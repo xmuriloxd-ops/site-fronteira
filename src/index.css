@@ -1,0 +1,78 @@
+@import "tailwindcss";
+
+@theme {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-border: var(--border);
+}
+
+:root {
+  --background: #f8fafc; /* slate-50 */
+  --foreground: #1e293b; /* slate-800 */
+  --card: #ffffff;
+  --card-foreground: #1e293b;
+  --border: #e2e8f0; /* slate-200 */
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0f172a; /* slate-900 */
+    --foreground: #f8fafc; /* slate-50 */
+    --card: #151f32; /* slate-850 / darker slate card */
+    --card-foreground: #f1f5f9; /* slate-100 */
+    --border: #334155; /* slate-700 */
+
+    /* Override standard tailwind colors in dark mode to guarantee automatic adaptation! */
+    --color-white: #151f32;
+    --color-slate-50: #0f172a;
+    --color-slate-100: #1b2537;
+    --color-slate-200: #334155;
+    --color-slate-300: #475569;
+    --color-slate-400: #94a3b8;
+    --color-slate-500: #cbd5e1;
+    --color-slate-600: #cbd5e1;
+    --color-slate-700: #f1f5f9;
+    --color-slate-800: #f8fafc;
+    --color-slate-900: #ffffff;
+    
+    /* Make custom svgs and badges look fantastic too */
+    --color-indigo-50: #1b2537;
+    --color-[#002075]\/10: rgba(56, 189, 248, 0.1);
+    --color-[#002075]: #38bdf8; /* Brighter sky blue for readability in dark mode */
+    --color-emerald-50: #064e3b;
+    --color-rose-50: #4c0519;
+    --color-amber-50: #451a03;
+  }
+}
+
+html, body {
+  overscroll-behavior: none; /* Disable overscroll bounce for full native feel */
+  -webkit-overflow-scrolling: touch;
+  background-color: var(--background);
+  color: var(--foreground);
+}
+
+button, 
+a, 
+select, 
+[role="button"],
+.tab-button,
+.nav-bar,
+.bottom-nav {
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+.safe-top {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+

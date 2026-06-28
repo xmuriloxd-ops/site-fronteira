@@ -1,0 +1,22 @@
+{
+  "name": "Controle de Ração - Grupo Btz",
+  "short_name": "BTZ Silos",
+  "description": "Controle de saldo de ração em silos - Grupo Btz",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#002075",
+  "theme_color": "#002075",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "https://img.icons8.com/color/192/000000/silo.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://img.icons8.com/color/512/000000/silo.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
