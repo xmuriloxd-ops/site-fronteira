@@ -1,6 +1,6 @@
 {
-  "name": "Controle de Ração - Grupo Btz",
-  "description": "Aplicativo para controle de saldo de ração em 3 silos, com registro de pesador, setor, lote e histórico de movimentações.",
+  "name": "ROTAM GOIÁS · GTA RP",
+  "description": "Portal de portfólio do Batalhão ROTAM no servidor de roleplay, com notícias, galeria de fotos e painel administrativo protegido por login.",
   "requestFramePermissions": [],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+  "majorCapabilities": []
 }

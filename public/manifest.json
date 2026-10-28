@@ -1,22 +1,25 @@
 {
-  "name": "Controle de Ração - Grupo Btz",
-  "short_name": "BTZ Silos",
-  "description": "Controle de saldo de ração em silos - Grupo Btz",
+  "name": "ROTAM GOIÁS · GTA RP",
+  "short_name": "ROTAM GO",
+  "description": "Portal oficial do Batalhão ROTAM no servidor de roleplay: notícias, operações e galeria.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#002075",
-  "theme_color": "#002075",
+  "background_color": "#0a0909",
+  "theme_color": "#0a0909",
   "orientation": "portrait-primary",
+  "lang": "pt-BR",
   "icons": [
     {
-      "src": "https://img.icons8.com/color/192/000000/silo.png",
+      "src": "/img/marca/icone-192.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any"
     },
     {
-      "src": "https://img.icons8.com/color/512/000000/silo.png",
+      "src": "/img/marca/icone-512.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any"
     }
   ]
 }

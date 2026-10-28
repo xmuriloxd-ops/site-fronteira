@@ -1,28 +1,25 @@
-import {StrictMode} from 'react';
-import {createRoot} from 'react-dom/client';
+import { StrictMode } from 'react';
+import { createRoot } from 'react-dom/client';
 import App from './App.tsx';
 import './index.css';
 
+// Limpa service workers e caches antigos (versão anterior do app) para
+// garantir que o portal sempre carregue os arquivos mais recentes.
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    // Clear all old caches programmatically on load to ensure stale resources are purged immediately
-    if ('caches' in window) {
-      caches.keys().then(names => {
-        for (const name of names) {
-          caches.delete(name).then(() => {
-            console.log('Old cache deleted:', name);
-          });
-        }
-      });
-    }
-
-    navigator.serviceWorker.register('/sw.js')
-      .then(reg => {
-        console.log('Service Worker registrado com sucesso:', reg.scope);
-        // Force update of service worker to prevent waiting
-        reg.update();
+    navigator.serviceWorker
+      .getRegistrations()
+      .then((registrations) => {
+        registrations.forEach((registration) => registration.unregister());
       })
-      .catch(err => console.error('Erro ao registrar Service Worker:', err));
+      .catch(() => {});
+
+    if ('caches' in window) {
+      caches
+        .keys()
+        .then((names) => Promise.all(names.map((name) => caches.delete(name))))
+        .catch(() => {});
+    }
   });
 }
 
