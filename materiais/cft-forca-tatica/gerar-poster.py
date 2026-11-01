@@ -169,7 +169,7 @@ def load_photo():
 
 def background():
     """Fundo ambiente: fotos desfocadas e escurecidas."""
-    img = Image.open(os.path.join(WORK, "foto-operadores.jpg")).convert("RGB")
+    img = Image.open(os.path.join(WORK, "foto-viatura-hd.jpg")).convert("RGB")
     sc = max(W / img.width, H / img.height) * 1.05
     nw, nh = int(img.width * sc), int(img.height * sc)
     img = img.resize((nw, nh), Image.BICUBIC)
@@ -214,13 +214,13 @@ def background():
     return Image.fromarray(a.astype(np.uint8)).convert("RGBA")
 
 
-def photo_band(canvas, y0, y1, fade=70, inset=26, path="foto-viatura-ft.jpg", focus=0.34):
+def photo_band(canvas, y0, y1, fade=70, inset=26, path="foto-viatura-ft.jpg", focus=0.34, zoom=1.0):
     """Faixa com foto nitida dentro da moldura (crop vertical por `focus`)."""
     x0, x1 = inset, DW - inset
     bw = int((x1 - x0) * S)
     bh = int((y1 - y0) * S)
     img = Image.open(os.path.join(WORK, path)).convert("RGB")
-    sc = max(bw / img.width, bh / img.height)
+    sc = max(bw / img.width, bh / img.height) * zoom
     nw, nh = int(img.width * sc + 0.5), int(img.height * sc + 0.5)
     img = img.resize((nw, nh), Image.LANCZOS)
     off_x = (nw - bw) // 2
@@ -293,6 +293,46 @@ def place_badge(canvas, path, size, center_x, top, pad=7.0):
     return top + size
 
 
+def place_instructor(canvas, size, center_x, top, path="instrutor-recorte.jpg", ring=(198, 160, 76)):
+    """Retrato do instrutor em medalhao circular com anel dourado."""
+    sx = int(round(center_x * S - size * S / 2))
+    sy = int(top * S)
+    sz = int(size * S)
+
+    img = Image.open(os.path.join(WORK, path)).convert("RGB").resize((sz, sz), Image.LANCZOS)
+
+    mask = Image.new("L", (sz, sz), 0)
+    ImageDraw.Draw(mask).ellipse([0, 0, sz - 1, sz - 1], fill=255)
+    mask = mask.filter(ImageFilter.GaussianBlur(0.8 * S))
+
+    photo = img.convert("RGBA")
+    photo.putalpha(mask)
+
+    # sombra projetada
+    sh_sz = sz + int(36 * S)
+    sh = Image.new("RGBA", (sh_sz, sh_sz), (0, 0, 0, 0))
+    ImageDraw.Draw(sh).ellipse(
+        [int(18 * S), int(24 * S), sh_sz - int(18 * S), sh_sz - int(12 * S)],
+        fill=(0, 0, 0, 170))
+    sh = sh.filter(ImageFilter.GaussianBlur(9 * S))
+    canvas.alpha_composite(sh, (sx - int(18 * S), sy - int(6 * S)))
+
+    # aneis (por cima da foto)
+    ring_layer = Image.new("RGBA", (sz + int(24 * S), sz + int(24 * S)), (0, 0, 0, 0))
+    rd = ImageDraw.Draw(ring_layer)
+    o = int(12 * S)
+    box = [o, o, o + sz, o + sz]
+    rd.ellipse(box, outline=(8, 9, 11, 255), width=max(1, int(10.0 * S)))
+    rd.ellipse(box, outline=ring + (255,), width=max(1, int(5.2 * S)))
+    rd.ellipse([box[0] - int(1.4 * S), box[1] - int(1.4 * S),
+                box[2] + int(1.4 * S), box[3] + int(1.4 * S)],
+               outline=(255, 246, 220, 80), width=max(1, int(1.0 * S)))
+
+    canvas.alpha_composite(photo, (sx, sy))
+    canvas.alpha_composite(ring_layer, (sx - o, sy - o))
+    return top + size
+
+
 def place_crest_pmgo(canvas, path, height, x, top):
     img = Image.open(path).convert("RGBA")
     w = int(img.width * height * S / img.height)
@@ -336,10 +376,14 @@ def build():
         fill=(241, 244, 247, 250), anchor="c", stroke=0.7, stroke_fill=(0, 0, 0, 130))
 
     # ---------------- foto dos operadores ----------------
-    photo_band(canvas, 302, 762 + int(EXTRA * 0.62), fade=56, path="foto-operadores.jpg", focus=0.04)
+    photo_band(canvas, 302, 762 + int(EXTRA * 0.62), fade=56,
+               path="foto-viatura-hd.jpg", focus=0.46, zoom=1.18)
 
     # escudo FT sobreposto (canto superior direito da foto)
-    place_badge(canvas, os.path.join(WORK, "escudo-ft.png"), 148, 950, 320, pad=7.0)
+    place_badge(canvas, os.path.join(WORK, "escudo-ft.png"), 140, 946, 326, pad=7.0)
+
+    # instrutor no canto inferior esquerdo da foto
+    place_instructor(canvas, 196, 158, 556)
 
     # ---------------- faixa do instrutor ----------------
     f_instr_lab = F("barlowcond-700.ttf", 21)
