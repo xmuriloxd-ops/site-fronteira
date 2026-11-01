@@ -6,14 +6,17 @@ import os
 import numpy as np
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
-import brasao as crest2
 
 WORK = os.path.dirname(os.path.abspath(__file__))
-FONTS = os.path.join(WORK, "fontes")
+FONT_DIR_LOCAL = os.path.join(WORK, "fontes")
+FONTS = FONT_DIR_LOCAL
 
 DW = 1080
 DH = int(os.environ.get("POSTER_DH", "1350"))   # design units
 EXTRA = DH - 1350                               # espaco vertical adicional
+
+def Y(v):
+    return v + EXTRA
 S = int(os.environ.get("POSTER_SS", "2"))       # supersampling
 W, H = DW * S, DH * S
 
@@ -84,9 +87,9 @@ def metal_text(canvas, text, fnt, center_x, baseline, tracking=0.0,
     grad_full.paste(grad, (0, y0))
     grad = grad_full
 
-    halo = mask.filter(ImageFilter.GaussianBlur(15 * S))
+    halo = mask.filter(ImageFilter.GaussianBlur(13 * S))
     halo_layer = Image.new("RGBA", canvas.size, (0, 0, 0, 255))
-    halo_layer.putalpha(halo.point(lambda v: int(v * 0.55)))
+    halo_layer.putalpha(halo.point(lambda v: int(v * 0.42)))
     canvas.alpha_composite(halo_layer)
 
     if shadow:
@@ -158,89 +161,149 @@ def corners(canvas, inset=26.0, arm=44.0, color=(196, 158, 74, 190), wgt=2.0):
         d.line([(sx, sy), (sx, sy + dy * a)], fill=color, width=wd)
 
 
-def background():
-    img = Image.open(os.path.join(WORK, "fundo-operadores.jpg")).convert("RGB")
-    sc = max(W / img.width, H / img.height)
-    nw, nh = int(img.width * sc + 0.5), int(img.height * sc + 0.5)
-    img = img.resize((nw, nh), Image.LANCZOS)
-    img = img.crop(((nw - W) // 2, 0, (nw - W) // 2 + W, H))
-    a = np.array(img).astype(np.float32) / 255.0
-    # contraste + escurecer + leve dessaturacao
-    a = np.clip((a - 0.5) * 1.10 + 0.5, 0, 1) ** 1.28
-    lum = a.mean(axis=2, keepdims=True)
-    a = lum + (a - lum) * 0.92
-    a *= 1.02
-    img = Image.fromarray(np.clip(a * 255, 0, 255).astype(np.uint8))
+def load_photo():
+    """Foto da viatura FT, cortada na proporcao pedida (cover)."""
+    img = Image.open(os.path.join(WORK, "foto-viatura-ft.jpg")).convert("RGB")
+    return img
 
+
+def background():
+    """Fundo ambiente: a propria foto, desfocada e escurecida."""
+    img = load_photo()
+    sc = max(W / img.width, H / img.height) * 1.08
+    nw, nh = int(img.width * sc), int(img.height * sc)
+    img = img.resize((nw, nh), Image.BICUBIC)
+    img = img.crop(((nw - W) // 2, (nh - H) // 2, (nw - W) // 2 + W, (nh - H) // 2 + H))
+    img = img.filter(ImageFilter.GaussianBlur(26 * S))
+    a = np.array(img).astype(np.float32) / 255.0
+
+    # tinta azul da corporacao nas sombras
+    lum = a.mean(axis=2, keepdims=True)
+    a = a * 0.34
+    a += np.array([0.010, 0.020, 0.045], dtype=np.float32) * (1.0 - lum)
+
+    canvas = Image.fromarray(np.clip(a * 255, 0, 255).astype(np.uint8)).convert("RGBA")
+
+    # gradientes: topo e base pretos
     ov = Image.new("RGBA", (W, H), (0, 0, 0, 0))
     d = ImageDraw.Draw(ov)
-    # topo e base escuros
-    for i in range(320 * S):
-        t = i / (320 * S)
-        d.line([(0, i), (W, i)], fill=(2, 4, 7, int(232 * (1 - t) ** 1.5)))
-    for i in range(560 * S):
-        t = i / (560 * S)
-        y = H - 560 * S + i
-        d.line([(0, y), (W, y)], fill=(2, 4, 7, int(250 * t ** 1.25)))
-    img = Image.alpha_composite(img.convert("RGBA"), ov)
+    for i in range(300 * S):
+        t = i / (300 * S)
+        d.line([(0, i), (W, i)], fill=(2, 4, 7, int(252 * (1 - t) ** 1.05)))
+    for i in range(int(H * 0.55)):
+        t = i / (H * 0.55)
+        d.line([(0, H - int(H * 0.55) + i), (W, H - int(H * 0.55) + i)],
+               fill=(2, 4, 7, int(252 * t ** 1.15)))
+    canvas = Image.alpha_composite(canvas, ov)
 
     # vinheta
     vig = Image.new("L", (W, H), 0)
-    vd = ImageDraw.Draw(vig)
-    vd.ellipse([-W * 0.35, -H * 0.22, W * 1.35, H * 1.22], fill=255)
-    vig = vig.filter(ImageFilter.GaussianBlur(120 * S / 2))
+    ImageDraw.Draw(vig).ellipse([-W * 0.30, -H * 0.18, W * 1.30, H * 1.18], fill=255)
+    vig = vig.filter(ImageFilter.GaussianBlur(90 * S))
     dark = Image.new("RGBA", (W, H), (0, 0, 0, 255))
-    dark.putalpha(vig.point(lambda v: int((255 - v) * 0.55)))
-    img = Image.alpha_composite(img, dark)
+    dark.putalpha(vig.point(lambda v: int((255 - v) * 0.60)))
+    canvas = Image.alpha_composite(canvas, dark)
 
-    # escurecimento lateral
-    lr = Image.new("L", (W, H), 0)
-    ld = ImageDraw.Draw(lr)
-    for i in range(int(W * 0.20)):
-        t = 1 - i / (W * 0.20)
-        ld.line([(i, 0), (i, H)], fill=int(150 * t ** 1.6))
-        ld.line([(W - 1 - i, 0), (W - 1 - i, H)], fill=int(150 * t ** 1.6))
-    side = Image.new("RGBA", (W, H), (0, 0, 0, 255))
-    side.putalpha(lr.filter(ImageFilter.GaussianBlur(28 * S)))
-    img = Image.alpha_composite(img, side)
-
-    # brilho dourado atras do brasao
+    # brilho dourado morno atras do titulo e do horario
     glow = Image.new("RGBA", (W, H), (0, 0, 0, 0))
     gd = ImageDraw.Draw(glow)
-    gd.ellipse([(540 - 360) * S, (520 - 330) * S, (540 + 360) * S, (520 + 330) * S],
-               fill=(255, 190, 92, 34))
-    glow = glow.filter(ImageFilter.GaussianBlur(90 * S))
-    img = Image.alpha_composite(img, glow)
+    gd.ellipse([(540 - 330) * S, (300 - 190) * S, (540 + 330) * S, (300 + 190) * S],
+               fill=(255, 172, 62, 26))
+    gd.ellipse([(540 - 300) * S, (1080 - 150) * S, (540 + 300) * S, (1080 + 150) * S],
+               fill=(255, 172, 62, 22))
+    glow = glow.filter(ImageFilter.GaussianBlur(80 * S))
+    canvas = Image.alpha_composite(canvas, glow)
 
-    # grao
-    rng = np.random.default_rng(7)
-    noise = rng.normal(0, 5.2, (H, W, 1)).repeat(3, axis=2)
-    a = np.clip(np.array(img.convert("RGB")).astype(np.float32) + noise, 0, 255)
+    rng = np.random.default_rng(11)
+    noise = rng.normal(0, 5.0, (H, W, 1)).repeat(3, axis=2)
+    a = np.clip(np.array(canvas.convert("RGB")).astype(np.float32) + noise, 0, 255)
     return Image.fromarray(a.astype(np.uint8)).convert("RGBA")
 
 
-def soft_band(canvas, y0, y1, alpha, feather=26):
-    """Faixa horizontal escura com bordas suaves."""
+def photo_band(canvas, y0, y1, fade=70, inset=26):
+    """Faixa com a foto nitida da viatura, dentro da moldura."""
+    x0, x1 = inset, DW - inset
+    bw = int((x1 - x0) * S)
     bh = int((y1 - y0) * S)
-    col = Image.new("L", (1, bh), 0)
-    px = col.load()
-    f = feather * S
+    img = load_photo()
+    sc = max(bw / img.width, bh / img.height)
+    nw, nh = int(img.width * sc + 0.5), int(img.height * sc + 0.5)
+    img = img.resize((nw, nh), Image.LANCZOS)
+    off_x = (nw - bw) // 2
+    off_y = int((nh - bh) * 0.34)
+    img = img.crop((off_x, off_y, off_x + bw, off_y + bh))
+    img = img.filter(ImageFilter.UnsharpMask(radius=1.8, percent=70, threshold=4))
+
+    a = np.array(img).astype(np.float32) / 255.0
+    img = Image.fromarray(np.clip((a ** 1.06) * 255, 0, 255).astype(np.uint8)).convert("RGBA")
+
+    grad = Image.new("L", (1, bh), 255)
+    gp = grad.load()
+    f = fade * S
     for i in range(bh):
+        v = 255
         if i < f:
-            v = alpha * (i / f) ** 0.85
+            v = int(255 * (i / f) ** 0.75)
         elif i > bh - f:
-            v = alpha * ((bh - i) / f) ** 0.85
-        else:
-            v = alpha
-        px[0, i] = int(v)
-    band = col.resize((W, bh), Image.BILINEAR)
-    layer = Image.new("RGBA", (W, H), (0, 0, 0, 0))
-    layer.paste(Image.new("RGBA", (W, bh), (2, 4, 7, 255)), (0, int(y0 * S)))
-    layer.putalpha(Image.new("L", (W, H), 0))
-    a = Image.new("L", (W, H), 0)
-    a.paste(band, (0, int(y0 * S)))
-    layer.putalpha(a)
-    canvas.alpha_composite(layer)
+            v = int(255 * ((bh - i) / f) ** 0.75)
+        gp[0, i] = v
+    img.putalpha(grad.resize((bw, bh), Image.BILINEAR))
+    canvas.alpha_composite(img, (int(x0 * S), int(y0 * S)))
+
+    d = ImageDraw.Draw(canvas)
+    for yy in (y0, y1):
+        d.line([(x0 * S, yy * S), (x1 * S, yy * S)], fill=(206, 170, 92, 110),
+               width=max(1, int(1.1 * S)))
+
+
+def place_badge(canvas, path, size, center_x, top, pad=7.0):
+    """Escudo FT apresentado como medalhao emoldurado (ouro sobre fundo escuro)."""
+    x0 = int((center_x - size / 2) * S)
+    y0 = int(top * S)
+    sz = int(size * S)
+    # sombra externa
+    sh = Image.new("RGBA", (sz + int(28 * S), sz + int(28 * S)), (0, 0, 0, 0))
+    ImageDraw.Draw(sh).rounded_rectangle(
+        [int(6 * S), int(10 * S), sh.width - int(6 * S), sh.height - int(6 * S)],
+        radius=int(sz * 0.16), fill=(0, 0, 0, 175))
+    sh = sh.filter(ImageFilter.GaussianBlur(9 * S))
+    canvas.alpha_composite(sh, (x0 - int(14 * S), y0 - int(4 * S)))
+
+    plate = Image.new("RGBA", (sz, sz), (0, 0, 0, 0))
+    pd = ImageDraw.Draw(plate)
+    pd.rounded_rectangle([0, 0, sz - 1, sz - 1], radius=int(sz * 0.16), fill=(10, 11, 14, 255))
+    # borda: preta, ouro, filete interno
+    pd.rounded_rectangle([0, 0, sz - 1, sz - 1], radius=int(sz * 0.16),
+                         outline=(6, 7, 9, 255), width=int(7.0 * S))
+    pd.rounded_rectangle([int(3.2 * S), int(3.2 * S), sz - int(3.2 * S), sz - int(3.2 * S)],
+                         radius=int(sz * 0.145), outline=(214, 178, 104, 255), width=int(2.6 * S))
+    pd.rounded_rectangle([int(8.6 * S), int(8.6 * S), sz - int(8.6 * S), sz - int(8.6 * S)],
+                         radius=int(sz * 0.125), outline=(255, 246, 220, 60), width=max(1, int(1.0 * S)))
+
+    badge = Image.open(path).convert("RGB")
+    inner = int((size - 2 * pad) * S)
+    badge = badge.resize((inner, inner), Image.LANCZOS)
+    badge = badge.filter(ImageFilter.UnsharpMask(radius=2.2, percent=80, threshold=3))
+    bmask = Image.new("L", (inner, inner), 0)
+    ImageDraw.Draw(bmask).rounded_rectangle([0, 0, inner - 1, inner - 1],
+                                            radius=int(inner * 0.11), fill=255)
+    bmask = bmask.filter(ImageFilter.GaussianBlur(1.6 * S))
+    badge = badge.convert("RGBA")
+    badge.putalpha(bmask)
+    plate.alpha_composite(badge, (int(pad * S), int(pad * S)))
+    canvas.alpha_composite(plate, (x0, y0))
+    return top + size
+
+
+def place_crest_pmgo(canvas, path, height, x, top):
+    img = Image.open(path).convert("RGBA")
+    w = int(img.width * height * S / img.height)
+    h = int(height * S)
+    img = img.resize((w, h), Image.LANCZOS)
+    canvas.alpha_composite(img, (int(x * S), int(top * S)))
+    return w / S
+
+
 
 
 def build():
@@ -248,85 +311,77 @@ def build():
     d = ImageDraw.Draw(canvas)
 
     # ---------------- moldura ----------------
-    d.rectangle([26 * S, 26 * S, W - 26 * S, H - 26 * S], outline=(188, 150, 74, 96), width=max(1, int(1.1 * S)))
+    d.rectangle([26 * S, 26 * S, W - 26 * S, H - 26 * S],
+                outline=(188, 150, 74, 96), width=max(1, int(1.1 * S)))
     corners(canvas)
 
-    # ---------------- cabecalho ----------------
-    f_head = F("barlowcond-700.ttf", 23)
-    put(d, "POLÍCIA MILITAR DE GOIÁS", f_head, 540 * S, 74 * S, 9.0,
-        fill=(228, 206, 156, 245), anchor="c")
-    hairline(canvas, 93, 320, 760, (200, 168, 100, 140), 1.0, True, 4.5)
+    # ---------------- cabecalho (brasao oficial PMGO) ----------------
+    f_top = F("barlowcond-700.ttf", 26)
+    w1 = tw("POLÍCIA MILITAR", f_top, 4.4) / S
+    w2 = tw("DE GOIÁS", f_top, 4.4) / S
+    wtxt = max(w1, w2)
+    group_w = 88 + 26 + wtxt
+    gx = 540 - group_w / 2
+    place_crest_pmgo(canvas, os.path.join(WORK, "Brasao_PMGO.png"), 88, gx, 42)
+    tx = gx + 88 + 26
+    put(d, "POLÍCIA MILITAR", f_top, tx * S, 78 * S, 4.4, fill=(242, 245, 248, 252))
+    put(d, "DE GOIÁS", f_top, tx * S, 110 * S, 4.4, fill=(242, 245, 248, 252))
 
     # ---------------- titulo ----------------
-    f_cft = F("anton.ttf", 246)
-    metal_text(canvas, "CFT", f_cft, 540, 326, tracking=5,
+    f_cft = F("anton.ttf", 176)
+    metal_text(canvas, "CFT", f_cft, 540, 318, tracking=5,
                outline=2.2, shadow=(0, 10, 22, 185),
                glow=((255, 168, 56, 255), 30, 30))
 
-    f_sub = F("barlowcond-700.ttf", 42)
-    put(d, "CURSO DE FORÇA TÁTICA", f_sub, 540 * S, 388 * S, 6.2,
-        fill=(241, 244, 247, 250), anchor="c", stroke=0.7, stroke_fill=(0, 0, 0, 120))
+    f_sub = F("barlowcond-700.ttf", 37)
+    put(d, "CURSO DE FORÇA TÁTICA", f_sub, 540 * S, 358 * S, 6.0,
+        fill=(241, 244, 247, 250), anchor="c", stroke=0.7, stroke_fill=(0, 0, 0, 130))
 
-    # ---------------- brasao ----------------
-    crest = crest2.make_crest(int(312 * S), ss=2)
-    cx = (W - crest.width) // 2
-    cy = int(398 * S)
-    glow = crest.getchannel("A").filter(ImageFilter.GaussianBlur(24 * S))
-    gl = Image.new("RGBA", crest.size, (255, 186, 84, 255))
-    gl.putalpha(glow.point(lambda v: int(v * 0.28)))
-    canvas.alpha_composite(gl, (cx, cy))
-    canvas.alpha_composite(crest, (cx, cy))
+    # ---------------- escudo FT ----------------
+    place_badge(canvas, os.path.join(WORK, "escudo-ft.png"), 216, 540, 372, pad=8.0)
 
-    # ---------------- bloco do horario ----------------
-    soft_band(canvas, 700, 1010, 198, 64)
+    # ---------------- foto da viatura ----------------
+    photo_band(canvas, 590, 966 + int(EXTRA * 0.60), fade=68)
 
-    f_lab = F("barlowcond-700.ttf", 26)
-    put(d, "HORÁRIO DE INÍCIO", f_lab, 540 * S, 800 * S, 11.5,
-        fill=(245, 226, 182, 255), anchor="c", stroke=0.5, stroke_fill=(0, 0, 0, 130))
+    # ---------------- horario ----------------
+    f_lab = F("barlowcond-700.ttf", 24)
+    put(d, "HORÁRIO DE INÍCIO", f_lab, 540 * S, Y(1000) * S, 10.5,
+        fill=(250, 236, 200, 255), anchor="c", stroke=0.9, stroke_fill=(0, 0, 0, 200))
 
-    f_time = F("anton.ttf", 186)
-    metal_text(canvas, "20:00", f_time, 540, 968, tracking=2,
+    f_time = F("anton.ttf", 148)
+    metal_text(canvas, "20:00", f_time, 540, Y(1136), tracking=2,
                outline=2.0, shadow=(0, 9, 20, 185),
                glow=((255, 168, 56, 255), 26, 32))
 
     # ---------------- convite ----------------
-    panel = (70, 1010 + EXTRA, 1010, 1246 + EXTRA)
-    rounded_panel(canvas, panel, 16, (6, 8, 12, 214), (198, 160, 76, 140), 1.3, (255, 255, 255, 26))
+    panel = (70, Y(1150), 1010, Y(1298))
+    rounded_panel(canvas, panel, 15, (6, 8, 12, 214), (198, 160, 76, 140), 1.3,
+                  (255, 255, 255, 26))
 
-    f_inv = F("barlowcond-800.ttf", 29)
-    close_inv = put(d, "CONVITE AOS POLICIAIS MILITARES", f_inv, 540 * S, (1052 + EXTRA) * S, 2.2,
+    f_inv = F("barlowcond-800.ttf", 27)
+    close_inv = put(d, "CONVITE AOS POLICIAIS MILITARES", f_inv, 540 * S, Y(1186) * S, 2.2,
                     fill=(228, 201, 143, 255), anchor="c")
     for sgn in (-1, 1):
-        cxd = 540 + sgn * (close_inv / (2 * S) + 24)
-        s = 4.2
-        cy_d = 1046 + EXTRA
-        d.polygon([((cxd) * S, (cy_d - s) * S), ((cxd + s) * S, cy_d * S),
-                   ((cxd) * S, (cy_d + s) * S), ((cxd - s) * S, cy_d * S)],
+        cxd = 540 + sgn * (close_inv / (2 * S) + 22)
+        s = 4.0
+        yy = Y(1180)
+        d.polygon([(cxd * S, (yy - s) * S), ((cxd + s) * S, yy * S),
+                   (cxd * S, (yy + s) * S), ((cxd - s) * S, yy * S)],
                   fill=(198, 160, 76, 215))
 
-    f_body = F("inter-400.ttf", 21)
-    lines = [
-        "Policiais militares interessados em integrar a Força Tática estão",
-        "convidados a participar do Curso de Força Tática (CFT). Venha",
-        "aprimorar seu preparo técnico, físico e operacional com a tropa.",
-    ]
-    y = 1092 + EXTRA
-    for ln in lines:
-        put(d, ln, f_body, 540 * S, y * S, 0.2, fill=(219, 224, 231, 242), anchor="c")
-        y += 34
-
-    # linha de acao destacada
-    cta = "INSCRIÇÕES E INFORMAÇÕES NO COMANDO DA SUA UNIDADE"
-    f_cta = F("barlowcond-700.ttf", 23)
-    wcta = tw(cta, f_cta, 3.0) / S
-    pill = (540 - wcta / 2 - 22, 1192 + EXTRA, 540 + wcta / 2 + 22, 1228 + EXTRA)
-    rounded_panel(canvas, pill, 6, (196, 158, 74, 26), (198, 160, 76, 150), 1.1)
-    put(d, cta, f_cta, 540 * S, (1216 + EXTRA) * S, 3.0, fill=(240, 219, 168, 255), anchor="c")
+    f_body = F("inter-400.ttf", 20)
+    for i, ln in enumerate([
+        "Policiais militares interessados em integrar a Força Tática estão convidados",
+        "a participar do Curso de Força Tática. Aprimore seu preparo técnico, físico",
+        "e operacional com a tropa.",
+    ]):
+        put(d, ln, f_body, 540 * S, Y(1216 + i * 27) * S, 0.1,
+            fill=(219, 224, 231, 240), anchor="c")
 
     # ---------------- rodape ----------------
-    f_foot = F("inter-600.ttf", 15)
-    put(d, "FORÇA TÁTICA  •  POLÍCIA MILITAR DE GOIÁS", f_foot, 540 * S, (1296 + EXTRA) * S, 3.6,
-        fill=(178, 185, 194, 200), anchor="c")
+    f_foot = F("inter-600.ttf", 14)
+    put(d, "FORÇA TÁTICA  •  POLÍCIA MILITAR DE GOIÁS", f_foot, 540 * S, Y(1330) * S, 3.4,
+        fill=(178, 185, 194, 195), anchor="c")
 
     return canvas.convert("RGB")
 
@@ -339,9 +394,3 @@ if __name__ == "__main__":
         out = out.resize((int(fw), int(fh)), Image.LANCZOS)
     out.save(dst)
     print("ok", out.size, dst)
-
-
-def export_crest(path, width=1600, ss=3, drop_shadow=True):
-    c = crest2.make_crest(width, ss=ss, drop_shadow=drop_shadow)
-    c.save(path)
-    return c.size
