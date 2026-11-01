@@ -168,23 +168,21 @@ def load_photo():
 
 
 def background():
-    """Fundo ambiente: a propria foto, desfocada e escurecida."""
-    img = load_photo()
-    sc = max(W / img.width, H / img.height) * 1.08
+    """Fundo ambiente: fotos desfocadas e escurecidas."""
+    img = Image.open(os.path.join(WORK, "foto-operadores.jpg")).convert("RGB")
+    sc = max(W / img.width, H / img.height) * 1.05
     nw, nh = int(img.width * sc), int(img.height * sc)
     img = img.resize((nw, nh), Image.BICUBIC)
-    img = img.crop(((nw - W) // 2, (nh - H) // 2, (nw - W) // 2 + W, (nh - H) // 2 + H))
-    img = img.filter(ImageFilter.GaussianBlur(26 * S))
+    img = img.crop(((nw - W) // 2, (nh - H) // 3, (nw - W) // 2 + W, (nh - H) // 3 + H))
+    img = img.filter(ImageFilter.GaussianBlur(24 * S))
     a = np.array(img).astype(np.float32) / 255.0
 
-    # tinta azul da corporacao nas sombras
     lum = a.mean(axis=2, keepdims=True)
-    a = a * 0.34
+    a = a * 0.30
     a += np.array([0.010, 0.020, 0.045], dtype=np.float32) * (1.0 - lum)
 
     canvas = Image.fromarray(np.clip(a * 255, 0, 255).astype(np.uint8)).convert("RGBA")
 
-    # gradientes: topo e base pretos
     ov = Image.new("RGBA", (W, H), (0, 0, 0, 0))
     d = ImageDraw.Draw(ov)
     for i in range(300 * S):
@@ -196,7 +194,6 @@ def background():
                fill=(2, 4, 7, int(252 * t ** 1.15)))
     canvas = Image.alpha_composite(canvas, ov)
 
-    # vinheta
     vig = Image.new("L", (W, H), 0)
     ImageDraw.Draw(vig).ellipse([-W * 0.30, -H * 0.18, W * 1.30, H * 1.18], fill=255)
     vig = vig.filter(ImageFilter.GaussianBlur(90 * S))
@@ -204,13 +201,10 @@ def background():
     dark.putalpha(vig.point(lambda v: int((255 - v) * 0.60)))
     canvas = Image.alpha_composite(canvas, dark)
 
-    # brilho dourado morno atras do titulo e do horario
     glow = Image.new("RGBA", (W, H), (0, 0, 0, 0))
     gd = ImageDraw.Draw(glow)
     gd.ellipse([(540 - 330) * S, (300 - 190) * S, (540 + 330) * S, (300 + 190) * S],
                fill=(255, 172, 62, 26))
-    gd.ellipse([(540 - 300) * S, (1080 - 150) * S, (540 + 300) * S, (1080 + 150) * S],
-               fill=(255, 172, 62, 22))
     glow = glow.filter(ImageFilter.GaussianBlur(80 * S))
     canvas = Image.alpha_composite(canvas, glow)
 
@@ -220,22 +214,26 @@ def background():
     return Image.fromarray(a.astype(np.uint8)).convert("RGBA")
 
 
-def photo_band(canvas, y0, y1, fade=70, inset=26):
-    """Faixa com a foto nitida da viatura, dentro da moldura."""
+def photo_band(canvas, y0, y1, fade=70, inset=26, path="foto-viatura-ft.jpg", focus=0.34):
+    """Faixa com foto nitida dentro da moldura (crop vertical por `focus`)."""
     x0, x1 = inset, DW - inset
     bw = int((x1 - x0) * S)
     bh = int((y1 - y0) * S)
-    img = load_photo()
+    img = Image.open(os.path.join(WORK, path)).convert("RGB")
     sc = max(bw / img.width, bh / img.height)
     nw, nh = int(img.width * sc + 0.5), int(img.height * sc + 0.5)
     img = img.resize((nw, nh), Image.LANCZOS)
     off_x = (nw - bw) // 2
-    off_y = int((nh - bh) * 0.34)
+    off_y = int((nh - bh) * focus)
     img = img.crop((off_x, off_y, off_x + bw, off_y + bh))
-    img = img.filter(ImageFilter.UnsharpMask(radius=1.8, percent=70, threshold=4))
+    img = img.filter(ImageFilter.UnsharpMask(radius=1.8, percent=60, threshold=4))
 
     a = np.array(img).astype(np.float32) / 255.0
-    img = Image.fromarray(np.clip((a ** 1.06) * 255, 0, 255).astype(np.uint8)).convert("RGBA")
+    lum = a.mean(axis=2, keepdims=True)
+    a = lum + (a - lum) * 0.90          # leve dessaturacao
+    a = a ** 1.08                       # contraste
+    a *= np.array([1.02, 0.99, 0.94], dtype=np.float32)   # sombra quente
+    img = Image.fromarray(np.clip(a * 255, 0, 255).astype(np.uint8)).convert("RGBA")
 
     grad = Image.new("L", (1, bh), 255)
     gp = grad.load()
@@ -316,55 +314,88 @@ def build():
     corners(canvas)
 
     # ---------------- cabecalho (brasao oficial PMGO) ----------------
-    f_top = F("barlowcond-700.ttf", 26)
+    f_top = F("barlowcond-700.ttf", 25)
     w1 = tw("POLÍCIA MILITAR", f_top, 4.4) / S
     w2 = tw("DE GOIÁS", f_top, 4.4) / S
     wtxt = max(w1, w2)
-    group_w = 88 + 26 + wtxt
+    group_w = 82 + 24 + wtxt
     gx = 540 - group_w / 2
-    place_crest_pmgo(canvas, os.path.join(WORK, "Brasao_PMGO.png"), 88, gx, 42)
-    tx = gx + 88 + 26
-    put(d, "POLÍCIA MILITAR", f_top, tx * S, 78 * S, 4.4, fill=(242, 245, 248, 252))
-    put(d, "DE GOIÁS", f_top, tx * S, 110 * S, 4.4, fill=(242, 245, 248, 252))
+    place_crest_pmgo(canvas, os.path.join(WORK, "Brasao_PMGO.png"), 82, gx, 34)
+    tx = gx + 82 + 24
+    put(d, "POLÍCIA MILITAR", f_top, tx * S, 68 * S, 4.4, fill=(242, 245, 248, 252))
+    put(d, "DE GOIÁS", f_top, tx * S, 99 * S, 4.4, fill=(242, 245, 248, 252))
 
     # ---------------- titulo ----------------
-    f_cft = F("anton.ttf", 176)
-    metal_text(canvas, "CFT", f_cft, 540, 318, tracking=5,
+    f_cft = F("anton.ttf", 158)
+    metal_text(canvas, "CFT", f_cft, 540, 244, tracking=5,
                outline=2.2, shadow=(0, 10, 22, 185),
-               glow=((255, 168, 56, 255), 30, 30))
+               glow=((255, 168, 56, 255), 28, 28))
 
-    f_sub = F("barlowcond-700.ttf", 37)
-    put(d, "CURSO DE FORÇA TÁTICA", f_sub, 540 * S, 358 * S, 6.0,
+    f_sub = F("barlowcond-700.ttf", 33)
+    put(d, "CURSO DE FORÇA TÁTICA", f_sub, 540 * S, 280 * S, 5.6,
         fill=(241, 244, 247, 250), anchor="c", stroke=0.7, stroke_fill=(0, 0, 0, 130))
 
-    # ---------------- escudo FT ----------------
-    place_badge(canvas, os.path.join(WORK, "escudo-ft.png"), 216, 540, 372, pad=8.0)
+    # ---------------- foto dos operadores ----------------
+    photo_band(canvas, 302, 762 + int(EXTRA * 0.62), fade=56, path="foto-operadores.jpg", focus=0.04)
 
-    # ---------------- foto da viatura ----------------
-    photo_band(canvas, 590, 966 + int(EXTRA * 0.60), fade=68)
+    # escudo FT sobreposto (canto superior direito da foto)
+    place_badge(canvas, os.path.join(WORK, "escudo-ft.png"), 148, 950, 320, pad=7.0)
 
-    # ---------------- horario ----------------
-    f_lab = F("barlowcond-700.ttf", 24)
-    put(d, "HORÁRIO DE INÍCIO", f_lab, 540 * S, Y(1000) * S, 10.5,
-        fill=(250, 236, 200, 255), anchor="c", stroke=0.9, stroke_fill=(0, 0, 0, 200))
+    # ---------------- faixa do instrutor ----------------
+    f_instr_lab = F("barlowcond-700.ttf", 21)
+    f_instr = F("anton.ttf", 46)
+    lab = "INSTRUTOR"
+    name = "CMD: MENDES"
+    wlab = tw(lab, f_instr_lab, 6.0) / S
+    wname = tw(name, f_instr, 2.0) / S
+    gap = 16
+    total = wlab + gap + wname
+    x = 540 - total / 2
+    yname = Y(812)
+    put(d, lab, f_instr_lab, x * S, yname * S, 6.0, fill=(212, 176, 108, 245))
+    metal_text(canvas, name, f_instr, x + wlab + gap + wname / 2, Y(828), tracking=2,
+               outline=0.9, shadow=(0, 5, 12, 165), glow=None)
+    # filetes laterais
+    for sx in (x - 30, x + total + 30):
+        sgn = -1 if sx < 540 else 1
+        d.line([(sx * S, Y(800) * S), (sx * S + sgn * 46 * S, Y(800) * S)],
+               fill=(206, 170, 92, 120), width=max(1, int(1.0 * S)))
 
-    f_time = F("anton.ttf", 148)
-    metal_text(canvas, "20:00", f_time, 540, Y(1136), tracking=2,
-               outline=2.0, shadow=(0, 9, 20, 185),
-               glow=((255, 168, 56, 255), 26, 32))
+    # ---------------- painel de informacoes ----------------
+    py0, py1 = Y(848), Y(1024)
+    rounded_panel(canvas, (70, py0, 636, py1), 14, (6, 8, 12, 206), (198, 160, 76, 130), 1.2,
+                  (255, 255, 255, 22))
+    rounded_panel(canvas, (656, py0, 1010, py1), 14, (6, 8, 12, 206), (198, 160, 76, 130), 1.2,
+                  (255, 255, 255, 22))
+
+    f_lab = F("barlowcond-700.ttf", 20)
+    put(d, "HORÁRIO DE INÍCIO", f_lab, 353 * S, Y(888) * S, 8.4,
+        fill=(250, 236, 200, 250), anchor="c", stroke=0.6, stroke_fill=(0, 0, 0, 180))
+    f_time = F("anton.ttf", 108)
+    metal_text(canvas, "20:00", f_time, 353, Y(992), tracking=2,
+               outline=1.6, shadow=(0, 8, 16, 175), glow=((255, 168, 56, 255), 22, 26))
+
+    put(d, "SAÍDA DO", f_lab, 833 * S, Y(888) * S, 8.4,
+        fill=(250, 236, 200, 250), anchor="c", stroke=0.6, stroke_fill=(0, 0, 0, 180))
+    f_bpm = F("anton.ttf", 62)
+    metal_text(canvas, "6º BPM", f_bpm, 833, Y(962), tracking=1.5,
+               outline=1.2, shadow=(0, 6, 14, 170), glow=((255, 168, 56, 255), 18, 22))
+    f_bpm_sub = F("barlowcond-700.ttf", 19)
+    put(d, "POLÍCIA MILITAR", f_bpm_sub, 833 * S, Y(1000) * S, 5.4,
+        fill=(226, 231, 237, 235), anchor="c")
 
     # ---------------- convite ----------------
-    panel = (70, Y(1150), 1010, Y(1298))
+    panel = (70, Y(1040), 1010, Y(1264))
     rounded_panel(canvas, panel, 15, (6, 8, 12, 214), (198, 160, 76, 140), 1.3,
                   (255, 255, 255, 26))
 
     f_inv = F("barlowcond-800.ttf", 27)
-    close_inv = put(d, "CONVITE AOS POLICIAIS MILITARES", f_inv, 540 * S, Y(1186) * S, 2.2,
+    close_inv = put(d, "CONVITE AOS POLICIAIS MILITARES", f_inv, 540 * S, Y(1076) * S, 2.2,
                     fill=(228, 201, 143, 255), anchor="c")
     for sgn in (-1, 1):
         cxd = 540 + sgn * (close_inv / (2 * S) + 22)
         s = 4.0
-        yy = Y(1180)
+        yy = Y(1070)
         d.polygon([(cxd * S, (yy - s) * S), ((cxd + s) * S, yy * S),
                    (cxd * S, (yy + s) * S), ((cxd - s) * S, yy * S)],
                   fill=(198, 160, 76, 215))
@@ -375,12 +406,19 @@ def build():
         "a participar do Curso de Força Tática. Aprimore seu preparo técnico, físico",
         "e operacional com a tropa.",
     ]):
-        put(d, ln, f_body, 540 * S, Y(1216 + i * 27) * S, 0.1,
+        put(d, ln, f_body, 540 * S, Y(1108 + i * 27) * S, 0.1,
             fill=(219, 224, 231, 240), anchor="c")
+
+    cta = "INSCRIÇÕES E INFORMAÇÕES NO COMANDO DA SUA UNIDADE"
+    f_cta = F("barlowcond-700.ttf", 21)
+    wcta = tw(cta, f_cta, 2.6) / S
+    rounded_panel(canvas, (540 - wcta / 2 - 20, Y(1202), 540 + wcta / 2 + 20, Y(1236)), 5,
+                  (196, 158, 74, 28), (198, 160, 76, 145), 1.0)
+    put(d, cta, f_cta, 540 * S, Y(1226) * S, 2.6, fill=(240, 219, 168, 255), anchor="c")
 
     # ---------------- rodape ----------------
     f_foot = F("inter-600.ttf", 14)
-    put(d, "FORÇA TÁTICA  •  POLÍCIA MILITAR DE GOIÁS", f_foot, 540 * S, Y(1330) * S, 3.4,
+    put(d, "FORÇA TÁTICA  •  POLÍCIA MILITAR DE GOIÁS", f_foot, 540 * S, Y(1304) * S, 3.4,
         fill=(178, 185, 194, 195), anchor="c")
 
     return canvas.convert("RGB")
