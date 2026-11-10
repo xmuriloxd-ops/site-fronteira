@@ -67,10 +67,6 @@ export function DivulgacaoTab({
   // Cartaz em imagem: prévia e anexo enviado ao Discord
   const [previaCartaz, setPreviaCartaz] = useState<string | null>(null);
   const [gerandoCartaz, setGerandoCartaz] = useState(false);
-  // Texto impresso no cartaz. Vazio = usa o texto do documento.
-  const [textoCartaz, setTextoCartaz] = useState('');
-  const [seloCartaz, setSeloCartaz] = useState('');
-  const [apoioCartaz, setApoioCartaz] = useState('');
   const [msg, setMsg] = useState<{ tipo: 'ok' | 'erro' | 'info'; texto: string } | null>(null);
   const [salvando, setSalvando] = useState(false);
   const [publicando, setPublicando] = useState(false);
@@ -100,16 +96,6 @@ export function DivulgacaoTab({
   const alterar = <K extends keyof DivulgacaoInscricoes>(campo: K, valor: DivulgacaoInscricoes[K]) =>
     setDoc((d) => ({ ...d, [campo]: valor }));
 
-  /** Opções do cartaz com os textos que o comando editou (vazio usa o padrão). */
-  const opcoesCartaz = useMemo(
-    () => ({
-      selo: seloCartaz.trim() || 'INSCRIÇÕES ABERTAS',
-      textoChamada: textoCartaz.trim() ? textoCartaz : undefined,
-      apoio: apoioCartaz.trim() || undefined,
-    }),
-    [seloCartaz, textoCartaz, apoioCartaz],
-  );
-
   // Redesenha a prévia do cartaz um instante depois de cada edição
   useEffect(() => {
     let cancelado = false;
@@ -117,7 +103,7 @@ export function DivulgacaoTab({
     const t = setTimeout(async () => {
       setGerandoCartaz(true);
       try {
-        const previa = await urlPreviaCartaz(doc, opcoesCartaz);
+        const previa = await urlPreviaCartaz(doc);
         if (cancelado) {
           previa.revogar();
           return;
@@ -136,7 +122,7 @@ export function DivulgacaoTab({
       clearTimeout(t);
       revogar?.();
     };
-  }, [doc, opcoesCartaz]);
+  }, [doc]);
 
   const alternarUnidade = (id: string) =>
     setDoc((d) => {
@@ -198,7 +184,7 @@ export function DivulgacaoTab({
       setGerandoCartaz(true);
       let cartaz: File;
       try {
-        cartaz = await gerarCartaz(doc, opcoesCartaz);
+        cartaz = await gerarCartaz(doc);
       } catch {
         setMsg({ tipo: 'erro', texto: 'Não foi possível gerar o cartaz neste navegador.' });
         return;
@@ -240,7 +226,7 @@ export function DivulgacaoTab({
   /** Baixa o cartaz em PNG para uso fora do Discord. */
   const baixarCartaz = async () => {
     try {
-      const arquivo = await gerarCartaz(doc, opcoesCartaz);
+      const arquivo = await gerarCartaz(doc);
       const link = document.createElement('a');
       link.href = URL.createObjectURL(arquivo);
       link.download = arquivo.name;
@@ -436,57 +422,9 @@ export function DivulgacaoTab({
               )}
             </div>
 
-            <div className="mt-3 space-y-2 border-t border-white/8 pt-3">
-              <p className="text-[0.66rem] font-semibold uppercase tracking-[0.14em] text-emerald-100/45">
-                Texto do cartaz
-              </p>
-
-              <div>
-                <label className="label" htmlFor="cart-selo">
-                  Faixa amarela
-                </label>
-                <input
-                  id="cart-selo"
-                  className="field text-[0.78rem]"
-                  value={seloCartaz}
-                  maxLength={40}
-                  onChange={(e) => setSeloCartaz(e.target.value)}
-                  placeholder="INSCRIÇÕES ABERTAS"
-                />
-              </div>
-
-              <div>
-                <label className="label" htmlFor="cart-apoio">
-                  Frase de apoio
-                </label>
-                <input
-                  id="cart-apoio"
-                  className="field text-[0.78rem]"
-                  value={apoioCartaz}
-                  maxLength={90}
-                  onChange={(e) => setApoioCartaz(e.target.value)}
-                  placeholder="Ex.: INGRESSE NA MAIOR FORÇA DE SEGURANÇA PÚBLICA DO PARANÁ"
-                />
-              </div>
-
-              <div>
-                <label className="label" htmlFor="cart-texto">
-                  Texto de chamada
-                </label>
-                <textarea
-                  id="cart-texto"
-                  className="field min-h-[64px] resize-y text-[0.78rem]"
-                  value={textoCartaz}
-                  maxLength={420}
-                  onChange={(e) => setTextoCartaz(e.target.value)}
-                  placeholder={doc.texto.trim() || 'Escreva a chamada que aparece no cartaz...'}
-                />
-                <p className="mt-1 flex items-center justify-between text-[0.6rem] text-emerald-100/30">
-                  <span>Vazio usa o texto do documento.</span>
-                  <span>{textoCartaz.length}/420</span>
-                </p>
-              </div>
-            </div>
+            <p className="mt-2 text-[0.66rem] leading-relaxed text-emerald-100/35">
+              Arte fixa do modelo oficial: o que muda é só o que estiver marcado nas unidades.
+            </p>
           </div>
         </div>
       </div>

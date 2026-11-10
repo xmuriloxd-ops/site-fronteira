@@ -1,5 +1,37 @@
 @import "tailwindcss";
 
+/* Fontes do cartaz de divulgação (SIL Open Font License) */
+@font-face {
+  font-family: "Anton";
+  src: url("/fontes/Anton-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Barlow Condensed";
+  src: url("/fontes/BarlowCondensed-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Barlow Condensed";
+  src: url("/fontes/BarlowCondensed-Medium.ttf") format("truetype");
+  font-weight: 500;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Barlow Condensed";
+  src: url("/fontes/BarlowCondensed-SemiBold.ttf") format("truetype");
+  font-weight: 600;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Barlow Condensed";
+  src: url("/fontes/BarlowCondensed-Bold.ttf") format("truetype");
+  font-weight: 700;
+  font-display: swap;
+}
+
 @theme {
   --color-pmpr-green: #0b6b3a;
   --color-pmpr-green-soft: #16a34a;
