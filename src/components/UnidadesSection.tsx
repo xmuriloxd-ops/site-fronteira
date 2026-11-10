@@ -56,7 +56,7 @@ export function UnidadesSection() {
             Conheça as <span className="gold-text">três unidades</span>
           </>
         }
-        description="Antes de escolher o edital, entenda a missão de cada tropa. A rotina, o preparo físico e as exigências mudam bastante de uma unidade para outra."
+        description="Antes de preencher o formulário, entenda a missão de cada tropa. A rotina, o preparo físico e as exigências mudam bastante de uma unidade para outra."
         align="center"
       />
 

@@ -3,11 +3,9 @@ import { Menu, X, ShieldCheck, LockKeyhole, LogOut } from 'lucide-react';
 import { Brasao } from './ui';
 
 const LINKS = [
-  { label: 'Editais', href: '#editais' },
+  { label: 'Inscrições', href: '#fichas-unidade' },
   { label: '13º BPM', href: '#recrutamento' },
-  { label: 'Documentos', href: '#documentos' },
   { label: 'Unidades', href: '#unidades' },
-  { label: 'Questões', href: '#questoes' },
   { label: 'Discord', href: '#discord' },
 ];
 
@@ -56,7 +54,7 @@ export function Header({
               Polícia Militar <span className="text-pmpr-gold">do Paraná</span>
             </p>
             <p className="text-[0.62rem] font-semibold uppercase tracking-[0.2em] text-emerald-100/45">
-              Portal de Editais · ROTAM · RONE
+              Portal de Inscrições · PMPR
             </p>
           </div>
         </button>

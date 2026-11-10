@@ -1,33 +1,34 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Send, CheckCircle2, AlertCircle, MessageSquare, BellRing, Loader2, Link2 } from 'lucide-react';
-import { EDITAIS } from '../data/editais';
-import type { AppConfigPublica, Edital } from '../types';
-import { Section, SectionHeading } from './ui';
+import { FORMULARIOS_UNIDADE } from '../data/fichas-unidade';
+import { FORMULARIO_RECRUTAMENTO } from '../data/recrutamento';
+import type { AppConfigPublica } from '../types';
+import { Section } from './ui';
 
 type Resultado = { tipo: 'ok' | 'erro'; texto: string } | null;
 
+/** Inscrições que a tropa pode acompanhar pelo Discord. */
+const INSCRICOES = [
+  { id: FORMULARIO_RECRUTAMENTO.id, sigla: '13º BPM', nome: FORMULARIO_RECRUTAMENTO.titulo },
+  ...Object.entries(FORMULARIOS_UNIDADE).map(([id, ficha]) => ({
+    id,
+    sigla: ficha.referencia,
+    nome: ficha.titulo,
+  })),
+];
+
 export function DiscordSection({
   config,
-  editalPreSelecionado,
   onAtualizarConfig,
 }: {
   config: AppConfigPublica | null;
-  editalPreSelecionado: string | null;
   onAtualizarConfig: () => void;
 }) {
   const [nome, setNome] = useState('');
   const [discord, setDiscord] = useState('');
-  const [selecionados, setSelecionados] = useState<string[]>(['pmpr-soldado']);
+  const [selecionados, setSelecionados] = useState<string[]>([INSCRICOES[0].id]);
   const [resultado, setResultado] = useState<Resultado>(null);
   const [enviando, setEnviando] = useState(false);
-
-  useEffect(() => {
-    if (editalPreSelecionado) {
-      setSelecionados((atual) =>
-        atual.includes(editalPreSelecionado) ? atual : [...atual, editalPreSelecionado],
-      );
-    }
-  }, [editalPreSelecionado]);
 
   const alternar = (id: string) => {
     setSelecionados((atual) => (atual.includes(id) ? atual.filter((x) => x !== id) : [...atual, id]));
@@ -44,7 +45,7 @@ export function DiscordSection({
       return;
     }
     if (selecionados.length === 0) {
-      setResultado({ tipo: 'erro', texto: 'Selecione ao menos um edital.' });
+      setResultado({ tipo: 'erro', texto: 'Selecione ao menos uma inscrição.' });
       return;
     }
 
@@ -88,18 +89,18 @@ export function DiscordSection({
             </div>
 
             <h2 className="display-title mt-6 text-3xl text-white sm:text-4xl">
-              Receba cada edital <span className="gold-text">direto no Discord</span>
+              Acompanhe as inscrições <span className="gold-text">direto no Discord</span>
             </h2>
             <p className="mt-4 max-w-md text-sm leading-relaxed text-emerald-50/60">
-              Vincule seu usuário e escolha quais seleções quer acompanhar. Sempre que o comando publicar uma
+              Vincule seu usuário e escolha quais inscrições quer acompanhar. Sempre que o comando publicar uma
               atualização, o portal envia a notificação para o canal da tropa.
             </p>
 
             <ul className="mt-6 space-y-3">
               {[
                 { Icon: BellRing, titulo: 'Avisos de abertura', texto: 'Notificação assim que as inscrições abrirem.' },
-                { Icon: Send, titulo: 'Edital completo', texto: 'Requisitos, etapas e cronograma resumidos no canal.' },
-                { Icon: Link2, titulo: 'Vínculo por usuário', texto: 'O comando vê quem está acompanhando cada edital.' },
+                { Icon: Send, titulo: 'Resultado no canal', texto: 'Andamento das fichas resumido na tropa.' },
+                { Icon: Link2, titulo: 'Vínculo por usuário', texto: 'O comando vê quem acompanha cada inscrição.' },
               ].map(({ Icon, titulo, texto }) => (
                 <li key={titulo} className="flex gap-3">
                   <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white/5 text-[#8b95f7]">
@@ -185,9 +186,9 @@ export function DiscordSection({
               </div>
 
               <div>
-                <span className="label">Editais de interesse</span>
+                <span className="label">Inscrições de interesse</span>
                 <div className="grid gap-1.5">
-                  {EDITAIS.map((e: Edital) => {
+                  {INSCRICOES.map((e) => {
                     const ativo = selecionados.includes(e.id);
                     return (
                       <button
@@ -208,7 +209,7 @@ export function DiscordSection({
                             {ativo && <CheckCircle2 size={11} strokeWidth={3} />}
                           </span>
                           <span className="text-[0.8rem] font-semibold text-white/90">{e.sigla}</span>
-                          <span className="text-[0.72rem] text-emerald-50/45">{e.nome}</span>
+                          <span className="line-clamp-1 text-[0.72rem] text-emerald-50/45">{e.nome}</span>
                         </span>
                       </button>
                     );
@@ -218,7 +219,7 @@ export function DiscordSection({
 
               <button onClick={enviar} disabled={enviando} className="btn-gold w-full text-sm disabled:opacity-60">
                 {enviando ? <Loader2 size={15} className="animate-spin" /> : <Send size={15} />}
-                {enviando ? 'Vinculando...' : 'Vincular e receber editais'}
+                {enviando ? 'Vinculando...' : 'Vincular e receber avisos'}
               </button>
 
               {resultado && (

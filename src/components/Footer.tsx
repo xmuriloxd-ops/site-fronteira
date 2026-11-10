@@ -23,12 +23,12 @@ export function Footer({ onAdminClick }: { onAdminClick: () => void }) {
               </div>
             </div>
             <p className="mt-4 max-w-sm text-[0.8rem] leading-relaxed text-emerald-50/45">
-              Portal demonstrativo de editais das seleções da PMPR, do ROTAM e da RONE. As informações são
-              compiladas de fontes públicas e não substituem as publicações oficiais da corporação.
+              Portal de inscrições das seleções da PMPR, do ROTAM e da RONE. Os formulários são recebidos
+              diretamente pelo comando e não substituem as publicações oficiais da corporação.
             </p>
             <p className="mt-4 inline-flex items-center gap-1.5 rounded-md border border-emerald-500/25 bg-emerald-500/[0.06] px-2.5 py-1.5 text-[0.7rem] font-semibold text-emerald-300">
               <ShieldCheck size={11} />
-              Editais publicados integralmente neste portal
+              Inscrições recebidas pelo comando
             </p>
           </div>
 
@@ -36,12 +36,9 @@ export function Footer({ onAdminClick }: { onAdminClick: () => void }) {
             <p className="eyebrow text-pmpr-gold/70">Navegar</p>
             <ul className="mt-3 space-y-2">
               {[
-                ['Editais', '#editais'],
+                ['Formulários ROTAM e RONE', '#fichas-unidade'],
                 ['Recrutamento 13º BPM', '#recrutamento'],
-                ['Documentos na íntegra', '#documentos'],
                 ['Unidades', '#unidades'],
-                ['Banco de questões', '#questoes'],
-                ['Simulado', '#simulado'],
                 ['Discord', '#discord'],
               ].map(([label, href]) => (
                 <li key={href}>
@@ -86,7 +83,7 @@ export function Footer({ onAdminClick }: { onAdminClick: () => void }) {
 
         <div className="flex flex-col items-center justify-between gap-2 text-center sm:flex-row sm:text-left">
           <p className="text-[0.7rem] text-emerald-100/30">
-            © {ano} Portal de Editais PMPR · Projeto demonstrativo, sem vínculo oficial com a corporação.
+            © {ano} Portal de Inscrições PMPR · Projeto demonstrativo, sem vínculo oficial com a corporação.
           </p>
           <p className="text-[0.68rem] uppercase tracking-[0.16em] text-emerald-100/25">
             ROTAM · RONE · PMPR

@@ -1,15 +1,13 @@
-import { ArrowRight, BadgeCheck, CalendarDays, MapPin, Users } from 'lucide-react';
-import type { Edital } from '../types';
-import { Brasao, StatusBadge, TOM_COLORS } from './ui';
+import { ArrowRight, BadgeCheck, ClipboardList, MapPin, ShieldCheck } from 'lucide-react';
+import { Brasao } from './ui';
 
+/** Abertura do portal com os formulários de inscrição abertos. */
 export function Hero({
-  editais,
-  onLerDocumento,
-  onAbrirFormulario,
+  onAbrirFormulario13,
+  onAbrirFicha,
 }: {
-  editais: Edital[];
-  onLerDocumento: (id: string) => void;
-  onAbrirFormulario: () => void;
+  onAbrirFormulario13: () => void;
+  onAbrirFicha: (editalId: string) => void;
 }) {
   return (
     <div className="relative overflow-hidden">
@@ -26,8 +24,8 @@ export function Hero({
               <p className="eyebrow text-pmpr-gold">Corporação desde 1854</p>
             </div>
 
-            <h1 className="display-title mt-5 text-[2.6rem] text-white sm:text-6xl lg:text-[4.1rem]">
-              Portal de Editais
+            <h1 className="display-title mt-5 text-4xl leading-[1.05] text-white sm:text-5xl lg:text-6xl">
+              Portal de Inscrições
               <br />
               <span className="gold-text">Polícia Militar</span>
               <br />
@@ -35,26 +33,26 @@ export function Hero({
             </h1>
 
             <p className="mt-6 max-w-xl text-sm leading-relaxed text-emerald-50/65 sm:text-base">
-              Edital completo da <strong className="font-semibold text-white">PMPR</strong> e inscrição aberta
-              para o <strong className="font-semibold text-pmpr-gold-soft">ROTAM</strong> e a{' '}
-              <strong className="font-semibold text-slate-200">RONE</strong>. Requisitos, etapas, cronograma,
-              provas anteriores e formulários que chegam direto ao comando.
+              Inscrição aberta para o <strong className="font-semibold text-pmpr-gold-soft">13º BPM</strong>, o{' '}
+              <strong className="font-semibold text-pmpr-gold-soft">ROTAM</strong> e a{' '}
+              <strong className="font-semibold text-slate-200">RONE</strong>. Preencha o formulário da unidade e o
+              envio chega direto ao comando, sem página externa.
             </p>
 
             <div className="mt-8 flex flex-wrap items-center gap-3">
-              <button onClick={() => onLerDocumento('pmpr-soldado')} className="btn-gold text-sm">
-                Ler edital do Soldado
-                <ArrowRight size={16} />
-              </button>
-              <a href="#fichas-unidade" className="btn-ghost text-sm">
+              <a href="#fichas-unidade" className="btn-gold text-sm">
                 Formulários ROTAM e RONE
+                <ArrowRight size={16} />
               </a>
+              <button onClick={onAbrirFormulario13} className="btn-ghost text-sm">
+                Inscrição 13º BPM
+              </button>
             </div>
 
             <div className="mt-10 grid max-w-lg grid-cols-3 gap-3">
               {[
-                { Icon: Users, valor: '2.141', label: 'Vagas somadas' },
-                { Icon: CalendarDays, valor: '2026/27', label: 'Ciclo de seleções' },
+                { Icon: ClipboardList, valor: '3', label: 'Formulários abertos' },
+                { Icon: ShieldCheck, valor: '100%', label: 'Campos obrigatórios' },
                 { Icon: MapPin, valor: '399', label: 'Municípios do PR' },
               ].map(({ Icon, valor, label }) => (
                 <div key={label} className="rounded-lg border border-pmpr-gold/12 bg-black/25 px-3 py-3">
@@ -83,74 +81,83 @@ export function Hero({
               <div className="gold-rule my-5" />
               <div className="flex items-center justify-center gap-2 text-[0.7rem] text-emerald-100/50">
                 <BadgeCheck size={13} className="text-emerald-400" />
-                Conteúdo baseado nos editais publicados
+                Inscrições recebidas pelo comando
               </div>
             </div>
           </div>
         </div>
 
-        {/* Faixa de editais */}
-        <div className="mt-14 grid gap-3 sm:mt-20 sm:grid-cols-2 lg:grid-cols-4">
-          {editais.map((e, idx) => {
-            const tom = TOM_COLORS[e.tom];
-            return (
-              <button
-                key={e.id}
-                onClick={() => onLerDocumento(e.id)}
-                style={{ animationDelay: `${180 + idx * 80}ms` }}
-                className="group animate-fade-up relative overflow-hidden rounded-xl border border-white/8 bg-white/[0.03] p-5 text-left transition hover:border-pmpr-gold/35 hover:bg-white/[0.055]"
-              >
-                <div
-                  className="absolute inset-x-0 top-0 h-0.5 opacity-70 transition group-hover:opacity-100"
-                  style={{ background: tom.cor }}
-                />
-                <div className="flex items-start justify-between gap-2">
-                  <span className="font-display text-xl font-bold tracking-wide" style={{ color: tom.texto }}>
-                    {e.sigla}
-                  </span>
-                  <StatusBadge status={e.status} />
-                </div>
-                <p className="mt-2 line-clamp-2 text-[0.8rem] leading-snug text-emerald-50/55">{e.nome}</p>
-                <p className="font-display mt-3 text-2xl font-bold text-white">
-                  {e.vagas.toLocaleString('pt-BR')}
-                  <span className="ml-1 text-[0.62rem] font-semibold uppercase tracking-[0.18em] text-emerald-100/40">
-                    vagas
-                  </span>
-                </p>
-                <span className="mt-3 inline-flex items-center gap-1 text-[0.72rem] font-semibold text-pmpr-gold/85 transition group-hover:gap-2">
-                  Abrir edital <ArrowRight size={13} />
+        {/* Cartões das inscrições abertas */}
+        <div className="mt-14 grid gap-3 sm:mt-20 sm:grid-cols-3">
+          {[
+            {
+              id: '13bpm',
+              sigla: '13º BPM',
+              nome: 'Recrutamento Fronteira Sul · Nov/2026',
+              campos: '9',
+              cor: '#4ade80',
+              classe:
+                'border-emerald-400/25 bg-emerald-500/[0.06] hover:border-emerald-400/60 hover:bg-emerald-500/10',
+              botao: 'text-emerald-300/90',
+              acao: 'Preencher inscrição',
+              abrir: onAbrirFormulario13,
+            },
+            {
+              id: 'rotam',
+              sigla: 'ROTAM',
+              nome: 'Curso Operacional · Rondas Táticas Metropolitanas',
+              campos: '6',
+              cor: '#d4af37',
+              classe: 'border-pmpr-gold/25 bg-pmpr-gold/[0.05] hover:border-pmpr-gold/60 hover:bg-pmpr-gold/10',
+              botao: 'text-pmpr-gold/90',
+              acao: 'Preencher formulário',
+              abrir: () => onAbrirFicha('rotam-operacional-2026'),
+            },
+            {
+              id: 'rone',
+              sigla: 'RONE',
+              nome: 'Curso de Operações Especiais · Rondas Ostensivas',
+              campos: '6',
+              cor: '#60a5fa',
+              classe: 'border-sky-400/25 bg-sky-500/[0.05] hover:border-sky-400/60 hover:bg-sky-500/10',
+              botao: 'text-sky-300/90',
+              acao: 'Preencher formulário',
+              abrir: () => onAbrirFicha('rone-operacional-2026'),
+            },
+          ].map((card, idx) => (
+            <button
+              key={card.id}
+              onClick={card.abrir}
+              style={{ animationDelay: `${180 + idx * 80}ms` }}
+              className={`group animate-fade-up relative overflow-hidden rounded-xl border p-5 text-left transition ${card.classe}`}
+            >
+              <div
+                className="absolute inset-x-0 top-0 h-0.5 opacity-70 transition group-hover:opacity-100"
+                style={{ background: card.cor }}
+              />
+              <div className="flex items-start justify-between gap-2">
+                <span className="font-display text-xl font-bold tracking-wide" style={{ color: card.cor }}>
+                  {card.sigla}
                 </span>
-              </button>
-            );
-          })}
-
-          {/* Card do recrutamento 13º BPM */}
-          <button
-            onClick={onAbrirFormulario}
-            style={{ animationDelay: `${180 + editais.length * 80}ms` }}
-            className="group animate-fade-up relative overflow-hidden rounded-xl border border-emerald-400/25 bg-emerald-500/[0.06] p-5 text-left transition hover:border-emerald-400/60 hover:bg-emerald-500/10"
-          >
-            <div className="absolute inset-x-0 top-0 h-0.5 bg-emerald-400/70 opacity-80 transition group-hover:opacity-100" />
-            <div className="flex items-start justify-between gap-2">
-              <span className="font-display text-xl font-bold tracking-wide text-emerald-300">13º BPM</span>
-              <span className="badge-pill border border-emerald-400/35 bg-emerald-500/15 text-emerald-300">
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-                Formulário
+                <span className="badge-pill border border-white/12 bg-white/[0.04] text-emerald-100/70">
+                  <span className="h-1.5 w-1.5 rounded-full bg-current" />
+                  Formulário
+                </span>
+              </div>
+              <p className="mt-2 line-clamp-2 text-[0.8rem] leading-snug text-emerald-50/55">{card.nome}</p>
+              <p className="font-display mt-3 text-2xl font-bold text-white">
+                {card.campos}
+                <span className="ml-1 text-[0.62rem] font-semibold uppercase tracking-[0.18em] text-emerald-100/40">
+                  campos
+                </span>
+              </p>
+              <span
+                className={`mt-3 inline-flex items-center gap-1 text-[0.72rem] font-semibold transition group-hover:gap-2 ${card.botao}`}
+              >
+                {card.acao} <ArrowRight size={13} />
               </span>
-            </div>
-            <p className="mt-2 line-clamp-2 text-[0.8rem] leading-snug text-emerald-50/55">
-              Recrutamento Fronteira Sul · Nov/2026
-            </p>
-            <p className="font-display mt-3 text-2xl font-bold text-white">
-              10
-              <span className="ml-1 text-[0.62rem] font-semibold uppercase tracking-[0.18em] text-emerald-100/40">
-                campos
-              </span>
-            </p>
-            <span className="mt-3 inline-flex items-center gap-1 text-[0.72rem] font-semibold text-emerald-300/90 transition group-hover:gap-2">
-              Preencher inscrição <ArrowRight size={13} />
-            </span>
-          </button>
+            </button>
+          ))}
         </div>
       </div>
     </div>

@@ -1,7 +1,7 @@
 {
-  "name": "Portal de Editais - Polícia Militar do Paraná",
-  "short_name": "Editais PMPR",
-  "description": "Editais da PMPR, ROTAM e RONE: requisitos, cronograma, provas anteriores e avisos no Discord.",
+  "name": "Portal de Inscrições - Polícia Militar do Paraná",
+  "short_name": "Inscrições PMPR",
+  "description": "Formulários de inscrição da PMPR, ROTAM e RONE, com envio direto ao comando e avisos no Discord.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#04110c",

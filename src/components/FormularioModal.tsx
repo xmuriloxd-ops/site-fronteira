@@ -19,7 +19,7 @@ type Respostas = Record<string, string>;
 
 /**
  * Formulário preenchível. Aceita qualquer ficha (13º BPM, ROTAM, RONE...):
- * o padrão é o edital de recrutamento, mas o componente não depende dele.
+ * o padrão é o formulário do 13º BPM, mas o componente não depende dele.
  */
 export function FormularioModal({
   onClose,
@@ -234,7 +234,7 @@ export function FormularioModal({
             </div>
           ) : (
             <article className="mx-auto max-w-2xl px-5 py-7 sm:px-9 sm:py-9 print:max-w-none print:px-0 print:py-0">
-              {/* Cabeçalho do edital */}
+              {/* Cabeçalho do formulário */}
               <header className="border-b-2 border-pmpr-green/40 pb-4">
                 <div className="flex items-start justify-center gap-3">
                   <img src="/pmpr-brasao.png" alt="Brasão da PMPR" className="h-16 w-16 shrink-0" />

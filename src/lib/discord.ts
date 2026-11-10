@@ -67,7 +67,7 @@ export async function enviarPeloNavegador(
   }
 
   const payload = {
-    username: 'Portal de Editais PMPR',
+    username: 'Portal de Inscrições PMPR',
     content: mensagem.mencionarHere ? '@here' : undefined,
     allowed_mentions: { parse: mensagem.mencionarHere ? ['everyone'] : [] },
     embeds: [
@@ -77,7 +77,7 @@ export async function enviarPeloNavegador(
         url: mensagem.url,
         color: mensagem.cor ?? 0x0b6b3a,
         fields: mensagem.campos ?? [],
-        footer: { text: 'Polícia Militar do Paraná · Portal de Editais' },
+        footer: { text: 'Polícia Militar do Paraná · Portal de Inscrições' },
         timestamp: new Date().toISOString(),
       },
     ],

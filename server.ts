@@ -125,7 +125,6 @@ interface Store {
   discord: DiscordConfig;
   interessados: Interessado[];
   envios: EnvioDiscord[];
-  overrides: Record<string, { status?: string; aviso?: string; publicacao?: string }>;
   logs: { id: string; criadoEm: string; ip: string; ua: string }[];
   sessions?: Record<string, { login: string; expiraEm: number }>;
   /** Tokens encerrados manualmente (logout) que precisam ser recusados. */
@@ -140,13 +139,12 @@ const DEFAULT_STORE: Store = {
   discord: {
     webhook: '',
     convite: '',
-    canal: 'editais-pmpr',
+    canal: 'inscricoes-pmpr',
     autoEnviar: false,
     mencionarHere: true,
   },
   interessados: [],
   envios: [],
-  overrides: {},
   logs: [],
   sessions: {},
   revogados: [],
@@ -165,7 +163,6 @@ function loadStore(): Store {
         discord: { ...DEFAULT_STORE.discord, ...(raw.discord ?? {}) },
         interessados: raw.interessados ?? [],
         envios: raw.envios ?? [],
-        overrides: raw.overrides ?? {},
         logs: raw.logs ?? [],
         sessions: raw.sessions ?? {},
         revogados: raw.revogados ?? [],
@@ -348,7 +345,7 @@ async function enviarDiscord(
   }
 
   const body = {
-    username: 'Portal de Editais PMPR',
+    username: 'Portal de Inscrições PMPR',
     content: config.mencionarHere ? '@here' : undefined,
     allowed_mentions: { parse: config.mencionarHere ? ['everyone'] : [] },
     embeds: [
@@ -358,7 +355,7 @@ async function enviarDiscord(
         url: payload.url,
         color: payload.cor ?? 0x0b6b3a,
         fields: payload.fields ?? [],
-        footer: { text: 'Polícia Militar do Paraná · Portal de Editais' },
+        footer: { text: 'Polícia Militar do Paraná · Portal de Inscrições' },
         timestamp: new Date().toISOString(),
       },
     ],
@@ -414,7 +411,6 @@ async function startServer() {
     conviteDiscord: store.discord.convite,
     interessados: store.interessados.length,
     inscricoes: store.inscricoes.length,
-    overrides: store.overrides,
   });
 
   app.get('/api/versao', (_req, res) => {
@@ -422,7 +418,7 @@ async function startServer() {
       versao: 3,
       loginPadrao: DEFAULT_STORE.auth.login,
       apelidosAceitos: APELIDOS_LOGIN,
-      autoLogin: true,
+      autoLogin: false,
     });
   });
 
@@ -431,11 +427,11 @@ async function startServer() {
   });
 
   app.get('/api/health', (_req, res) => {
-    // 1 edital publicado (PMPR Soldado) + 2 formulários (ROTAM e RONE)
+    // Sem editais: o portal trabalha com formulários de inscrição.
     res.json({
       status: 'ok',
-      editais: 1,
-      formularios: 2,
+      editais: 0,
+      formularios: 3,
       interessados: store.interessados.length,
     });
   });
@@ -516,7 +512,6 @@ async function startServer() {
       },
       interessados: store.interessados,
       envios: store.envios.slice(0, 40),
-      overrides: store.overrides,
     });
   });
 
@@ -612,7 +607,7 @@ async function startServer() {
   // O teste de envio é feito pelo navegador do comando (src/lib/discord.ts):
   // este servidor não alcança o Discord, então a rota antiga foi removida.
 
-  /* ---------------------- Envio de edital ao Discord ----------------- */
+  /* ------------------- Registro de envios ao Discord ------------------ */
 
   app.post('/api/admin/envios', exigirAdmin, async (req, res) => {
     const { editalId, titulo, descricao, campos, url } = req.body ?? {};
@@ -649,49 +644,6 @@ async function startServer() {
     res.json({ ok: true });
   });
 
-  /* ------------------------ Status dos editais ----------------------- */
-
-  app.patch('/api/admin/editais/:id', exigirAdmin, async (req, res) => {
-    const { id } = req.params;
-    const { status, aviso, publicacao, notificar } = req.body ?? {};
-
-    const permitido = ['aberto', 'em-breve', 'encerrado'];
-    if (status !== undefined && !permitido.includes(status)) {
-      return res.status(400).json({ erro: 'Status inválido.' });
-    }
-
-    store.overrides[id] = {
-      ...(store.overrides[id] ?? {}),
-      ...(status !== undefined ? { status } : {}),
-      ...(aviso !== undefined ? { aviso: String(aviso) } : {}),
-      ...(publicacao !== undefined ? { publicacao: String(publicacao).slice(0, 4000) } : {}),
-    };
-    saveStore(store);
-
-    let envio = null;
-    if (notificar && store.discord.autoEnviar) {
-      const resultado = await enviarDiscord(store.discord, {
-        titulo: 'Atualização de edital',
-        descricao: aviso || `O edital ${id.toUpperCase()} foi atualizado.`,
-        fields: [{ name: 'Novo status', value: String(status ?? 'mantido'), inline: true }],
-      });
-      envio = {
-        id: crypto.randomUUID(),
-        editalId: id,
-        titulo: 'Atualização de edital',
-        destino: store.discord.canal,
-        status: resultado.ok ? 'sucesso' : 'erro',
-        detalhe: resultado.detalhe,
-        criadoEm: new Date().toISOString(),
-      } as EnvioDiscord;
-      store.envios.unshift(envio);
-      store.envios = store.envios.slice(0, 100);
-      saveStore(store);
-    }
-
-    res.json({ ok: true, overrides: store.overrides, envio });
-  });
-
   /* ------------------------ Lista de interessados -------------------- */
 
   app.patch('/api/admin/interessados/:id', exigirAdmin, (req, res) => {
@@ -723,7 +675,7 @@ async function startServer() {
       return res.status(400).json({ erro: 'Informe seu usuário do Discord.' });
     }
     if (!Array.isArray(editais) || editais.length === 0) {
-      return res.status(400).json({ erro: 'Selecione ao menos um edital.' });
+      return res.status(400).json({ erro: 'Selecione ao menos uma inscrição.' });
     }
 
     const interessado: Interessado = {
@@ -741,11 +693,17 @@ async function startServer() {
     let aviso = 'Cadastro registrado no portal.';
     if (store.discord.webhook && webhookValido(store.discord.webhook)) {
       const resultado = await enviarDiscord(store.discord, {
-        titulo: '📣 Novo interessado nos editais',
+        titulo: '📣 Novo interessado nas inscrições',
         descricao: `**${interessado.nome}** vinculou o Discord \`${interessado.discord}\` ao portal.`,
         cor: 0x1f7a4d,
         fields: [
-          { name: 'Editais', value: interessado.editais.map((e) => e.toUpperCase()).join(' · '), inline: false },
+          {
+            name: 'Inscrições',
+            value: interessado.editais
+              .map((e) => e.replace(/-operacional-\d+$/, '').replace(/-/g, ' ').toUpperCase())
+              .join(' · '),
+            inline: false,
+          },
           { name: 'Próximo passo', value: 'Envie `!confirmar` no canal para validar a vinculação.', inline: false },
         ],
       });
@@ -898,7 +856,7 @@ async function startServer() {
 
   for (const porta of PORTAS) {
     const servidor = app.listen(porta, '0.0.0.0', () => {
-      console.log(`Portal de Editais PMPR em http://0.0.0.0:${porta}`);
+      console.log(`Portal de Inscrições PMPR em http://0.0.0.0:${porta}`);
     });
     servidor.on('error', (erro: NodeJS.ErrnoException) => {
       if (erro.code === 'EADDRINUSE') {

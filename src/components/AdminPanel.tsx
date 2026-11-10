@@ -24,12 +24,12 @@ import {
   Clock4,
   XCircle,
 } from 'lucide-react';
-import { EDITAIS } from '../data/editais';
+import { FORMULARIOS_UNIDADE } from '../data/fichas-unidade';
 import { enviarPeloNavegador } from '../lib/discord';
-import type { EditalStatus, Interessado, EnvioDiscord, InscricaoRecrutamento } from '../types';
+import type { Interessado, EnvioDiscord, InscricaoRecrutamento } from '../types';
 import { FORMULARIO_RECRUTAMENTO } from '../data/recrutamento';
 
-type Aba = 'discord' | 'credenciais' | 'editais' | 'recrutamento' | 'tropa';
+type Aba = 'discord' | 'credenciais' | 'recrutamento' | 'tropa';
 
 interface AdminData {
   login: string;
@@ -44,7 +44,6 @@ interface AdminData {
   };
   interessados: Interessado[];
   envios: EnvioDiscord[];
-  overrides: Record<string, { status?: EditalStatus; aviso?: string; publicacao?: string }>;
 }
 
 const API = '/api/admin';
@@ -279,7 +278,7 @@ export function AdminPanel({
                   Identificação
                 </h3>
                 <p className="mt-1 text-[0.78rem] text-emerald-50/45">
-                  Informe as credenciais do comando para gerenciar os editais.
+                  Informe as credenciais do comando para gerenciar as inscrições.
                 </p>
               </div>
 
@@ -364,7 +363,6 @@ export function AdminPanel({
                 {(
                   [
                     { id: 'discord', label: 'Discord', Icon: MessageSquare },
-                    { id: 'editais', label: 'Editais', Icon: Settings2 },
                     { id: 'recrutamento', label: 'Recrutamento', Icon: ClipboardList },
                     { id: 'tropa', label: 'Tropa', Icon: Users },
                     { id: 'credenciais', label: 'Login e senha', Icon: KeyRound },
@@ -407,17 +405,6 @@ export function AdminPanel({
 
               {dados && aba === 'discord' && (
                 <DiscordTab
-                  dados={dados}
-                  cabecalho={cabecalho}
-                  onAtualizar={() => {
-                    void carregarDados();
-                    onConfigChange();
-                  }}
-                />
-              )}
-
-              {dados && aba === 'editais' && (
-                <EditaisTab
                   dados={dados}
                   cabecalho={cabecalho}
                   onAtualizar={() => {
@@ -474,7 +461,16 @@ function DiscordTab({
   const [msg, setMsg] = useState<{ tipo: 'ok' | 'erro'; texto: string } | null>(null);
   const [salvando, setSalvando] = useState(false);
   const [testando, setTestando] = useState(false);
-  const [envioEdital, setEnvioEdital] = useState(EDITAIS[0].id);
+  // Inscrições que podem ser divulgadas no canal da tropa
+  const INSCRICOES = [
+    { id: FORMULARIO_RECRUTAMENTO.id, sigla: '13º BPM', nome: FORMULARIO_RECRUTAMENTO.titulo },
+    ...Object.entries(FORMULARIOS_UNIDADE).map(([id, ficha]) => ({
+      id,
+      sigla: ficha.referencia,
+      nome: ficha.titulo,
+    })),
+  ];
+  const [envioInscricao, setEnvioInscricao] = useState(INSCRICOES[0].id);
   const [enviando, setEnviando] = useState(false);
 
   const salvar = async () => {
@@ -558,7 +554,7 @@ function DiscordTab({
       const resultado = await enviarPeloNavegador(url, {
         titulo: 'Teste de integração ✅',
         descricao:
-          'O Portal de Editais da Polícia Militar do Paraná está conectado a este canal. A partir de agora, os editais podem ser enviados para a tropa.',
+          'O Portal de Inscrições da Polícia Militar do Paraná está conectado a este canal. A partir de agora, os formulários podem ser divulgados para a tropa.',
         campos: [
           { name: 'Canal', value: dados.discord.canal || 'não informado', inline: true },
           { name: 'Envio', value: 'pelo navegador do comando', inline: true },
@@ -574,12 +570,12 @@ function DiscordTab({
   };
 
   /**
-   * Envia o edital pelo navegador do comando (o servidor não alcança o Discord)
-   * e registra o resultado no histórico do painel.
+   * Divulga o formulário de inscrição pelo navegador do comando
+   * (o servidor não alcança o Discord) e registra no histórico do painel.
    */
-  const enviarEdital = async () => {
-    const edital = EDITAIS.find((e) => e.id === envioEdital);
-    if (!edital) return;
+  const enviarInscricao = async () => {
+    const inscricao = INSCRICOES.find((e) => e.id === envioInscricao);
+    if (!inscricao) return;
     setEnviando(true);
     setMsg(null);
     try {
@@ -589,13 +585,16 @@ function DiscordTab({
         return;
       }
       const resultado = await enviarPeloNavegador(url, {
-        titulo: `${edital.sigla} — ${edital.nome}`,
-        descricao: edital.resumo,
+        titulo: `Inscrições abertas — ${inscricao.sigla}`,
+        descricao: inscricao.nome,
         campos: [
-          { name: 'Vagas', value: edital.vagasDetalhe, inline: true },
-          { name: 'Inscrições', value: edital.inscricoes, inline: true },
-          { name: 'Prova', value: edital.prova, inline: true },
-          { name: 'Requisitos', value: edital.destaque.join(' · '), inline: false },
+          { name: 'Unidade', value: inscricao.sigla, inline: true },
+          { name: 'Como se inscrever', value: 'Formulário no portal, na seção de inscrições', inline: false },
+          {
+            name: 'Campos',
+            value: 'QRA · Patente · Unidade · Carga horária · Tempo de serviço · Quem autorizou',
+            inline: false,
+          },
         ],
       });
       setMsg({ tipo: resultado.ok ? 'ok' : 'erro', texto: resultado.detalhe });
@@ -603,8 +602,8 @@ function DiscordTab({
       void apiFetch('/envios/registrar', {
         method: 'POST',
         body: JSON.stringify({
-          editalId: edital.id,
-          titulo: `${edital.sigla} — ${edital.nome}`,
+          editalId: inscricao.id,
+          titulo: `${inscricao.sigla} — ${inscricao.nome}`,
           ok: resultado.ok,
           detalhe: resultado.detalhe,
         }),
@@ -613,7 +612,7 @@ function DiscordTab({
       });
       if (resultado.ok) onAtualizar();
     } catch {
-      setMsg({ tipo: 'erro', texto: 'Falha inesperada ao enviar o edital.' });
+      setMsg({ tipo: 'erro', texto: 'Falha inesperada ao divulgar a inscrição.' });
     } finally {
       setEnviando(false);
     }
@@ -640,7 +639,7 @@ function DiscordTab({
             {dados.discord.vinculado ? 'Webhook conectado' : 'Webhook não configurado'}
           </p>
           <p className="truncate text-[0.72rem] text-emerald-50/45">
-            {dados.discord.webhookMascarado || 'Cole abaixo a URL do webhook do canal de editais.'}
+            {dados.discord.webhookMascarado || 'Cole abaixo a URL do webhook do canal da tropa.'}
           </p>
         </div>
       </div>
@@ -716,21 +715,21 @@ function DiscordTab({
       <div className="gold-rule" />
 
       <Bloco
-        titulo="Enviar edital para o Discord"
+        titulo="Divulgar inscrição no Discord"
         Icon={Send}
-        descricao="Publica um resumo do edital com vagas, inscrições e requisitos."
+        descricao="Publica no canal um aviso com a unidade e os campos do formulário."
       >
         <div className="flex flex-col gap-2 sm:flex-row">
-          <select className="field sm:flex-1" value={envioEdital} onChange={(e) => setEnvioEdital(e.target.value)}>
-            {EDITAIS.map((e) => (
+          <select className="field sm:flex-1" value={envioInscricao} onChange={(e) => setEnvioInscricao(e.target.value)}>
+            {INSCRICOES.map((e) => (
               <option key={e.id} value={e.id} className="bg-ink-900">
                 {e.sigla} — {e.nome}
               </option>
             ))}
           </select>
-          <button onClick={enviarEdital} disabled={enviando} className="btn-gold px-4 py-2 text-[0.8rem] disabled:opacity-60">
+          <button onClick={enviarInscricao} disabled={enviando} className="btn-gold px-4 py-2 text-[0.8rem] disabled:opacity-60">
             {enviando ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
-            Enviar agora
+            Divulgar agora
           </button>
         </div>
       </Bloco>
@@ -784,130 +783,6 @@ function DiscordTab({
           </ul>
         )}
       </div>
-    </div>
-  );
-}
-
-/* ------------------------------------------------------------------ */
-/* Aba: Editais                                                        */
-/* ------------------------------------------------------------------ */
-
-function EditaisTab({
-  dados,
-  cabecalho,
-  onAtualizar,
-}: {
-  dados: AdminData;
-  cabecalho: () => Record<string, string>;
-  onAtualizar: () => void;
-}) {
-  const [estado, setEstado] = useState<Record<string, { status: EditalStatus; aviso: string; publicacao: string }>>(
-    () =>
-      Object.fromEntries(
-        EDITAIS.map((e) => [
-          e.id,
-          {
-            status: dados.overrides[e.id]?.status ?? e.status,
-            aviso: dados.overrides[e.id]?.aviso ?? '',
-            publicacao: dados.overrides[e.id]?.publicacao ?? '',
-          },
-        ]),
-      ),
-  );
-  const [salvandoId, setSalvandoId] = useState<string | null>(null);
-  const [msg, setMsg] = useState<{ tipo: 'ok' | 'erro'; texto: string } | null>(null);
-
-  const salvar = async (id: string, notificar = false) => {
-    setSalvandoId(id);
-    setMsg(null);
-    try {
-      const r = await fetch(`${API}/editais/${id}`, {
-        method: 'PATCH',
-        headers: cabecalho(),
-        credentials: 'same-origin',
-        body: JSON.stringify({ ...estado[id], notificar }),
-      });
-      const d = await r.json();
-      setMsg({ tipo: r.ok ? 'ok' : 'erro', texto: r.ok ? 'Edital atualizado.' : (d.erro ?? 'Erro ao salvar.') });
-      if (r.ok) onAtualizar();
-    } catch {
-      setMsg({ tipo: 'erro', texto: 'Falha de conexão.' });
-    } finally {
-      setSalvandoId(null);
-    }
-  };
-
-  return (
-    <div className="space-y-4">
-      <p className="text-[0.78rem] leading-relaxed text-emerald-50/50">
-        Altere o status exibido no portal, publique um aviso para a tropa e complemente o texto do edital. O campo
-        <strong className="text-emerald-100/70"> Publicação complementar </strong>
-        aparece no fim do documento oficial do site. Com o envio automático ativo, a mudança também é notificada no
-        Discord.
-      </p>
-
-      {EDITAIS.map((e) => (
-        <div key={e.id} className="rounded-lg border border-white/8 bg-white/[0.02] p-4">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <div>
-              <p className="font-display text-base font-bold tracking-wide text-white">{e.sigla}</p>
-              <p className="text-[0.7rem] text-emerald-100/40">{e.nome}</p>
-            </div>
-            <select
-              className="field max-w-[11rem] py-1.5 text-[0.78rem]"
-              value={estado[e.id].status}
-              onChange={(ev) =>
-                setEstado((s) => ({ ...s, [e.id]: { ...s[e.id], status: ev.target.value as EditalStatus } }))
-              }
-            >
-              <option value="aberto" className="bg-ink-900">Inscrições abertas</option>
-              <option value="em-breve" className="bg-ink-900">Em breve</option>
-              <option value="encerrado" className="bg-ink-900">Encerrado</option>
-            </select>
-          </div>
-
-          <textarea
-            className="field mt-3 min-h-[62px] resize-y text-[0.8rem]"
-            value={estado[e.id].aviso}
-            onChange={(ev) => setEstado((s) => ({ ...s, [e.id]: { ...s[e.id], aviso: ev.target.value } }))}
-            placeholder="Aviso exibido no portal (opcional)"
-          />
-
-          <div className="mt-2">
-            <label className="text-[0.62rem] font-bold uppercase tracking-[0.14em] text-emerald-100/35">
-              Publicação complementar no documento ({estado[e.id].publicacao.length}/4000)
-            </label>
-            <textarea
-              className="field mt-1 min-h-[80px] resize-y text-[0.8rem]"
-              value={estado[e.id].publicacao}
-              maxLength={4000}
-              onChange={(ev) => setEstado((s) => ({ ...s, [e.id]: { ...s[e.id], publicacao: ev.target.value } }))}
-              placeholder="Ex.: Retificação do item 4.2 — nova data de pagamento da taxa."
-            />
-          </div>
-
-          <div className="mt-2.5 flex flex-wrap gap-2">
-            <button
-              onClick={() => salvar(e.id)}
-              disabled={salvandoId === e.id}
-              className="btn-ghost px-3 py-1.5 text-[0.75rem] disabled:opacity-60"
-            >
-              {salvandoId === e.id ? <Loader2 size={12} className="animate-spin" /> : <Save size={12} />}
-              Salvar
-            </button>
-            <button
-              onClick={() => salvar(e.id, true)}
-              disabled={salvandoId === e.id}
-              className="inline-flex items-center gap-1.5 rounded-md border border-[#5865F2]/35 px-3 py-1.5 text-[0.75rem] font-semibold text-[#8b95f7] transition hover:bg-[#5865F2]/12 disabled:opacity-60"
-            >
-              <Send size={12} />
-              Salvar e notificar
-            </button>
-          </div>
-        </div>
-      ))}
-
-      {msg && <Aviso tipo={msg.tipo} texto={msg.texto} />}
     </div>
   );
 }
@@ -1119,7 +994,7 @@ function RecrutamentoTab({ cabecalho }: { cabecalho: () => Record<string, string
       {inscricoes !== null && lista.length === 0 && (
         <p className="rounded-lg border border-white/8 bg-white/[0.02] p-6 text-center text-[0.78rem] text-emerald-100/35">
           Nenhuma inscrição recebida ainda. Divulgue o formulário com a tropa: ele está na página inicial, em
-          Edital 13º BPM.
+          Recrutamento 13º BPM.
         </p>
       )}
 

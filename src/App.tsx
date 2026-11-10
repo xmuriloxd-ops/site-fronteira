@@ -1,39 +1,26 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import type { AppConfigPublica, Edital, EditalOverride } from './types';
-import { EDITAIS } from './data/editais';
+import { useCallback, useEffect, useState } from 'react';
+import type { AppConfigPublica } from './types';
 import { Header } from './components/Header';
 import { Hero } from './components/Hero';
-import { EditaisSection } from './components/EditaisSection';
-import { EditalModal } from './components/EditalModal';
-import { EditalDocumento } from './components/EditalDocumento';
-import { getDocumento } from './data/documentos';
-import { DocumentosSection } from './components/DocumentosSection';
 import { RecrutamentoCard } from './components/RecrutamentoCard';
 import { FichasUnidadeSection } from './components/FichasUnidadeSection';
 import { FORMULARIOS_UNIDADE } from './data/fichas-unidade';
 import { FormularioModal } from './components/FormularioModal';
 import { UnidadesSection } from './components/UnidadesSection';
-import { ProvasSection } from './components/ProvasSection';
-import { SimuladoSection } from './components/SimuladoSection';
 import { DiscordSection } from './components/DiscordSection';
 import { Footer } from './components/Footer';
 import { AdminPanel } from './components/AdminPanel';
-import { Section } from './components/ui';
 
 const TOKEN_KEY = 'pmpr-admin-token';
 
 export default function App() {
   const [config, setConfig] = useState<AppConfigPublica | null>(null);
-  const [overrides, setOverrides] = useState<Record<string, EditalOverride>>({});
-  const [editalAberto, setEditalAberto] = useState<string | null>(null);
-  const [documentoAberto, setDocumentoAberto] = useState<string | null>(null);
-  // null = fechado; 'fronteira-sul' = edital do 13º BPM; demais = ficha de unidade
+  // null = fechado; 'fronteira-sul' = formulário do 13º BPM; demais = ficha de unidade
   const [formularioAberto, setFormularioAberto] = useState<string | null>(null);
   const [painelAberto, setPainelAberto] = useState(false);
   // Sessão sempre começa vazia: não há login automático.
   // O comando precisa digitar login e senha a cada acesso.
   const [token, setToken] = useState<string | null>(null);
-  const [editalDiscord, setEditalDiscord] = useState<string | null>(null);
 
   /* ------------------------------ Configuração ----------------------------- */
 
@@ -43,7 +30,6 @@ export default function App() {
       if (!r.ok) return;
       const dados = (await r.json()) as AppConfigPublica;
       setConfig(dados);
-      setOverrides(dados.overrides ?? {});
     } catch {
       /* servidor offline: mantém os dados locais */
     }
@@ -79,57 +65,7 @@ export default function App() {
     }
   }, []);
 
-  /* --------------------------------- Editais -------------------------------- */
-
-  const editais = useMemo<Edital[]>(
-    () =>
-      EDITAIS.map((e) => ({
-        ...e,
-        status: overrides[e.id]?.status ?? e.status,
-      })),
-    [overrides],
-  );
-
-  const avisos = useMemo(
-    () =>
-      EDITAIS.flatMap((e) => {
-        const texto = overrides[e.id]?.aviso?.trim();
-        return texto ? [{ id: e.id, sigla: e.sigla, texto }] : [];
-      }),
-    [overrides],
-  );
-
-  const editalSelecionado = useMemo(
-    () => editais.find((e) => e.id === editalAberto) ?? null,
-    [editais, editalAberto],
-  );
-
   /* -------------------------------- Ações UI -------------------------------- */
-
-  const abrirEdital = (id: string) => {
-    setPainelAberto(false);
-    setEditalAberto(id);
-  };
-
-  const documentoSelecionado = useMemo(() => {
-    if (!documentoAberto) return null;
-    const edital = editais.find((e) => e.id === documentoAberto);
-    const doc = getDocumento(documentoAberto);
-    return edital && doc ? { edital, doc } : null;
-  }, [documentoAberto, editais]);
-
-  const lerDocumento = (id: string) => {
-    setEditalAberto(null);
-    setDocumentoAberto(id);
-  };
-
-  const irParaDiscord = (editalId: string) => {
-    setEditalDiscord(editalId);
-    setEditalAberto(null);
-    requestAnimationFrame(() => {
-      document.getElementById('discord')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    });
-  };
 
   const aoEntrar = (novoToken: string) => {
     setToken(novoToken);
@@ -166,33 +102,10 @@ export default function App() {
       />
 
       <main>
-        <Hero editais={editais} onLerDocumento={lerDocumento} onAbrirFormulario={() => setFormularioAberto('fronteira-sul')} />
-
-        <EditaisSection
-          editais={editais}
-          onAbrir={abrirEdital}
-          onLerDocumento={lerDocumento}
-          onDiscord={irParaDiscord}
+        <Hero
+          onAbrirFormulario13={() => setFormularioAberto('fronteira-sul')}
+          onAbrirFicha={(id) => setFormularioAberto(id)}
         />
-
-        {/* Faixa de avisos do comando */}
-        {avisos.length > 0 && (
-          <Section className="pb-4">
-            <div className="space-y-2">
-              {avisos.map((aviso) => (
-                <div
-                  key={aviso.id}
-                  className="flex items-start gap-3 rounded-lg border border-pmpr-gold/25 bg-pmpr-gold/[0.06] px-4 py-3"
-                >
-                  <span className="font-display shrink-0 rounded bg-pmpr-gold/15 px-2 py-0.5 text-[0.68rem] font-bold tracking-wide text-pmpr-gold">
-                    {aviso.sigla}
-                  </span>
-                  <p className="text-[0.8rem] leading-relaxed text-pmpr-gold-soft/85">{aviso.texto}</p>
-                </div>
-              ))}
-            </div>
-          </Section>
-        )}
 
         <RecrutamentoCard
           onAbrirFormulario={() => setFormularioAberto('fronteira-sul')}
@@ -204,45 +117,12 @@ export default function App() {
           totalInscricoes={config?.inscricoes ?? 0}
         />
 
-        <DocumentosSection editais={editais} onLerDocumento={lerDocumento} />
-
         <UnidadesSection />
 
-        <div className="relative">
-          <div className="pointer-events-none absolute inset-0 bg-grid opacity-20" />
-          <div className="relative">
-            <ProvasSection />
-            <SimuladoSection />
-          </div>
-        </div>
-
-        <DiscordSection
-          config={config}
-          editalPreSelecionado={editalDiscord}
-          onAtualizarConfig={carregarConfig}
-        />
+        <DiscordSection config={config} onAtualizarConfig={carregarConfig} />
       </main>
 
       <Footer onAdminClick={() => setPainelAberto(true)} />
-
-      {editalSelecionado && (
-        <EditalModal
-          edital={editalSelecionado}
-          aviso={overrides[editalSelecionado.id]?.aviso}
-          onClose={() => setEditalAberto(null)}
-          onDiscord={irParaDiscord}
-          onLerDocumento={lerDocumento}
-        />
-      )}
-
-      {documentoSelecionado && (
-        <EditalDocumento
-          doc={documentoSelecionado.doc}
-          edital={documentoSelecionado.edital}
-          publicacao={overrides[documentoSelecionado.edital.id]?.publicacao}
-          onClose={() => setDocumentoAberto(null)}
-        />
-      )}
 
       {formularioAberto && (
         <FormularioModal

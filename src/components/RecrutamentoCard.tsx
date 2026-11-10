@@ -18,7 +18,7 @@ export function RecrutamentoCard({
         eyebrow="Recrutamento em andamento"
         title={
           <>
-            Edital <span className="gold-text">13º Batalhão</span>
+            Recrutamento <span className="gold-text">13º Batalhão</span>
             <br />
             Fronteira Sul · Nov/2026
           </>

@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
-import { ShieldCheck, Clock, Lock } from 'lucide-react';
-import type { EditalStatus, EditalTom } from '../types';
+/** Identidade visual das unidades do portal. */
+export type TomUnidade = 'rotam' | 'rone' | 'pmpr';
 
 /* ------------------------------------------------------------------ */
 /* Selo / brasão                                                       */
@@ -20,10 +20,10 @@ export function Brasao({ size = 56, className = '' }: { size?: number; className
 }
 
 /* ------------------------------------------------------------------ */
-/* Cores e rótulos por edital                                          */
+/* Cores por unidade                                                   */
 /* ------------------------------------------------------------------ */
 
-export const TOM_COLORS: Record<EditalTom, { cor: string; brilho: string; texto: string; chip: string }> = {
+export const TOM_COLORS: Record<TomUnidade, { cor: string; brilho: string; texto: string; chip: string }> = {
   pmpr: {
     cor: '#0b6b3a',
     brilho: 'rgba(11,107,58,0.55)',
@@ -43,35 +43,6 @@ export const TOM_COLORS: Record<EditalTom, { cor: string; brilho: string; texto:
     chip: 'bg-slate-400/12 text-slate-300 border-slate-400/30',
   },
 };
-
-export const STATUS_META: Record<EditalStatus, { label: string; className: string; Icon: typeof ShieldCheck }> = {
-  aberto: {
-    label: 'Inscrições abertas',
-    className: 'bg-emerald-500/15 text-emerald-300 border border-emerald-400/35',
-    Icon: ShieldCheck,
-  },
-  'em-breve': {
-    label: 'Em breve',
-    className: 'bg-amber-500/15 text-amber-300 border border-amber-400/35',
-    Icon: Clock,
-  },
-  encerrado: {
-    label: 'Encerrado',
-    className: 'bg-slate-500/15 text-slate-300 border border-slate-400/35',
-    Icon: Lock,
-  },
-};
-
-export function StatusBadge({ status }: { status: EditalStatus }) {
-  const meta = STATUS_META[status] ?? STATUS_META.aberto;
-  const { Icon } = meta;
-  return (
-    <span className={`badge-pill ${meta.className}`}>
-      <Icon size={12} strokeWidth={2.5} />
-      {meta.label}
-    </span>
-  );
-}
 
 /* ------------------------------------------------------------------ */
 /* Estruturas                                                          */

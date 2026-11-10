@@ -35,7 +35,7 @@ export function FichasUnidadeSection({
             <span className="gold-text">RONE</span>
           </>
         }
-        description="Sem edital: a inscrição é feita direto no formulário da unidade. Todos os campos são obrigatórios e o envio chega imediatamente ao comando."
+        description="A inscrição é feita direto no formulário da unidade. Todos os campos são obrigatórios e o envio chega imediatamente ao comando."
       />
 
       <div className="mt-8 grid gap-4 lg:grid-cols-2">
@@ -86,7 +86,7 @@ export function FichasUnidadeSection({
                     <ClipboardList size={12} /> {perguntas} campos
                   </span>
                   <span className="flex items-center gap-1.5">
-                    <FileText size={12} /> sem edital
+                    <FileText size={12} /> envio imediato
                   </span>
                 </div>
               </div>

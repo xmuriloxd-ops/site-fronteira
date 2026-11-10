@@ -1,14 +1,14 @@
 import type { FormularioRecrutamento } from '../types';
 
 /**
- * Edital de recrutamento em formato de formulário.
+ * Recrutamento do 13º BPM em formato de formulário.
  *
  * Este é o documento "Fronteira Sul — Novembro de 2026": as respostas enviadas
  * pelo candidato ficam no próprio portal e aparecem na aba do comando.
  */
 export const FORMULARIO_RECRUTAMENTO: FormularioRecrutamento = {
   id: 'fronteira-sul-nov-2026',
-  titulo: 'EDITAL - PMPR - 13º BATALHÃO | NOV/2026',
+  titulo: 'FORMULÁRIO DE INSCRIÇÃO — PMPR · 13º BATALHÃO | NOV/2026',
   subtitulo: 'PROCESSO SELETIVO — RECRUTAMENTO NOVEMBRO 2026 - Fronteira Sul',
   batalhao: '13º Batalhão de Polícia Militar — Fronteira Sul',
   referencia: 'RP',
