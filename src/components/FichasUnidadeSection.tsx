@@ -1,11 +1,20 @@
-import { ClipboardList, ArrowRight, Clock, FileText, ShieldCheck } from 'lucide-react';
+import { ClipboardList, ArrowRight, FileText, ShieldCheck } from 'lucide-react';
 import { FORMULARIOS_UNIDADE } from '../data/fichas-unidade';
-import type { Edital } from '../types';
 import { Section, SectionHeading } from './ui';
 
+/** Campos do padrão de inscrição das unidades especializadas. */
+const CAMPOS_PADRAO = [
+  { nome: 'QRA', descricao: 'nome de guerra / indicativo' },
+  { nome: 'Patente', descricao: 'posto ou graduação' },
+  { nome: 'Unidade', descricao: 'lotação atual' },
+  { nome: 'Carga horária', descricao: 'disponibilidade semanal' },
+  { nome: 'Tempo de serviço', descricao: 'tempo na corporação' },
+  { nome: 'Quem autorizou', descricao: 'comando responsável' },
+];
+
 /**
- * Fichas de identificação operacional das unidades especializadas.
- * Segue o padrão QRA / PT / UND / CARGHR usado na qualificação da tropa.
+ * Formulários de inscrição da ROTAM e da RONE.
+ * Não há edital: a inscrição é feita diretamente pelo formulário da unidade.
  */
 export function FichasUnidadeSection({
   onAbrirFicha,
@@ -19,14 +28,14 @@ export function FichasUnidadeSection({
   return (
     <Section id="fichas-unidade" className="py-16 sm:py-24">
       <SectionHeading
-        eyebrow="Identificação operacional"
+        eyebrow="Inscrições das unidades especializadas"
         title={
           <>
-            Fichas da <span className="gold-text">ROTAM</span> e da{' '}
+            Formulários da <span className="gold-text">ROTAM</span> e da{' '}
             <span className="gold-text">RONE</span>
           </>
         }
-        description="Inscrição das unidades especializadas no padrão de qualificação da tropa: QRA, PT, UND e CARGHR. O envio chega direto ao comando da unidade."
+        description="Sem edital: a inscrição é feita direto no formulário da unidade. Todos os campos são obrigatórios e o envio chega imediatamente ao comando."
       />
 
       <div className="mt-8 grid gap-4 lg:grid-cols-2">
@@ -59,34 +68,25 @@ export function FichasUnidadeSection({
                   {ficha.introducao}
                 </p>
 
-                {/* Padrão de identificação */}
                 <ul className="mt-4 grid gap-1.5">
-                  {[
-                    { sigla: 'QRA', texto: 'nome de guerra / indicativo' },
-                    { sigla: 'PT', texto: 'posto ou graduação' },
-                    { sigla: 'UND', texto: 'unidade de lotação' },
-                    { sigla: 'CARGHR', texto: 'carga horária disponível' },
-                  ].map(({ sigla, texto }) => (
+                  {CAMPOS_PADRAO.map(({ nome, descricao }) => (
                     <li
-                      key={sigla}
+                      key={nome}
                       className="flex items-center gap-2 rounded-md border border-white/8 bg-white/[0.02] px-2.5 py-1.5"
                     >
                       <ShieldCheck size={12} className="shrink-0 text-pmpr-gold/80" />
-                      <span className="font-mono text-[0.7rem] font-bold text-pmpr-gold">{sigla}</span>
-                      <span className="text-[0.72rem] text-emerald-50/45">{texto}</span>
+                      <span className="text-[0.72rem] font-bold text-pmpr-gold">{nome}</span>
+                      <span className="text-[0.7rem] text-emerald-50/40">{descricao}</span>
                     </li>
                   ))}
                 </ul>
 
                 <div className="mt-4 flex flex-wrap gap-3 text-[0.7rem] text-emerald-50/40">
                   <span className="flex items-center gap-1.5">
-                    <ClipboardList size={12} /> {perguntas} perguntas
+                    <ClipboardList size={12} /> {perguntas} campos
                   </span>
                   <span className="flex items-center gap-1.5">
-                    <FileText size={12} /> {ficha.campos.length} campos
-                  </span>
-                  <span className="flex items-center gap-1.5">
-                    <Clock size={12} /> resposta imediata
+                    <FileText size={12} /> sem edital
                   </span>
                 </div>
               </div>
@@ -96,12 +96,12 @@ export function FichasUnidadeSection({
                   onClick={() => onAbrirFicha(editalId)}
                   className="btn-gold w-full justify-center text-[0.8rem]"
                 >
-                  Preencher ficha {ficha.referencia}
+                  Preencher formulário {ficha.referencia}
                   <ArrowRight size={14} />
                 </button>
                 <p className="mt-2 text-center text-[0.66rem] text-emerald-100/30">
                   {totalInscricoes > 0
-                    ? `${totalInscricoes} ficha(s) já enviada(s) ao comando`
+                    ? `${totalInscricoes} inscrição(ões) já enviada(s) ao comando`
                     : 'Seu envio aparece na aba do comando'}
                 </p>
               </div>
@@ -111,15 +111,4 @@ export function FichasUnidadeSection({
       </div>
     </Section>
   );
-}
-
-/** Resumo curto usado nos cartões de edital. */
-export function resumoFicha(edital: Edital) {
-  const ficha = FORMULARIOS_UNIDADE[edital.id];
-  if (!ficha) return null;
-  return {
-    referencia: ficha.referencia,
-    campos: ficha.campos.length,
-    perguntas: ficha.campos.filter((c) => c.tipo !== 'identificacao').length,
-  };
 }

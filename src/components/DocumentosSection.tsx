@@ -19,7 +19,7 @@ export function DocumentosSection({
             Editais <span className="gold-text">na íntegra</span>, sem link de terceiro
           </>
         }
-        description="O texto completo dos três editais é hospedado e mantido aqui. Leia capítulo por capítulo, imprima ou baixe a cópia em texto — nenhuma etapa depende de site externo."
+        description="O texto completo do edital é hospedado e mantido aqui. Leia capítulo por capítulo, imprima ou baixe a cópia em texto — nenhuma etapa depende de site externo."
       />
 
       <div className="mt-9 space-y-3">

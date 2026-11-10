@@ -35,10 +35,10 @@ export function Hero({
             </h1>
 
             <p className="mt-6 max-w-xl text-sm leading-relaxed text-emerald-50/65 sm:text-base">
-              Acompanhe as seleções da <strong className="font-semibold text-white">PMPR</strong>, do{' '}
-              <strong className="font-semibold text-pmpr-gold-soft">ROTAM</strong> e da{' '}
-              <strong className="font-semibold text-slate-200">RONE</strong> em um só lugar. Requisitos, etapas,
-              cronograma, provas anteriores e envio automático dos editais para o Discord da tropa.
+              Edital completo da <strong className="font-semibold text-white">PMPR</strong> e inscrição aberta
+              para o <strong className="font-semibold text-pmpr-gold-soft">ROTAM</strong> e a{' '}
+              <strong className="font-semibold text-slate-200">RONE</strong>. Requisitos, etapas, cronograma,
+              provas anteriores e formulários que chegam direto ao comando.
             </p>
 
             <div className="mt-8 flex flex-wrap items-center gap-3">
@@ -46,8 +46,8 @@ export function Hero({
                 Ler edital do Soldado
                 <ArrowRight size={16} />
               </button>
-              <a href="#editais" className="btn-ghost text-sm">
-                Os três editais
+              <a href="#fichas-unidade" className="btn-ghost text-sm">
+                Formulários ROTAM e RONE
               </a>
             </div>
 

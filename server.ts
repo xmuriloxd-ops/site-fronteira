@@ -431,7 +431,13 @@ async function startServer() {
   });
 
   app.get('/api/health', (_req, res) => {
-    res.json({ status: 'ok', editais: 3, interessados: store.interessados.length });
+    // 1 edital publicado (PMPR Soldado) + 2 formulários (ROTAM e RONE)
+    res.json({
+      status: 'ok',
+      editais: 1,
+      formularios: 2,
+      interessados: store.interessados.length,
+    });
   });
 
   app.get('/api/public/config', (_req, res) => {
@@ -787,7 +793,7 @@ async function startServer() {
     // RONE (7). O mínimo é proporcional, para nenhuma ficha ser recusada.
     const MINIMOS: Record<string, number> = {
       'fronteira-sul-nov-2026': 8,
-      'rotam-operacional-2026': 5,
+      'rotam-operacional-2026': 6,
       'rone-operacional-2026': 6,
     };
     const minimo = MINIMOS[String(formularioId ?? '')] ?? 5;
