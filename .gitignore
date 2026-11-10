@@ -6,3 +6,14 @@ coverage/
 *.log
 .env*
 !.env.example
+
+# dados locais do portal
+portal-data.json
+.portal-secret
+.portal-sessao.json
+btz_access_logs.json
+btz_operators.json
+image-search/
+
+# Exemplos gerados localmente (não fazem parte do app)
+.exemplos/

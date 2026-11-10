@@ -1,22 +1,25 @@
 {
-  "name": "Controle de Ração - Grupo Btz",
-  "short_name": "BTZ Silos",
-  "description": "Controle de saldo de ração em silos - Grupo Btz",
+  "name": "Portal de Inscrições - Polícia Militar do Paraná",
+  "short_name": "Inscrições PMPR",
+  "description": "Portal de inscrições da Polícia Militar do Paraná: fichas da PMPR, ROTAM e RONE com envio direto ao comando.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#002075",
-  "theme_color": "#002075",
+  "background_color": "#04110c",
+  "theme_color": "#04110c",
   "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "https://img.icons8.com/color/192/000000/silo.png",
-      "sizes": "192x192",
-      "type": "image/png"
+      "src": "/pmpr-brasao.png",
+      "sizes": "1200x1200",
+      "type": "image/png",
+      "purpose": "any"
     },
     {
-      "src": "https://img.icons8.com/color/512/000000/silo.png",
-      "sizes": "512x512",
-      "type": "image/png"
+      "src": "/pmpr-brasao.png",
+      "sizes": "1200x1200",
+      "type": "image/png",
+      "purpose": "maskable"
     }
-  ]
+  ],
+  "lang": "pt-BR"
 }
