@@ -13,7 +13,8 @@ import {
   CalendarDays,
 } from 'lucide-react';
 import { FORMULARIO_RECRUTAMENTO } from '../data/recrutamento';
-import type { FormularioRecrutamento, InscricaoRecrutamento } from '../types';
+import { entregarFichaNoDiscord } from '../lib/entregaFicha';
+import type { InscricaoRecrutamento, FormularioRecrutamento, RespostaInscricao } from '../types';
 
 type Respostas = Record<string, string>;
 
@@ -39,6 +40,9 @@ export function FormularioModal({
   const [enviando, setEnviando] = useState(false);
   const [enviado, setEnviado] = useState<InscricaoRecrutamento | null>(null);
   const [erroGeral, setErroGeral] = useState<string | null>(null);
+  // Estado da entrega automática no Discord, mostrado na tela de confirmação.
+  const [entrega, setEntrega] = useState<{ tentou: boolean; ok: boolean; detalhe: string } | null>(null);
+  const [entregando, setEntregando] = useState(false);
   const corpoRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -127,13 +131,22 @@ export function FormularioModal({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(corpo),
       });
-      const dados = await r.json();
+      const dados = (await r.json()) as RespostaInscricao & { erro?: string };
       if (!r.ok) {
         setErroGeral(dados.erro ?? 'Não foi possível enviar a inscrição.');
         return;
       }
       setEnviado(dados.inscricao);
       corpoRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+
+      // Ficha preenchida → vai automaticamente para o Discord cadastrado.
+      setEntregando(true);
+      try {
+        const resultado = await entregarFichaNoDiscord(dados.inscricao, dados.discord);
+        setEntrega(resultado);
+      } finally {
+        setEntregando(false);
+      }
     } catch {
       setErroGeral('Falha de conexão com o servidor. Tente novamente.');
     } finally {
@@ -220,6 +233,45 @@ export function FormularioModal({
                   conhecimento, coerência, disciplina e compreensão das regras de Roleplay.
                 </p>
               </div>
+              {/* Entrega automática no Discord */}
+              {entregando && (
+                <div className="mt-4 flex items-center justify-center gap-2 rounded-lg border border-[#5865F2]/30 bg-[#5865F2]/8 px-3 py-2.5 text-[0.78rem] font-semibold text-[#4b55c9]">
+                  <Loader2 size={14} className="animate-spin" />
+                  Enviando a ficha para o Discord do comando...
+                </div>
+              )}
+
+              {!entregando && entrega?.ok && (
+                <div className="mt-4 flex items-start gap-2 rounded-lg border border-emerald-600/35 bg-emerald-600/8 px-3 py-2.5 text-left text-[0.78rem] leading-relaxed text-[#0b5c33]">
+                  <CheckCircle2 size={15} className="mt-0.5 shrink-0" />
+                  <span>
+                    <strong className="font-semibold">Ficha entregue no Discord do comando.</strong> A inscrição já
+                    está no canal cadastrado para análise.
+                  </span>
+                </div>
+              )}
+
+              {!entregando && entrega?.tentou && !entrega.ok && (
+                <div className="mt-4 flex items-start gap-2 rounded-lg border border-amber-500/40 bg-amber-500/10 px-3 py-2.5 text-left text-[0.78rem] leading-relaxed text-[#7a5200]">
+                  <AlertCircle size={15} className="mt-0.5 shrink-0" />
+                  <span>
+                    <strong className="font-semibold">Sua ficha está salva no portal</strong>, mas não foi possível
+                    entregar no Discord agora. O comando ainda recebe a inscrição pelo painel.
+                    <span className="mt-1 block text-[0.72rem] opacity-75">{entrega.detalhe}</span>
+                  </span>
+                </div>
+              )}
+
+              {!entregando && entrega && !entrega.tentou && (
+                <div className="mt-4 flex items-start gap-2 rounded-lg border border-[#d9d3c0] bg-[#efe9d8] px-3 py-2.5 text-left text-[0.78rem] leading-relaxed text-[#5c5340]">
+                  <ShieldCheck size={15} className="mt-0.5 shrink-0" />
+                  <span>
+                    <strong className="font-semibold">Inscrição registrada no portal.</strong> O comando ainda não
+                    cadastrou o canal do Discord; a ficha já está no painel para análise.
+                  </span>
+                </div>
+              )}
+
               <p className="mt-4 text-[0.78rem] leading-relaxed text-[#4a5c4a]">
                 Guarde o protocolo. Os candidatos selecionados serão convocados para as próximas etapas do
                 recrutamento.

@@ -3,13 +3,15 @@ import type { FormularioRecrutamento } from '../types';
 /**
  * Formulários de inscrição das unidades especializadas.
  *
- * Seguem o padrão de qualificação da tropa:
- *   QRA    — nome de guerra / indicativo do operador
- *   PT     — posto ou graduação
- *   UND    — unidade de lotação atual
- *   CARGHR — carga horária disponível para o serviço
+ * Campos do padrão de inscrição:
+ *   QRA             — nome de guerra / indicativo do operador
+ *   patente         — posto ou graduação
+ *   unidade         — lotação atual
+ *   cargaHoraria    — disponibilidade semanal
+ *   tempoServico    — tempo na corporação
+ *   autorizacao     — quem autorizou a inscrição
  *
- * As inscrições caem na mesma lista do comando usada pelo edital do 13º BPM.
+ * As inscrições caem na mesma lista do comando usada pelo 13º BPM.
  */
 
 export const FORMULARIO_ROTAM: FormularioRecrutamento = {
@@ -186,8 +188,8 @@ export const FORMULARIO_RONE: FormularioRecrutamento = {
   ],
 };
 
-/** Formulários das unidades especializadas, indexados pelo id do edital. */
+/** Formulários das unidades especializadas, indexados pelo id do formulário. */
 export const FORMULARIOS_UNIDADE: Record<string, FormularioRecrutamento> = {
-  rotam: FORMULARIO_ROTAM,
-  rone: FORMULARIO_RONE,
+  [FORMULARIO_ROTAM.id]: FORMULARIO_ROTAM,
+  [FORMULARIO_RONE.id]: FORMULARIO_RONE,
 };

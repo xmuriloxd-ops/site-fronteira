@@ -93,7 +93,7 @@ export function FichasUnidadeSection({
 
               <div className="border-t border-white/8 px-5 py-4">
                 <button
-                  onClick={() => onAbrirFicha(editalId)}
+                  onClick={() => onAbrirFicha(ficha.id)}
                   className="btn-gold w-full justify-center text-[0.8rem]"
                 >
                   Preencher formulário {ficha.referencia}

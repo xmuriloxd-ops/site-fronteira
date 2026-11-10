@@ -5,6 +5,7 @@ import { Hero } from './components/Hero';
 import { RecrutamentoCard } from './components/RecrutamentoCard';
 import { FichasUnidadeSection } from './components/FichasUnidadeSection';
 import { FORMULARIOS_UNIDADE } from './data/fichas-unidade';
+import { FORMULARIO_RECRUTAMENTO } from './data/recrutamento';
 import { FormularioModal } from './components/FormularioModal';
 import { UnidadesSection } from './components/UnidadesSection';
 import { DiscordSection } from './components/DiscordSection';
@@ -126,7 +127,7 @@ export default function App() {
 
       {formularioAberto && (
         <FormularioModal
-          formulario={FORMULARIOS_UNIDADE[formularioAberto]}
+          formulario={FORMULARIOS_UNIDADE[formularioAberto] ?? FORMULARIO_RECRUTAMENTO}
           onClose={() => setFormularioAberto(null)}
         />
       )}

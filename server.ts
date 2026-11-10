@@ -118,6 +118,8 @@ interface InscricaoRecrutamento {
   criadoEm: string;
   status: 'novo' | 'em-analise' | 'aprovado' | 'reprovado';
   observacaoComando?: string;
+  discordEnviado?: boolean;
+  discordErro?: string;
 }
 
 interface Store {
@@ -775,11 +777,50 @@ async function startServer() {
     store.inscricoes = store.inscricoes.slice(0, 800);
     saveStore(store);
 
+    // Envio automático: o servidor não alcança o Discord nesta rede, então
+    // devolvemos o destino cadastrado e o navegador entrega a ficha.
+    // A URL do webhook só sai daqui com o envio automático ligado.
+    const podeEnviar =
+      store.discord.autoEnviar && Boolean(store.discord.webhook) && webhookValido(store.discord.webhook);
+
     res.status(201).json({
       ok: true,
       aviso: 'Inscrição registrada. O comando do batalhão fará a análise.',
       inscricao,
+      ...(podeEnviar
+        ? { discord: { webhook: store.discord.webhook, mencionarHere: store.discord.mencionarHere } }
+        : {}),
     });
+  });
+
+  /* --------- Confirmação de entrega da ficha no Discord (navegador) -------- */
+
+  app.patch('/api/public/recrutamento/:id/discord', (req, res) => {
+    const { id } = req.params;
+    const { ok, detalhe } = req.body ?? {};
+    if (typeof ok !== 'boolean') {
+      return res.status(400).json({ erro: 'Informe se a entrega funcionou.' });
+    }
+
+    const inscricao = store.inscricoes.find((i) => i.id === id);
+    if (!inscricao) return res.status(404).json({ erro: 'Inscrição não encontrada.' });
+
+    inscricao.discordEnviado = ok;
+    inscricao.discordErro = ok ? undefined : String(detalhe ?? '').slice(0, 300);
+
+    store.envios.unshift({
+      id: crypto.randomUUID(),
+      editalId: inscricao.formularioId,
+      titulo: `Ficha ${inscricao.nome} — ${inscricao.formularioId}`,
+      destino: store.discord.canal || 'Discord',
+      status: ok ? 'sucesso' : 'erro',
+      detalhe: ok ? 'Ficha entregue ao canal.' : String(detalhe ?? 'Falha no envio.').slice(0, 300),
+      criadoEm: new Date().toISOString(),
+    });
+    store.envios = store.envios.slice(0, 100);
+    saveStore(store);
+
+    res.json({ ok: true });
   });
 
   app.get('/api/admin/inscricoes', exigirAdmin, (_req, res) => {

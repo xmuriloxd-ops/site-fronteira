@@ -645,10 +645,10 @@ function DiscordTab({
       </div>
 
       <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/8 p-3 text-[0.74rem] leading-relaxed text-emerald-200">
-        <p className="font-semibold">Envio feito pelo seu navegador</p>
+        <p className="font-semibold">Fichas preenchidas caem direto no canal</p>
         <p className="mt-1 opacity-80">
-          As mensagens partem deste navegador, não do servidor — assim funcionam mesmo quando o
-          servidor não tem acesso ao Discord. Basta manter esta aba aberta ao enviar.
+          Com o webhook salvo e o envio automático ligado, cada formulário preenchido — 13º BPM, ROTAM e
+          RONE — é entregue no canal assim que o candidato clica em enviar.
         </p>
         {diagnostico?.webhookValido === false && (
           <p className="mt-1.5 font-semibold text-amber-200">
@@ -690,8 +690,8 @@ function DiscordTab({
         <Toggle
           ativo={autoEnviar}
           onChange={setAutoEnviar}
-          titulo="Envio automático"
-          descricao="Notifica o canal quando um status muda."
+          titulo="Envio automático das fichas"
+          descricao="Toda ficha preenchida vai para o canal assim que o candidato envia."
         />
         <Toggle
           ativo={mencionarHere}

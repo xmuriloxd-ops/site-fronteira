@@ -49,6 +49,25 @@ export interface InscricaoRecrutamento {
   criadoEm: string;
   status: 'novo' | 'em-analise' | 'aprovado' | 'reprovado';
   observacaoComando?: string;
+  /** Entrega automática da ficha no Discord (preenchida pelo servidor). */
+  discordEnviado?: boolean;
+  discordErro?: string;
+}
+
+/** Destino de Discord devolvido pelo servidor para o envio automático. */
+export interface DestinoDiscord {
+  /** URL do webhook do canal cadastrado pelo comando. */
+  webhook: string;
+  mencionarHere: boolean;
+}
+
+/** Resposta de POST /api/public/recrutamento */
+export interface RespostaInscricao {
+  ok: boolean;
+  aviso: string;
+  inscricao: InscricaoRecrutamento;
+  /** Presente apenas quando o envio automático está ligado e há webhook salvo. */
+  discord?: DestinoDiscord;
 }
 
 /* ------------------------------------------------------------------ */
@@ -66,6 +85,7 @@ export interface Interessado {
 
 export interface EnvioDiscord {
   id: string;
+  /** Formulário de origem (ou id da inscrição divulgada pelo painel). */
   editalId: string;
   titulo: string;
   destino: string;
