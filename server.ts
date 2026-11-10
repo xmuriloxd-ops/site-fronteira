@@ -10,6 +10,7 @@ import { createServer as createViteServer } from 'vite';
 
 const DATA_FILE = path.join(process.cwd(), 'portal-data.json');
 const SECRET_FILE = path.join(process.cwd(), '.portal-secret');
+const SESSION_STATE_FILE = path.join(process.cwd(), '.portal-sessao.json');
 const SESSION_TTL = 1000 * 60 * 60 * 8; // 8 horas
 
 /**
@@ -40,6 +41,45 @@ function carregarSegredo(): string {
 }
 
 const SECRET = carregarSegredo();
+
+/**
+ * Estado de autenticação em arquivo próprio.
+ * Fica separado do portal-data.json porque limpar os dados do portal não pode
+ * revalidar sessões encerradas nem invalidar sessões legítimas.
+ */
+interface EstadoSessao {
+  /** Só cresce: identifica a geração das credenciais. */
+  versao: number;
+  /** Assinaturas (payloads) de tokens encerrados no logout. */
+  revogados: string[];
+}
+
+function carregarEstadoSessao(): EstadoSessao {
+  try {
+    if (fs.existsSync(SESSION_STATE_FILE)) {
+      const bruto = JSON.parse(fs.readFileSync(SESSION_STATE_FILE, 'utf8')) as Partial<EstadoSessao>;
+      return {
+        versao: typeof bruto.versao === 'number' ? bruto.versao : 0,
+        revogados: Array.isArray(bruto.revogados) ? bruto.revogados : [],
+      };
+    }
+  } catch {
+    /* arquivo corrompido: recomeça do zero */
+  }
+  return { versao: 0, revogados: [] };
+}
+
+function gravarEstadoSessao(estado: EstadoSessao) {
+  try {
+    fs.writeFileSync(
+      SESSION_STATE_FILE,
+      JSON.stringify({ versao: estado.versao, revogados: estado.revogados.slice(-300) }, null, 2),
+      { encoding: 'utf8', mode: 0o600 },
+    );
+  } catch {
+    /* sem permissão de escrita: segue em memória */
+  }
+}
 
 interface Interessado {
   id: string;
@@ -90,7 +130,7 @@ interface Store {
   sessions?: Record<string, { login: string; expiraEm: number }>;
   /** Tokens encerrados manualmente (logout) que precisam ser recusados. */
   revogados?: string[];
-  /** Incrementa a cada troca de credenciais para invalidar tokens antigos. */
+  /** @deprecated mantido apenas para compatibilidade de leitura. */
   versaoSessao?: number;
   inscricoes: InscricaoRecrutamento[];
 }
@@ -180,10 +220,11 @@ function assinar(payload: string) {
 }
 
 function criarSessao(store: Store, login: string) {
+  const estado = carregarEstadoSessao();
   const sessao: SessaoAssinada = {
     login,
     expiraEm: Date.now() + SESSION_TTL,
-    versao: store.versaoSessao ?? 0,
+    versao: estado.versao,
   };
   const payload = Buffer.from(JSON.stringify(sessao), 'utf8').toString('base64url');
   // mantém o registro em disco apenas como histórico (não é mais fonte de verdade)
@@ -202,7 +243,8 @@ function validarSessao(_store: Store, token: string | undefined): SessaoAssinada
   const [payload, assinatura] = token.split('.');
   if (!payload || !assinatura) return null;
 
-  if ((_store.revogados ?? []).includes(payload)) return null;
+  const estado = carregarEstadoSessao();
+  if (estado.revogados.includes(payload)) return null;
 
   const esperada = assinar(payload);
   const a = Buffer.from(assinatura);
@@ -214,7 +256,7 @@ function validarSessao(_store: Store, token: string | undefined): SessaoAssinada
     if (typeof sessao?.expiraEm !== 'number' || sessao.expiraEm < Date.now()) return null;
     if (typeof sessao.login !== 'string') return null;
     // token emitido antes de uma troca de credenciais deixa de valer
-    if ((sessao.versao ?? 0) !== (_store.versaoSessao ?? 0)) return null;
+    if ((sessao.versao ?? 0) !== estado.versao) return null;
     return sessao;
   } catch {
     return null;
@@ -444,8 +486,8 @@ async function startServer() {
     const token = tokenDaRequisicao(req);
     const payload = token?.split('.')[0];
     if (payload && validarSessao(store, token)) {
-      store.revogados = [...(store.revogados ?? []), payload].slice(-200);
-      saveStore(store);
+      const estado = carregarEstadoSessao();
+      gravarEstadoSessao({ ...estado, revogados: [...estado.revogados, payload] });
     }
     res.clearCookie(COOKIE_SESSAO, { path: '/' });
     res.json({ ok: true });
@@ -505,9 +547,10 @@ async function startServer() {
     if (login !== undefined) store.auth.login = login.trim();
     if (senha !== undefined) store.auth.senha = senha;
 
-    // Derruba todas as sessões antigas por segurança (troca a versão dos tokens)
-    store.versaoSessao = (store.versaoSessao ?? 0) + 1;
-    store.revogados = [];
+    // Derruba todas as sessões antigas: só a geração muda, e o arquivo de
+    // sessão é separado para não voltar atrás quando os dados são limpos.
+    const estadoAtual = carregarEstadoSessao();
+    gravarEstadoSessao({ versao: estadoAtual.versao + 1, revogados: [] });
     store.sessions = {};
     const token = criarSessao(store, store.auth.login);
     saveStore(store);

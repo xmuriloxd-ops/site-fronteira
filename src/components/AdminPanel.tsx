@@ -139,8 +139,13 @@ export function AdminPanel({
     try {
       const r = await apiFetch('/data', {}, uso);
       if (r.status === 401) {
-        // mantém o token: a próxima tentativa pode passar pelo cookie ou pela URL
-        setErroConexao('O servidor não reconheceu a sessão. Clique em "Tentar novamente".');
+        // A sessão não vale mais. Não fecha o painel: mostra o login no lugar
+        // dos dados, preservando o que o comando já estava fazendo.
+        setDados(null);
+        setTokenAtivo(null);
+        setSessaoExpirada(true);
+        setErroConexao(null);
+        onSessaoExpirada();
         return;
       }
       if (!r.ok) {
