@@ -25,6 +25,7 @@ import {
   XCircle,
 } from 'lucide-react';
 import { EDITAIS } from '../data/editais';
+import { enviarPeloNavegador } from '../lib/discord';
 import type { EditalStatus, Interessado, EnvioDiscord, InscricaoRecrutamento } from '../types';
 import { FORMULARIO_RECRUTAMENTO } from '../data/recrutamento';
 
@@ -515,11 +516,7 @@ function DiscordTab({
     }
   };
 
-  const [diagnostico, setDiagnostico] = useState<{
-    redeOk: boolean;
-    motivoRede: string;
-    webhookValido: boolean;
-  } | null>(null);
+  const [diagnostico, setDiagnostico] = useState<{ webhookValido: boolean } | null>(null);
 
   useEffect(() => {
     let ativo = true;
@@ -538,48 +535,94 @@ function DiscordTab({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  /** Busca a URL do webhook no servidor (rota autenticada). */
+  const obterWebhook = async (): Promise<string | null> => {
+    try {
+      // o token precisa ir explícito: apiFetch não conhece o estado do pai
+      const r = await apiFetch('/discord/webhook', {}, cabecalho()['x-admin-token']);
+      if (!r.ok) return null;
+      const d = (await r.json()) as { webhook?: string };
+      return d.webhook ?? null;
+    } catch {
+      return null;
+    }
+  };
+
+  /**
+   * O teste sai do navegador, não do servidor: aqui a rede alcança o Discord.
+   * Antes o envio partia do servidor, que está bloqueado, e sempre falhava.
+   */
   const testar = async () => {
     setTestando(true);
     setMsg(null);
     try {
-      const r = await apiFetch('/discord/teste', { method: 'POST' });
-      const d = await r.json();
-      setMsg({ tipo: r.ok ? 'ok' : 'erro', texto: d.detalhe ?? (r.ok ? 'Mensagem enviada.' : 'Falha no teste.') });
-      onAtualizar();
+      const url = await obterWebhook();
+      if (!url) {
+        setMsg({
+          tipo: 'erro',
+          texto: 'Nenhum webhook salvo ainda. Cole a URL do Discord e clique em salvar.',
+        });
+        return;
+      }
+      const resultado = await enviarPeloNavegador(url, {
+        titulo: 'Teste de integração ✅',
+        descricao:
+          'O Portal de Editais da Polícia Militar do Paraná está conectado a este canal. A partir de agora, os editais podem ser enviados para a tropa.',
+        campos: [
+          { name: 'Canal', value: dados.discord.canal || 'não informado', inline: true },
+          { name: 'Envio', value: 'pelo navegador do comando', inline: true },
+        ],
+      });
+      setMsg({ tipo: resultado.ok ? 'ok' : 'erro', texto: resultado.detalhe });
+      if (resultado.ok) onAtualizar();
     } catch {
-      setMsg({ tipo: 'erro', texto: 'Falha de conexão.' });
+      setMsg({ tipo: 'erro', texto: 'Falha inesperada ao enviar o teste.' });
     } finally {
       setTestando(false);
     }
   };
 
+  /**
+   * Envia o edital pelo navegador do comando (o servidor não alcança o Discord)
+   * e registra o resultado no histórico do painel.
+   */
   const enviarEdital = async () => {
     const edital = EDITAIS.find((e) => e.id === envioEdital);
     if (!edital) return;
     setEnviando(true);
     setMsg(null);
     try {
-      const r = await fetch(`${API}/envios`, {
+      const url = await obterWebhook();
+      if (!url) {
+        setMsg({ tipo: 'erro', texto: 'Configure e salve o webhook do canal antes de enviar.' });
+        return;
+      }
+      const resultado = await enviarPeloNavegador(url, {
+        titulo: `${edital.sigla} — ${edital.nome}`,
+        descricao: edital.resumo,
+        campos: [
+          { name: 'Vagas', value: edital.vagasDetalhe, inline: true },
+          { name: 'Inscrições', value: edital.inscricoes, inline: true },
+          { name: 'Prova', value: edital.prova, inline: true },
+          { name: 'Requisitos', value: edital.destaque.join(' · '), inline: false },
+        ],
+      });
+      setMsg({ tipo: resultado.ok ? 'ok' : 'erro', texto: resultado.detalhe });
+      // registra no histórico do painel, com ou sem sucesso
+      void apiFetch('/envios/registrar', {
         method: 'POST',
-        headers: cabecalho(),
-        credentials: 'same-origin',
         body: JSON.stringify({
           editalId: edital.id,
           titulo: `${edital.sigla} — ${edital.nome}`,
-          descricao: edital.resumo,
-          campos: [
-            { name: 'Vagas', value: edital.vagasDetalhe, inline: true },
-            { name: 'Inscrições', value: edital.inscricoes, inline: true },
-            { name: 'Prova', value: edital.prova, inline: true },
-            { name: 'Requisitos', value: edital.destaque.join(' · '), inline: false },
-          ],
+          ok: resultado.ok,
+          detalhe: resultado.detalhe,
         }),
+      }).catch(() => {
+        /* o envio já aconteceu; o histórico é secundário */
       });
-      const d = await r.json();
-      setMsg({ tipo: r.ok ? 'ok' : 'erro', texto: d.detalhe ?? 'Resposta recebida.' });
-      onAtualizar();
+      if (resultado.ok) onAtualizar();
     } catch {
-      setMsg({ tipo: 'erro', texto: 'Falha de conexão.' });
+      setMsg({ tipo: 'erro', texto: 'Falha inesperada ao enviar o edital.' });
     } finally {
       setEnviando(false);
     }
@@ -611,28 +654,18 @@ function DiscordTab({
         </div>
       </div>
 
-      {diagnostico && (
-        <div
-          className={`rounded-lg border p-3 text-[0.74rem] leading-relaxed ${
-            diagnostico.redeOk
-              ? 'border-emerald-500/30 bg-emerald-500/8 text-emerald-200'
-              : 'border-amber-400/35 bg-amber-500/10 text-amber-200'
-          }`}
-        >
-          <p className="font-semibold">
-            {diagnostico.redeOk
-              ? 'Servidor com acesso ao Discord'
-              : 'Servidor sem acesso ao Discord'}
+      <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/8 p-3 text-[0.74rem] leading-relaxed text-emerald-200">
+        <p className="font-semibold">Envio feito pelo seu navegador</p>
+        <p className="mt-1 opacity-80">
+          As mensagens partem deste navegador, não do servidor — assim funcionam mesmo quando o
+          servidor não tem acesso ao Discord. Basta manter esta aba aberta ao enviar.
+        </p>
+        {diagnostico?.webhookValido === false && (
+          <p className="mt-1.5 font-semibold text-amber-200">
+            Nenhum webhook salvo ainda: cole a URL do canal abaixo e clique em salvar.
           </p>
-          <p className="mt-1 opacity-80">{diagnostico.motivoRede}</p>
-          {!diagnostico.redeOk && (
-            <p className="mt-1 opacity-80">
-              O webhook fica salvo, mas o envio automático só acontece quando o servidor
-              conseguir alcançar o Discord. Use o botão <strong>Enviar teste</strong> para conferir.
-            </p>
-          )}
-        </div>
-      )}
+        )}
+      </div>
 
       <Bloco titulo="Webhook do canal" Icon={Link2} descricao="No Discord: Configurações do canal → Integrações → Webhooks → Copiar URL.">
         <input
