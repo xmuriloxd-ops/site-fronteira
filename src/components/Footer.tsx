@@ -37,6 +37,7 @@ export function Footer({ onAdminClick }: { onAdminClick: () => void }) {
             <ul className="mt-3 space-y-2">
               {[
                 ['Editais', '#editais'],
+                ['Recrutamento 13º BPM', '#recrutamento'],
                 ['Documentos na íntegra', '#documentos'],
                 ['Unidades', '#unidades'],
                 ['Banco de questões', '#questoes'],

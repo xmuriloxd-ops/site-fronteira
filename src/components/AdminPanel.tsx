@@ -18,11 +18,17 @@ import {
   Radio,
   Save,
   BellRing,
+  ClipboardList,
+  ChevronDown,
+  UserCheck,
+  Clock4,
+  XCircle,
 } from 'lucide-react';
 import { EDITAIS } from '../data/editais';
-import type { EditalStatus, Interessado, EnvioDiscord } from '../types';
+import type { EditalStatus, Interessado, EnvioDiscord, InscricaoRecrutamento } from '../types';
+import { FORMULARIO_RECRUTAMENTO } from '../data/recrutamento';
 
-type Aba = 'discord' | 'credenciais' | 'editais' | 'tropa';
+type Aba = 'discord' | 'credenciais' | 'editais' | 'recrutamento' | 'tropa';
 
 interface AdminData {
   login: string;
@@ -252,6 +258,7 @@ export function AdminPanel({
                   [
                     { id: 'discord', label: 'Discord', Icon: MessageSquare },
                     { id: 'editais', label: 'Editais', Icon: Settings2 },
+                    { id: 'recrutamento', label: 'Recrutamento', Icon: ClipboardList },
                     { id: 'tropa', label: 'Tropa', Icon: Users },
                     { id: 'credenciais', label: 'Login e senha', Icon: KeyRound },
                   ] as { id: Aba; label: string; Icon: typeof Users }[]
@@ -299,6 +306,10 @@ export function AdminPanel({
                     onConfigChange();
                   }}
                 />
+              )}
+
+              {dados && aba === 'recrutamento' && (
+                <RecrutamentoTab cabecalho={cabecalho} />
               )}
 
               {dados && aba === 'tropa' && (
@@ -777,6 +788,231 @@ function TropaTab({
           ))}
         </ul>
       )}
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Aba: Recrutamento (13º BPM - Fronteira Sul)                         */
+/* ------------------------------------------------------------------ */
+
+const STATUS_INSCRICAO: Record<
+  InscricaoRecrutamento['status'],
+  { label: string; cor: string; Icon: typeof Clock4 }
+> = {
+  novo: { label: 'Nova', cor: 'border-sky-400/35 bg-sky-500/12 text-sky-300', Icon: Clock4 },
+  'em-analise': { label: 'Em análise', cor: 'border-amber-400/35 bg-amber-500/12 text-amber-300', Icon: Clock4 },
+  aprovado: { label: 'Aprovado', cor: 'border-emerald-400/35 bg-emerald-500/12 text-emerald-300', Icon: UserCheck },
+  reprovado: { label: 'Reprovado', cor: 'border-rose-400/35 bg-rose-500/12 text-rose-300', Icon: XCircle },
+};
+
+function RecrutamentoTab({ cabecalho }: { cabecalho: () => Record<string, string> }) {
+  const [inscricoes, setInscricoes] = useState<InscricaoRecrutamento[] | null>(null);
+  const [aberta, setAberta] = useState<string | null>(null);
+  const [filtroStatus, setFiltroStatus] = useState<'todas' | InscricaoRecrutamento['status']>('todas');
+  const [busca, setBusca] = useState('');
+  const [salvando, setSalvando] = useState(false);
+
+  const carregar = async () => {
+    try {
+      const r = await fetch(`${API}/inscricoes`, { headers: cabecalho() });
+      if (!r.ok) return;
+      const d = await r.json();
+      setInscricoes(d.inscricoes ?? []);
+    } catch {
+      setInscricoes([]);
+    }
+  };
+
+  useEffect(() => {
+    void carregar();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const atualizar = async (id: string, corpo: Record<string, unknown>) => {
+    setSalvando(true);
+    try {
+      await fetch(`${API}/inscricoes/${id}`, {
+        method: 'PATCH',
+        headers: cabecalho(),
+        body: JSON.stringify(corpo),
+      });
+      await carregar();
+    } finally {
+      setSalvando(false);
+    }
+  };
+
+  const remover = async (id: string) => {
+    await fetch(`${API}/inscricoes/${id}`, { method: 'DELETE', headers: cabecalho() });
+    setAberta(null);
+    await carregar();
+  };
+
+  const lista = (inscricoes ?? [])
+    .filter((i) => filtroStatus === 'todas' || i.status === filtroStatus)
+    .filter((i) => `${i.nome} ${i.idRp}`.toLowerCase().includes(busca.toLowerCase()));
+
+  const campoPorId = (id: string) => FORMULARIO_RECRUTAMENTO.campos.find((c) => c.id === id);
+
+  return (
+    <div className="space-y-4">
+      <div className="rounded-lg border border-emerald-500/25 bg-emerald-500/[0.06] p-3.5">
+        <p className="flex items-center gap-2 text-[0.8rem] font-semibold text-emerald-200">
+          <ClipboardList size={14} />
+          {FORMULARIO_RECRUTAMENTO.titulo}
+        </p>
+        <p className="mt-1 text-[0.72rem] leading-relaxed text-emerald-50/50">
+          {FORMULARIO_RECRUTAMENTO.subtitulo} · {FORMULARIO_RECRUTAMENTO.campos.length - 1} perguntas + identificação.
+          As inscrições enviadas pelo site aparecem aqui.
+        </p>
+      </div>
+
+      <div className="grid grid-cols-4 gap-2">
+        {(['novo', 'em-analise', 'aprovado', 'reprovado'] as const).map((st) => (
+          <div key={st}>
+            <MiniStat
+              label={STATUS_INSCRICAO[st].label}
+              valor={String((inscricoes ?? []).filter((i) => i.status === st).length)}
+            />
+          </div>
+        ))}
+      </div>
+
+      <div className="flex flex-col gap-2 sm:flex-row">
+        <input
+          className="field flex-1"
+          placeholder="Buscar por nome ou ID"
+          value={busca}
+          onChange={(e) => setBusca(e.target.value)}
+        />
+        <select
+          className="field sm:max-w-[11rem]"
+          value={filtroStatus}
+          onChange={(e) => setFiltroStatus(e.target.value as typeof filtroStatus)}
+        >
+          <option value="todas" className="bg-ink-900">Todas</option>
+          <option value="novo" className="bg-ink-900">Novas</option>
+          <option value="em-analise" className="bg-ink-900">Em análise</option>
+          <option value="aprovado" className="bg-ink-900">Aprovadas</option>
+          <option value="reprovado" className="bg-ink-900">Reprovadas</option>
+        </select>
+      </div>
+
+      {inscricoes === null && (
+        <div className="flex justify-center py-10 text-emerald-100/40">
+          <Loader2 size={20} className="animate-spin" />
+        </div>
+      )}
+
+      {inscricoes !== null && lista.length === 0 && (
+        <p className="rounded-lg border border-white/8 bg-white/[0.02] p-6 text-center text-[0.78rem] text-emerald-100/35">
+          Nenhuma inscrição recebida ainda. Divulgue o formulário com a tropa: ele está na página inicial, em
+          Edital 13º BPM.
+        </p>
+      )}
+
+      <ul className="space-y-1.5">
+        {lista.map((inscricao) => {
+          const meta = STATUS_INSCRICAO[inscricao.status];
+          const expandida = aberta === inscricao.id;
+          const { Icon } = meta;
+
+          return (
+            <li key={inscricao.id} className="overflow-hidden rounded-lg border border-white/8 bg-white/[0.02]">
+              <button
+                onClick={() => setAberta(expandida ? null : inscricao.id)}
+                className="flex w-full items-center gap-2.5 px-3 py-2.5 text-left transition hover:bg-white/[0.03]"
+              >
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-pmpr-gold/12 text-[0.7rem] font-bold text-pmpr-gold">
+                  {inscricao.nome.slice(0, 2).toUpperCase()}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-[0.8rem] font-semibold text-white/90">{inscricao.nome}</p>
+                  <p className="truncate text-[0.68rem] text-emerald-100/40">
+                    {inscricao.idade} anos · ID {inscricao.idRp} ·{' '}
+                    {new Date(inscricao.criadoEm).toLocaleString('pt-BR', {
+                      day: '2-digit',
+                      month: '2-digit',
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })}
+                  </p>
+                </div>
+                <span className={`flex shrink-0 items-center gap-1 rounded border px-1.5 py-0.5 text-[0.58rem] font-bold uppercase ${meta.cor}`}>
+                  <Icon size={9} />
+                  {meta.label}
+                </span>
+                <ChevronDown
+                  size={14}
+                  className={`shrink-0 text-emerald-100/35 transition ${expandida ? 'rotate-180' : ''}`}
+                />
+              </button>
+
+              {expandida && (
+                <div className="border-t border-white/8 bg-black/20 px-3 py-3">
+                  <div className="space-y-2.5">
+                    {Object.entries(inscricao.respostas).map(([campoId, valor]) => {
+                      const campo = campoPorId(campoId);
+                      return (
+                        <div key={campoId} className="rounded border border-white/6 bg-white/[0.02] p-2.5">
+                          <p className="text-[0.62rem] font-bold uppercase leading-snug tracking-wider text-pmpr-gold/70">
+                            {campo?.numero ? `${campo.numero}. ` : ''}
+                            {campo?.titulo ?? campoId}
+                          </p>
+                          <p className="mt-1 whitespace-pre-line text-[0.78rem] leading-relaxed text-emerald-50/75">
+                            {valor}
+                          </p>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  <div className="mt-3">
+                    <label className="text-[0.6rem] font-bold uppercase tracking-[0.14em] text-emerald-100/35">
+                      Observação do comando
+                    </label>
+                    <textarea
+                      className="field mt-1 min-h-[54px] resize-y text-[0.78rem]"
+                      defaultValue={inscricao.observacaoComando ?? ''}
+                      placeholder="Anotação interna sobre o candidato"
+                      onBlur={(e) => {
+                        if (e.target.value !== (inscricao.observacaoComando ?? '')) {
+                          void atualizar(inscricao.id, { observacaoComando: e.target.value });
+                        }
+                      }}
+                    />
+                  </div>
+
+                  <div className="mt-2.5 flex flex-wrap gap-1.5">
+                    {(['em-analise', 'aprovado', 'reprovado'] as const).map((st) => (
+                      <button
+                        key={st}
+                        onClick={() => atualizar(inscricao.id, { status: st })}
+                        disabled={salvando || inscricao.status === st}
+                        className={`rounded border px-2.5 py-1.5 text-[0.68rem] font-bold uppercase transition disabled:opacity-40 ${
+                          inscricao.status === st
+                            ? STATUS_INSCRICAO[st].cor
+                            : 'border-white/10 text-emerald-100/50 hover:border-white/25 hover:text-white'
+                        }`}
+                      >
+                        {STATUS_INSCRICAO[st].label}
+                      </button>
+                    ))}
+                    <button
+                      onClick={() => remover(inscricao.id)}
+                      className="ml-auto flex items-center gap-1 rounded border border-white/10 px-2 py-1.5 text-[0.68rem] text-emerald-100/35 transition hover:border-rose-400/40 hover:text-rose-300"
+                    >
+                      <Trash2 size={10} />
+                      Excluir
+                    </button>
+                  </div>
+                </div>
+              )}
+            </li>
+          );
+        })}
+      </ul>
     </div>
   );
 }

@@ -1,6 +1,7 @@
 # Portal de Editais · Polícia Militar do Paraná
 
-Portal web com os editais da **PMPR**, do **ROTAM** e da **RONE**.
+Portal web com os editais da **PMPR**, do **ROTAM**, da **RONE** e o edital de
+recrutamento do **13º Batalhão — Fronteira Sul** em formato de formulário.
 
 Todo o conteúdo é publicado dentro do próprio site: o texto integral dos três
 editais, banco de questões com gabarito comentado, simulado, integração com o
@@ -65,6 +66,17 @@ capítulos, incisos e tabelas. O leitor de documento (`EditalDocumento`) oferece
 Nenhum link aponta para fora do portal. A única URL externa é a do webhook do
 Discord, informada pelo próprio comando no painel.
 
+## Recrutamento RP — 13º Batalhão
+
+O edital de recrutamento é um formulário de 10 campos (identificação + 8 perguntas
++ redação de 8 linhas + duas perguntas de concordância com escala e ausências).
+O candidato preenche no próprio site, com barra de progresso, limite mínimo de
+caracteres por resposta e validação no cliente e no servidor.
+
+As inscrições caem na aba **Recrutamento** do painel do comando, com protocolo,
+filtro por status, busca e exportação visual de cada resposta. O texto do
+formulário fica em `src/data/recrutamento.ts`.
+
 ## Estrutura
 
 ```
@@ -72,10 +84,11 @@ src/
   data/editais.ts        resumo estruturado dos três editais
   data/documentos.ts     TEXTO INTEGRAL dos editais (capítulos e tabelas)
   data/questoes.ts       banco de questões autorais + gabarito comentado
+  data/recrutamento.ts   edital-formulário do 13º BPM (Fronteira Sul)
   components/            Header, Hero, EditaisSection, EditalModal,
                          EditalDocumento, DocumentosSection, UnidadesSection,
-                         ProvasSection, SimuladoSection, DiscordSection,
-                         AdminPanel, Footer, ui
+                         RecrutamentoCard, FormularioModal, ProvasSection,
+                         SimuladoSection, DiscordSection, AdminPanel, Footer, ui
 server.ts                API Express + Vite (login, Discord, dados do painel)
 public/pmpr-brasao.png   brasão da PMPR (Wikimedia Commons)
 ```
@@ -92,6 +105,9 @@ public/pmpr-brasao.png   brasão da PMPR (Wikimedia Commons)
 | POST | `/api/admin/envios` | publica um edital no Discord |
 | PATCH | `/api/admin/editais/:id` | status, aviso e publicação complementar |
 | POST | `/api/public/interesse` | vincula o Discord do candidato aos editais |
+| POST | `/api/public/recrutamento` | recebe a inscrição do formulário do 13º BPM |
+| GET | `/api/admin/inscricoes` | lista as inscrições recebidas |
+| PATCH | `/api/admin/inscricoes/:id` | altera status e observação do comando |
 
 Rotas `/api/admin/*` exigem o cabeçalho `Authorization: Bearer <token>`, com
 sessão de 8 horas.

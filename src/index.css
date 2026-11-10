@@ -311,4 +311,24 @@ body {
   a[href]::after {
     content: '';
   }
+
+  /* Formulário: campos como linhas para preenchimento manual */
+  textarea,
+  input {
+    border: 0 !important;
+    border-bottom: 1px solid #999 !important;
+    background: transparent !important;
+    min-height: 2.2rem !important;
+    resize: none !important;
+    color: #111 !important;
+  }
+
+  button {
+    background: transparent !important;
+  }
+
+  section {
+    border-color: #bbb !important;
+    background: transparent !important;
+  }
 }

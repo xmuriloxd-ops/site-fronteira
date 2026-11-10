@@ -38,6 +38,18 @@ interface DiscordConfig {
   mencionarHere: boolean;
 }
 
+interface InscricaoRecrutamento {
+  id: string;
+  formularioId: string;
+  nome: string;
+  idade: string;
+  idRp: string;
+  respostas: Record<string, string>;
+  criadoEm: string;
+  status: 'novo' | 'em-analise' | 'aprovado' | 'reprovado';
+  observacaoComando?: string;
+}
+
 interface Store {
   auth: { login: string; senha: string };
   discord: DiscordConfig;
@@ -46,6 +58,7 @@ interface Store {
   overrides: Record<string, { status?: string; aviso?: string; publicacao?: string }>;
   logs: { id: string; criadoEm: string; ip: string; ua: string }[];
   sessions: Record<string, { login: string; expiraEm: number }>;
+  inscricoes: InscricaoRecrutamento[];
 }
 
 const DEFAULT_STORE: Store = {
@@ -62,6 +75,7 @@ const DEFAULT_STORE: Store = {
   overrides: {},
   logs: [],
   sessions: {},
+  inscricoes: [],
 };
 
 function loadStore(): Store {
@@ -78,6 +92,7 @@ function loadStore(): Store {
         overrides: raw.overrides ?? {},
         logs: raw.logs ?? [],
         sessions: raw.sessions ?? {},
+        inscricoes: raw.inscricoes ?? [],
       };
     }
   } catch (error) {
@@ -206,6 +221,7 @@ async function startServer() {
     canalDiscord: store.discord.canal,
     conviteDiscord: store.discord.convite,
     interessados: store.interessados.length,
+    inscricoes: store.inscricoes.length,
     overrides: store.overrides,
   });
 
@@ -499,6 +515,92 @@ async function startServer() {
 
     saveStore(store);
     res.status(201).json({ ok: true, aviso, interessado, convite: store.discord.convite });
+  });
+
+  /* --------------------- Recrutamento RP (formulário) ---------------- */
+
+  const LIMITE_RESPOSTA = 4000;
+
+  app.post('/api/public/recrutamento', (req, res) => {
+    const { formularioId, nome, idade, idRp, respostas } = req.body ?? {};
+
+    if (typeof nome !== 'string' || nome.trim().length < 2) {
+      return res.status(400).json({ erro: 'Informe o nome dentro da cidade.' });
+    }
+    if (typeof idade !== 'string' || !/^\d{1,2}$/.test(idade.trim())) {
+      return res.status(400).json({ erro: 'Informe uma idade válida (fora do RP).' });
+    }
+    const idadeNum = Number(idade.trim());
+    if (idadeNum < 10 || idadeNum > 99) {
+      return res.status(400).json({ erro: 'A idade deve estar entre 10 e 99 anos.' });
+    }
+    if (typeof idRp !== 'string' || idRp.trim().length < 1) {
+      return res.status(400).json({ erro: 'Informe o ID dentro do RP.' });
+    }
+    if (!respostas || typeof respostas !== 'object' || Array.isArray(respostas)) {
+      return res.status(400).json({ erro: 'Respostas inválidas.' });
+    }
+
+    const limpas: Record<string, string> = {};
+    for (const [chave, valor] of Object.entries(respostas as Record<string, unknown>)) {
+      if (typeof valor !== 'string' || !valor.trim()) continue;
+      if (!/^[a-z0-9_-]{1,40}$/i.test(chave)) continue;
+      limpas[chave] = valor.trim().slice(0, LIMITE_RESPOSTA);
+    }
+
+    if (Object.keys(limpas).length < 8) {
+      return res.status(400).json({ erro: 'Responda todas as perguntas obrigatórias antes de enviar.' });
+    }
+
+    const inscricao: InscricaoRecrutamento = {
+      id: crypto.randomUUID(),
+      formularioId: typeof formularioId === 'string' ? formularioId.slice(0, 60) : 'fronteira-sul-nov-2026',
+      nome: nome.trim().slice(0, 80),
+      idade: String(idadeNum),
+      idRp: idRp.trim().slice(0, 30),
+      respostas: limpas,
+      criadoEm: new Date().toISOString(),
+      status: 'novo',
+    };
+
+    store.inscricoes.unshift(inscricao);
+    store.inscricoes = store.inscricoes.slice(0, 800);
+    saveStore(store);
+
+    res.status(201).json({
+      ok: true,
+      aviso: 'Inscrição registrada. O comando do batalhão fará a análise.',
+      inscricao,
+    });
+  });
+
+  app.get('/api/admin/inscricoes', exigirAdmin, (_req, res) => {
+    res.json({ inscricoes: store.inscricoes });
+  });
+
+  app.patch('/api/admin/inscricoes/:id', exigirAdmin, (req, res) => {
+    const { id } = req.params;
+    const { status, observacaoComando } = req.body ?? {};
+    const alvo = store.inscricoes.find((i) => i.id === id);
+    if (!alvo) return res.status(404).json({ erro: 'Inscrição não encontrada.' });
+
+    const permitido = ['novo', 'em-analise', 'aprovado', 'reprovado'];
+    if (status !== undefined && !permitido.includes(status)) {
+      return res.status(400).json({ erro: 'Status inválido.' });
+    }
+    if (status !== undefined) alvo.status = status;
+    if (observacaoComando !== undefined) {
+      alvo.observacaoComando = String(observacaoComando).slice(0, 2000);
+    }
+    saveStore(store);
+    res.json({ ok: true, inscricao: alvo });
+  });
+
+  app.delete('/api/admin/inscricoes/:id', exigirAdmin, (req, res) => {
+    const { id } = req.params;
+    store.inscricoes = store.inscricoes.filter((i) => i.id !== id);
+    saveStore(store);
+    res.json({ ok: true });
   });
 
   /* ------------------------------- Vite ------------------------------ */

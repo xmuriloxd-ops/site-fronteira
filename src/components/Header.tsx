@@ -4,6 +4,7 @@ import { Brasao } from './ui';
 
 const LINKS = [
   { label: 'Editais', href: '#editais' },
+  { label: '13º BPM', href: '#recrutamento' },
   { label: 'Documentos', href: '#documentos' },
   { label: 'Unidades', href: '#unidades' },
   { label: 'Questões', href: '#questoes' },

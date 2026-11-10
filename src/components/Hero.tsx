@@ -4,12 +4,12 @@ import { Brasao, StatusBadge, TOM_COLORS } from './ui';
 
 export function Hero({
   editais,
-  onAbrir,
   onLerDocumento,
+  onAbrirFormulario,
 }: {
   editais: Edital[];
-  onAbrir: (id: string) => void;
   onLerDocumento: (id: string) => void;
+  onAbrirFormulario: () => void;
 }) {
   return (
     <div className="relative overflow-hidden">
@@ -89,8 +89,8 @@ export function Hero({
           </div>
         </div>
 
-        {/* Faixa dos três editais */}
-        <div className="mt-14 grid gap-3 sm:mt-20 sm:grid-cols-3">
+        {/* Faixa de editais */}
+        <div className="mt-14 grid gap-3 sm:mt-20 sm:grid-cols-2 lg:grid-cols-4">
           {editais.map((e, idx) => {
             const tom = TOM_COLORS[e.tom];
             return (
@@ -110,7 +110,7 @@ export function Hero({
                   </span>
                   <StatusBadge status={e.status} />
                 </div>
-                <p className="mt-2 text-[0.8rem] leading-snug text-emerald-50/55">{e.nome}</p>
+                <p className="mt-2 line-clamp-2 text-[0.8rem] leading-snug text-emerald-50/55">{e.nome}</p>
                 <p className="font-display mt-3 text-2xl font-bold text-white">
                   {e.vagas.toLocaleString('pt-BR')}
                   <span className="ml-1 text-[0.62rem] font-semibold uppercase tracking-[0.18em] text-emerald-100/40">
@@ -123,6 +123,34 @@ export function Hero({
               </button>
             );
           })}
+
+          {/* Card do recrutamento 13º BPM */}
+          <button
+            onClick={onAbrirFormulario}
+            style={{ animationDelay: `${180 + editais.length * 80}ms` }}
+            className="group animate-fade-up relative overflow-hidden rounded-xl border border-emerald-400/25 bg-emerald-500/[0.06] p-5 text-left transition hover:border-emerald-400/60 hover:bg-emerald-500/10"
+          >
+            <div className="absolute inset-x-0 top-0 h-0.5 bg-emerald-400/70 opacity-80 transition group-hover:opacity-100" />
+            <div className="flex items-start justify-between gap-2">
+              <span className="font-display text-xl font-bold tracking-wide text-emerald-300">13º BPM</span>
+              <span className="badge-pill border border-emerald-400/35 bg-emerald-500/15 text-emerald-300">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                Formulário
+              </span>
+            </div>
+            <p className="mt-2 line-clamp-2 text-[0.8rem] leading-snug text-emerald-50/55">
+              Recrutamento Fronteira Sul · Nov/2026
+            </p>
+            <p className="font-display mt-3 text-2xl font-bold text-white">
+              10
+              <span className="ml-1 text-[0.62rem] font-semibold uppercase tracking-[0.18em] text-emerald-100/40">
+                campos
+              </span>
+            </p>
+            <span className="mt-3 inline-flex items-center gap-1 text-[0.72rem] font-semibold text-emerald-300/90 transition group-hover:gap-2">
+              Preencher inscrição <ArrowRight size={13} />
+            </span>
+          </button>
         </div>
       </div>
     </div>

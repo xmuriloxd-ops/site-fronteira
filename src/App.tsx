@@ -8,6 +8,8 @@ import { EditalModal } from './components/EditalModal';
 import { EditalDocumento } from './components/EditalDocumento';
 import { getDocumento } from './data/documentos';
 import { DocumentosSection } from './components/DocumentosSection';
+import { RecrutamentoCard } from './components/RecrutamentoCard';
+import { FormularioModal } from './components/FormularioModal';
 import { UnidadesSection } from './components/UnidadesSection';
 import { ProvasSection } from './components/ProvasSection';
 import { SimuladoSection } from './components/SimuladoSection';
@@ -23,6 +25,7 @@ export default function App() {
   const [overrides, setOverrides] = useState<Record<string, EditalOverride>>({});
   const [editalAberto, setEditalAberto] = useState<string | null>(null);
   const [documentoAberto, setDocumentoAberto] = useState<string | null>(null);
+  const [formularioAberto, setFormularioAberto] = useState(false);
   const [painelAberto, setPainelAberto] = useState(false);
   const [token, setToken] = useState<string | null>(() => localStorage.getItem(TOKEN_KEY));
   const [editalDiscord, setEditalDiscord] = useState<string | null>(null);
@@ -121,7 +124,7 @@ export default function App() {
       />
 
       <main>
-        <Hero editais={editais} onAbrir={abrirEdital} onLerDocumento={lerDocumento} />
+        <Hero editais={editais} onLerDocumento={lerDocumento} onAbrirFormulario={() => setFormularioAberto(true)} />
 
         <EditaisSection
           editais={editais}
@@ -148,6 +151,11 @@ export default function App() {
             </div>
           </Section>
         )}
+
+        <RecrutamentoCard
+          onAbrirFormulario={() => setFormularioAberto(true)}
+          totalInscricoes={config?.inscricoes ?? 0}
+        />
 
         <DocumentosSection editais={editais} onLerDocumento={lerDocumento} />
 
@@ -188,6 +196,8 @@ export default function App() {
           onClose={() => setDocumentoAberto(null)}
         />
       )}
+
+      {formularioAberto && <FormularioModal onClose={() => setFormularioAberto(false)} />}
 
       {painelAberto && (
         <AdminPanel
