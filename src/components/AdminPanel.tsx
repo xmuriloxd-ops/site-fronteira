@@ -23,6 +23,7 @@ import {
   UserCheck,
   Clock4,
   XCircle,
+  Info,
 } from 'lucide-react';
 import { EDITAIS } from '../data/editais';
 import type { EditalStatus, Interessado, EnvioDiscord, InscricaoRecrutamento } from '../types';
@@ -227,9 +228,9 @@ export function AdminPanel({
 
               <div className="mt-6 space-y-3">
                 {sessaoExpirada && (
-                  <div className="flex items-start gap-2 rounded-lg border border-amber-400/40 bg-amber-500/10 p-2.5 text-[0.76rem] leading-relaxed text-amber-200">
-                    <AlertCircle size={13} className="mt-0.5 shrink-0" />
-                    Sua sessão expirou. Entre novamente com login e senha.
+                  <div className="flex items-start gap-2 rounded-lg border border-white/12 bg-white/[0.04] p-2.5 text-[0.76rem] leading-relaxed text-emerald-100/60">
+                    <Info size={13} className="mt-0.5 shrink-0" />
+                    Sessão anterior encerrada. Entre com o login e a senha abaixo.
                   </div>
                 )}
                 <div>
@@ -307,15 +308,18 @@ export function AdminPanel({
                 <p className="text-[0.68rem] text-emerald-100/35">Problemas para entrar?</p>
                 <button
                   onClick={() => {
+                    // limpa tudo que pode estar guardado e já deixa o acesso pronto
                     setTokenAtivo(null);
                     setDados(null);
                     onSessaoExpirada();
                     setSessaoExpirada(false);
                     setErroLogin(null);
+                    setLogin('comando');
+                    setSenha('1234');
                   }}
-                  className="rounded border border-white/10 px-2 py-1 text-[0.68rem] font-semibold text-emerald-100/60 transition hover:border-pmpr-gold/40 hover:text-pmpr-gold"
+                  className="rounded border border-pmpr-gold/40 bg-pmpr-gold/10 px-2 py-1 text-[0.68rem] font-semibold text-pmpr-gold transition hover:bg-pmpr-gold/20"
                 >
-                  Limpar sessão salva
+                  Limpar e preencher acesso
                 </button>
               </div>
             </div>

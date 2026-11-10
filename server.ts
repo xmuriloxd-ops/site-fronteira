@@ -757,8 +757,31 @@ async function startServer() {
     app.use(vite.middlewares);
   } else {
     const distPath = path.join(process.cwd(), 'dist');
-    app.use(express.static(distPath));
+
+    // HTML e service worker nunca entram em cache: assim o navegador sempre
+    // pega o bundle novo (era isso que mantinha o painel no código antigo).
+    app.use((req, res, next) => {
+      const url = req.path;
+      if (url === '/' || url.endsWith('.html') || url === '/sw.js' || url === '/manifest.json') {
+        res.set('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
+        res.set('Pragma', 'no-cache');
+        res.set('Expires', '0');
+      }
+      next();
+    });
+
+    app.use(
+      express.static(distPath, {
+        setHeaders: (res, caminho) => {
+          // assets têm hash no nome: podem ser cacheados por muito tempo
+          if (/[\\/]assets[\\/]/.test(caminho)) {
+            res.set('Cache-Control', 'public, max-age=31536000, immutable');
+          }
+        },
+      }),
+    );
     app.get('*', (_req, res) => {
+      res.set('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
       res.sendFile(path.join(distPath, 'index.html'));
     });
   }

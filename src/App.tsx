@@ -48,6 +48,26 @@ export default function App() {
     void carregarConfig();
   }, [carregarConfig]);
 
+  // Remove o service worker de versões antigas do portal: ele podia servir
+  // JavaScript em cache e manter o painel do comando no código velho.
+  useEffect(() => {
+    if (!('serviceWorker' in navigator)) return;
+    void navigator.serviceWorker
+      .getRegistrations()
+      .then((registros) => Promise.all(registros.map((r) => r.unregister())))
+      .catch(() => {
+        /* navegador sem suporte ou bloqueado: segue sem service worker */
+      });
+    if ('caches' in window) {
+      void caches
+        .keys()
+        .then((nomes) => Promise.all(nomes.map((nome) => caches.delete(nome))))
+        .catch(() => {
+          /* sem caches a limpar */
+        });
+    }
+  }, []);
+
   /* --------------------------------- Editais -------------------------------- */
 
   const editais = useMemo<Edital[]>(
