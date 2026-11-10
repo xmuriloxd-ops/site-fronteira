@@ -26,7 +26,6 @@ import type { ConfigDiscordPainel } from './WebhookDiscord';
 import { DocumentoDivulgacao } from './DocumentoDivulgacao';
 import {
   UNIDADES_DIVULGACAO,
-  camposDivulgacao,
   corpoDivulgacao,
   tituloDivulgacao,
 } from '../lib/documentoTexto';
@@ -68,7 +67,10 @@ export function DivulgacaoTab({
   // Cartaz em imagem: prévia e anexo enviado ao Discord
   const [previaCartaz, setPreviaCartaz] = useState<string | null>(null);
   const [gerandoCartaz, setGerandoCartaz] = useState(false);
-  const [enviarCartaz, setEnviarCartaz] = useState(true);
+  // Texto impresso no cartaz. Vazio = usa o texto do documento.
+  const [textoCartaz, setTextoCartaz] = useState('');
+  const [seloCartaz, setSeloCartaz] = useState('');
+  const [apoioCartaz, setApoioCartaz] = useState('');
   const [msg, setMsg] = useState<{ tipo: 'ok' | 'erro' | 'info'; texto: string } | null>(null);
   const [salvando, setSalvando] = useState(false);
   const [publicando, setPublicando] = useState(false);
@@ -98,6 +100,16 @@ export function DivulgacaoTab({
   const alterar = <K extends keyof DivulgacaoInscricoes>(campo: K, valor: DivulgacaoInscricoes[K]) =>
     setDoc((d) => ({ ...d, [campo]: valor }));
 
+  /** Opções do cartaz com os textos que o comando editou (vazio usa o padrão). */
+  const opcoesCartaz = useMemo(
+    () => ({
+      selo: seloCartaz.trim() || 'INSCRIÇÕES ABERTAS',
+      textoChamada: textoCartaz.trim() ? textoCartaz : undefined,
+      apoio: apoioCartaz.trim() || undefined,
+    }),
+    [seloCartaz, textoCartaz, apoioCartaz],
+  );
+
   // Redesenha a prévia do cartaz um instante depois de cada edição
   useEffect(() => {
     let cancelado = false;
@@ -105,7 +117,7 @@ export function DivulgacaoTab({
     const t = setTimeout(async () => {
       setGerandoCartaz(true);
       try {
-        const previa = await urlPreviaCartaz(doc);
+        const previa = await urlPreviaCartaz(doc, opcoesCartaz);
         if (cancelado) {
           previa.revogar();
           return;
@@ -124,7 +136,7 @@ export function DivulgacaoTab({
       clearTimeout(t);
       revogar?.();
     };
-  }, [doc]);
+  }, [doc, opcoesCartaz]);
 
   const alternarUnidade = (id: string) =>
     setDoc((d) => {
@@ -182,31 +194,21 @@ export function DivulgacaoTab({
         return;
       }
 
-      // Gera o cartaz em imagem para ir junto do texto
-      let cartaz: File | undefined;
-      if (enviarCartaz) {
-        setGerandoCartaz(true);
-        try {
-          cartaz = await gerarCartaz(doc, { selo: 'INSCRIÇÕES ABERTAS' });
-        } catch {
-          cartaz = undefined;
-        } finally {
-          setGerandoCartaz(false);
-        }
+      // Gera o cartaz em imagem: é a única coisa enviada ao canal
+      setGerandoCartaz(true);
+      let cartaz: File;
+      try {
+        cartaz = await gerarCartaz(doc, opcoesCartaz);
+      } catch {
+        setMsg({ tipo: 'erro', texto: 'Não foi possível gerar o cartaz neste navegador.' });
+        return;
+      } finally {
+        setGerandoCartaz(false);
       }
 
       const resultado = await enviarPeloNavegador(url, {
         arquivo: cartaz,
-        titulo: `📣 ${tituloDivulgacao(doc)}`,
-        descricao: [
-          doc.texto.trim(),
-          doc.observacoes.trim() ? `\n_${doc.observacoes.trim()}_` : '',
-        ]
-          .filter(Boolean)
-          .join('\n'),
-        cor: 0xd4af37,
-        campos: camposDivulgacao(doc),
-        mencionarHere: true,
+        somenteImagem: true,
       });
 
       await fetch(`${API}/envios/registrar`, {
@@ -226,9 +228,7 @@ export function DivulgacaoTab({
       setMsg({
         tipo: resultado.ok ? 'ok' : 'erro',
         texto: resultado.ok
-          ? enviarCartaz && cartaz
-            ? 'Divulgação publicada no canal com o cartaz em imagem.'
-            : 'Divulgação publicada no canal.'
+          ? 'Cartaz da divulgação publicado no canal.'
           : resultado.detalhe,
       });
       if (resultado.ok) onAtualizar();
@@ -240,7 +240,7 @@ export function DivulgacaoTab({
   /** Baixa o cartaz em PNG para uso fora do Discord. */
   const baixarCartaz = async () => {
     try {
-      const arquivo = await gerarCartaz(doc);
+      const arquivo = await gerarCartaz(doc, opcoesCartaz);
       const link = document.createElement('a');
       link.href = URL.createObjectURL(arquivo);
       link.download = arquivo.name;
@@ -271,7 +271,9 @@ export function DivulgacaoTab({
         </p>
         <p className="mt-1 opacity-85">
           Escolha as unidades, edite o texto, a data e o horário e quem está divulgando. O documento é salvo no
-          portal e, ao publicar, vai para o canal do Discord com o @here.
+          portal. Ao publicar, o canal do Discord recebe{' '}
+          <strong className="font-semibold text-pmpr-gold">somente o cartaz em imagem</strong> — sem o texto do
+          documento. O @here segue a configuração do canal.
         </p>
       </div>
 
@@ -434,25 +436,57 @@ export function DivulgacaoTab({
               )}
             </div>
 
-            <button
-              onClick={() => setEnviarCartaz((v) => !v)}
-              className={`mt-2 flex w-full items-center gap-2 rounded-lg border p-2 text-left transition ${
-                enviarCartaz
-                  ? 'border-emerald-500/40 bg-emerald-500/8'
-                  : 'border-white/10 bg-white/[0.02] hover:border-white/25'
-              }`}
-            >
-              <span
-                className={`flex h-4 w-4 shrink-0 items-center justify-center rounded border ${
-                  enviarCartaz ? 'border-emerald-400 bg-emerald-500 text-ink-950' : 'border-white/25'
-                }`}
-              >
-                {enviarCartaz && <CheckCircle2 size={11} strokeWidth={3} />}
-              </span>
-              <span className="text-[0.72rem] font-semibold text-white/85">
-                Enviar o cartaz junto do texto no Discord
-              </span>
-            </button>
+            <div className="mt-3 space-y-2 border-t border-white/8 pt-3">
+              <p className="text-[0.66rem] font-semibold uppercase tracking-[0.14em] text-emerald-100/45">
+                Texto do cartaz
+              </p>
+
+              <div>
+                <label className="label" htmlFor="cart-selo">
+                  Faixa amarela
+                </label>
+                <input
+                  id="cart-selo"
+                  className="field text-[0.78rem]"
+                  value={seloCartaz}
+                  maxLength={40}
+                  onChange={(e) => setSeloCartaz(e.target.value)}
+                  placeholder="INSCRIÇÕES ABERTAS"
+                />
+              </div>
+
+              <div>
+                <label className="label" htmlFor="cart-apoio">
+                  Frase de apoio
+                </label>
+                <input
+                  id="cart-apoio"
+                  className="field text-[0.78rem]"
+                  value={apoioCartaz}
+                  maxLength={90}
+                  onChange={(e) => setApoioCartaz(e.target.value)}
+                  placeholder="Ex.: INGRESSE NA MAIOR FORÇA DE SEGURANÇA PÚBLICA DO PARANÁ"
+                />
+              </div>
+
+              <div>
+                <label className="label" htmlFor="cart-texto">
+                  Texto de chamada
+                </label>
+                <textarea
+                  id="cart-texto"
+                  className="field min-h-[64px] resize-y text-[0.78rem]"
+                  value={textoCartaz}
+                  maxLength={420}
+                  onChange={(e) => setTextoCartaz(e.target.value)}
+                  placeholder={doc.texto.trim() || 'Escreva a chamada que aparece no cartaz...'}
+                />
+                <p className="mt-1 flex items-center justify-between text-[0.6rem] text-emerald-100/30">
+                  <span>Vazio usa o texto do documento.</span>
+                  <span>{textoCartaz.length}/420</span>
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -465,8 +499,8 @@ export function DivulgacaoTab({
           Salvar documento
         </button>
         <button onClick={publicar} disabled={publicando} className="btn-gold px-4 py-2 text-[0.8rem] disabled:opacity-60">
-          {publicando ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
-          Publicar no Discord
+          {publicando ? <Loader2 size={14} className="animate-spin" /> : <ImageIcon size={14} />}
+          Enviar só o cartaz ao Discord
         </button>
         <button onClick={copiar} className="btn-ghost px-3 py-2 text-[0.78rem]">
           <Download size={13} />

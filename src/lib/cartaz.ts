@@ -166,6 +166,13 @@ export interface OpcoesCartaz {
   selo?: string;
   /** Texto do selo de data/horário. */
   quando?: string;
+  /**
+   * Linha de chamada impressa no cartaz. Quando informada, substitui o
+   * `texto` do documento — é o texto editado só para a imagem.
+   */
+  textoChamada?: string;
+  /** Frase de apoio sob a unidade. */
+  apoio?: string;
 }
 
 /**
@@ -307,7 +314,7 @@ export async function desenharCartaz(
   const apoioY = faixaY + faixaH + 58 + tamanho * 0.86 + 26;
   ctx.fillStyle = 'rgba(255,255,255,0.92)';
   ctx.font = `700 24px ${FONTE_TEXTO}`;
-  textoEspacado(ctx, fraseApoio(divulgacao), margem, apoioY, 1.1);
+  textoEspacado(ctx, opcoes.apoio?.trim() || fraseApoio(divulgacao), margem, apoioY, 1.1);
 
   /* --------------------- Blocos de data e horário --------------------- */
   const quando = opcoes.quando ?? formatarQuando(divulgacao.data, divulgacao.horario);
@@ -335,10 +342,11 @@ export async function desenharCartaz(
   }
 
   /* ----------------------- Texto de chamada --------------------------- */
-  if (divulgacao.texto.trim()) {
+  const chamada = (opcoes.textoChamada ?? divulgacao.texto).trim();
+  if (chamada) {
     ctx.fillStyle = 'rgba(255,255,255,0.80)';
     ctx.font = `400 21px ${FONTE_TEXTO}`;
-    const linhas = quebrarLinhas(ctx, divulgacao.texto.trim(), 640).slice(0, 3);
+    const linhas = quebrarLinhas(ctx, chamada, 640).slice(0, 3);
     linhas.forEach((linha, i) => ctx.fillText(linha, margem, by - 44 + i * 28));
   }
 

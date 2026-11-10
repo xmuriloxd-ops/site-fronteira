@@ -15,14 +15,21 @@ export interface CampoEmbed {
 }
 
 export interface MensagemDiscord {
-  titulo: string;
-  descricao: string;
+  /** Título do embed. Ignorado quando `somenteImagem` é verdadeiro. */
+  titulo?: string;
+  /** Texto do embed. Ignorado quando `somenteImagem` é verdadeiro. */
+  descricao?: string;
   url?: string;
   cor?: number;
   campos?: CampoEmbed[];
   mencionarHere?: boolean;
   /** Imagem anexada à mensagem (cartaz de divulgação, por exemplo). */
   arquivo?: File;
+  /**
+   * Manda só a imagem, sem embed de texto.
+   * Usado na divulgação: o canal recebe o cartaz e nada mais.
+   */
+  somenteImagem?: boolean;
 }
 
 export interface ResultadoEnvio {
@@ -72,26 +79,36 @@ export async function enviarPeloNavegador(
 
   const comAnexo = Boolean(mensagem.arquivo);
 
-  const payload = {
+  const base = {
     username: 'Portal de Inscrições PMPR',
     content: mensagem.mencionarHere ? '@here' : undefined,
     allowed_mentions: { parse: mensagem.mencionarHere ? ['everyone'] : [] },
-    embeds: [
-      {
-        title: mensagem.titulo,
-        description: mensagem.descricao,
-        url: mensagem.url,
-        color: mensagem.cor ?? 0x0b6b3a,
-        fields: mensagem.campos ?? [],
-        // Com o cartaz anexado, a imagem aparece dentro da mensagem.
-        ...(comAnexo && mensagem.arquivo
-          ? { image: { url: `attachment://${encodeURIComponent(mensagem.arquivo.name)}` } }
-          : {}),
-        footer: { text: 'Polícia Militar do Paraná · Portal de Inscrições' },
-        timestamp: new Date().toISOString(),
-      },
-    ],
   };
+
+  /**
+   * Só a imagem: o cartaz já traz o texto, então a mensagem fica limpa,
+   * sem embed nem campos.
+   */
+  const payload = mensagem.somenteImagem
+    ? base
+    : {
+        ...base,
+        embeds: [
+          {
+            title: mensagem.titulo,
+            description: mensagem.descricao,
+            url: mensagem.url,
+            color: mensagem.cor ?? 0x0b6b3a,
+            fields: mensagem.campos ?? [],
+            // Com o cartaz anexado, a imagem aparece dentro da mensagem.
+            ...(comAnexo && mensagem.arquivo
+              ? { image: { url: `attachment://${encodeURIComponent(mensagem.arquivo.name)}` } }
+              : {}),
+            footer: { text: 'Polícia Militar do Paraná · Portal de Inscrições' },
+            timestamp: new Date().toISOString(),
+          },
+        ],
+      };
 
   try {
     const resposta = await fetch(webhook, {
