@@ -1,6 +1,6 @@
 {
-  "name": "Controle de Ração - Grupo Btz",
-  "description": "Aplicativo para controle de saldo de ração em 3 silos, com registro de pesador, setor, lote e histórico de movimentações.",
+  "name": "RONE · Edital de Ingresso",
+  "description": "Site institucional da RONE (Rondas Ostensivas de Natureza Especial) com edital de ingresso, formulário de pré-inscrição, galeria de fotos e logos editáveis, painel de cores do tema e o jogo Operação RONE.",
   "requestFramePermissions": [],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+  "majorCapabilities": []
 }

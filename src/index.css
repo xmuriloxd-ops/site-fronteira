@@ -1,78 +1,173 @@
 @import "tailwindcss";
 
 @theme {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-card: var(--card);
-  --color-card-foreground: var(--card-foreground);
-  --color-border: var(--border);
+  --color-ink: var(--c-ink);
+  --color-ink-2: var(--c-ink-2);
+  --color-brand: var(--c-brand);
+  --color-brand-soft: var(--c-brand-soft);
+  --color-gold: var(--c-gold);
+  --color-alert: var(--c-alert);
+  --color-paper: var(--c-paper);
+  --font-display: "Barlow Condensed", "Arial Narrow", Impact, system-ui, sans-serif;
+  --font-sans: Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 }
 
 :root {
-  --background: #f8fafc; /* slate-50 */
-  --foreground: #1e293b; /* slate-800 */
-  --card: #ffffff;
-  --card-foreground: #1e293b;
-  --border: #e2e8f0; /* slate-200 */
+  --c-ink: #070c14;
+  --c-ink-2: #0d1522;
+  --c-brand: #123a63;
+  --c-brand-soft: #1d5488;
+  --c-gold: #c8a04a;
+  --c-alert: #b81f2b;
+  --c-paper: #e9eef4;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0f172a; /* slate-900 */
-    --foreground: #f8fafc; /* slate-50 */
-    --card: #151f32; /* slate-850 / darker slate card */
-    --card-foreground: #f1f5f9; /* slate-100 */
-    --border: #334155; /* slate-700 */
+html {
+  scroll-behavior: smooth;
+}
 
-    /* Override standard tailwind colors in dark mode to guarantee automatic adaptation! */
-    --color-white: #151f32;
-    --color-slate-50: #0f172a;
-    --color-slate-100: #1b2537;
-    --color-slate-200: #334155;
-    --color-slate-300: #475569;
-    --color-slate-400: #94a3b8;
-    --color-slate-500: #cbd5e1;
-    --color-slate-600: #cbd5e1;
-    --color-slate-700: #f1f5f9;
-    --color-slate-800: #f8fafc;
-    --color-slate-900: #ffffff;
-    
-    /* Make custom svgs and badges look fantastic too */
-    --color-indigo-50: #1b2537;
-    --color-[#002075]\/10: rgba(56, 189, 248, 0.1);
-    --color-[#002075]: #38bdf8; /* Brighter sky blue for readability in dark mode */
-    --color-emerald-50: #064e3b;
-    --color-rose-50: #4c0519;
-    --color-amber-50: #451a03;
+body {
+  margin: 0;
+  background-color: var(--c-ink);
+  color: var(--c-paper);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  overscroll-behavior-y: none;
+}
+
+::selection {
+  background: var(--c-gold);
+  color: #070c14;
+}
+
+/* ---------- Shared utility classes ---------- */
+.font-display {
+  font-family: var(--font-display);
+}
+
+.text-uppercase-wide {
+  text-transform: uppercase;
+  letter-spacing: 0.22em;
+}
+
+.hairline {
+  border-color: color-mix(in srgb, var(--c-paper) 14%, transparent);
+}
+
+.card {
+  background: linear-gradient(160deg, color-mix(in srgb, var(--c-ink-2) 92%, transparent), color-mix(in srgb, var(--c-ink) 96%, transparent));
+  border: 1px solid color-mix(in srgb, var(--c-paper) 12%, transparent);
+}
+
+.gold-line {
+  background-image: linear-gradient(90deg, transparent, var(--c-gold), transparent);
+}
+
+.grid-texture {
+  background-image:
+    linear-gradient(color-mix(in srgb, var(--c-paper) 4%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in srgb, var(--c-paper) 4%, transparent) 1px, transparent 1px);
+  background-size: 56px 56px;
+}
+
+.clip-corner {
+  clip-path: polygon(0 0, calc(100% - 18px) 0, 100% 18px, 100% 100%, 18px 100%, 0 calc(100% - 18px));
+}
+
+.hero-overlay {
+  background: linear-gradient(
+    180deg,
+    rgba(7, 12, 20, 0.72) 0%,
+    rgba(7, 12, 20, 0.5) 42%,
+    var(--c-ink) 100%
+  );
+}
+
+.clip-btn {
+  clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
+}
+
+.stripe-gold {
+  background: repeating-linear-gradient(
+    -45deg,
+    var(--c-gold) 0 14px,
+    transparent 14px 28px
+  );
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.hide-scrollbar {
+  scrollbar-width: none;
+}
+
+input,
+select,
+textarea {
+  font-family: inherit;
+}
+
+.field {
+  width: 100%;
+  background: color-mix(in srgb, #000 35%, var(--c-ink-2));
+  border: 1px solid color-mix(in srgb, var(--c-paper) 16%, transparent);
+  color: var(--c-paper);
+  padding: 0.65rem 0.8rem;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  outline: none;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+}
+.field:focus {
+  border-color: var(--c-gold);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--c-gold) 22%, transparent);
+}
+.field::placeholder {
+  color: color-mix(in srgb, var(--c-paper) 38%, transparent);
+}
+select.field option {
+  background: var(--c-ink-2);
+  color: var(--c-paper);
+}
+
+@keyframes pulse-slow {
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 1; }
+}
+.animate-pulse-slow {
+  animation: pulse-slow 2.6s ease-in-out infinite;
+}
+
+@keyframes rise {
+  from { opacity: 0; transform: translateY(18px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-rise {
+  animation: rise 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes sweep {
+  from { transform: translateX(-120%); }
+  to { transform: translateX(220%); }
+}
+.animate-sweep {
+  animation: sweep 4.5s ease-in-out infinite;
+}
+
+@media print {
+  body {
+    background: #fff !important;
+    color: #111 !important;
+  }
+  .no-print {
+    display: none !important;
+  }
+  .print-area,
+  .print-area * {
+    color: #111 !important;
+    background: #fff !important;
+    border-color: #999 !important;
+    box-shadow: none !important;
   }
 }
-
-html, body {
-  overscroll-behavior: none; /* Disable overscroll bounce for full native feel */
-  -webkit-overflow-scrolling: touch;
-  background-color: var(--background);
-  color: var(--foreground);
-}
-
-button, 
-a, 
-select, 
-[role="button"],
-.tab-button,
-.nav-bar,
-.bottom-nav {
-  user-select: none;
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  -webkit-touch-callout: none;
-}
-
-.safe-top {
-  padding-top: env(safe-area-inset-top, 0px);
-}
-
-.safe-bottom {
-  padding-bottom: env(safe-area-inset-bottom, 0px);
-}
-
