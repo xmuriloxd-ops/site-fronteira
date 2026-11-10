@@ -111,9 +111,9 @@ export function AdminPanel({
   onConfigChange: () => void;
   onTokenConfirmado?: (token: string) => void;
 }) {
-  // já vem preenchido com o acesso padrão do comando
-  const [login, setLogin] = useState('comando');
-  const [senha, setSenha] = useState('1234');
+  // campos vazios de propósito: não há preenchimento automático
+  const [login, setLogin] = useState('');
+  const [senha, setSenha] = useState('');
   const [verSenha, setVerSenha] = useState(false);
   const [erroLogin, setErroLogin] = useState<string | null>(null);
   const [entrando, setEntrando] = useState(false);
@@ -186,29 +186,6 @@ export function AdminPanel({
     if (tokenAtivo) void carregarDados(tokenAtivo);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tokenAtivo]);
-
-  // Sem token salvo, tenta reaproveitar a sessão do cookie gravado no login:
-  // se o servidor reconhecer, o painel abre direto, sem pedir nada.
-  useEffect(() => {
-    if (tokenAtivo) return;
-    let ativo = true;
-    (async () => {
-      try {
-        const r = await fetch(`${API}/data`, {
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'same-origin',
-        });
-        if (!ativo || !r.ok) return;
-        setDados(await r.json());
-      } catch {
-        /* sem cookie válido: mostra o login */
-      }
-    })();
-    return () => {
-      ativo = false;
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   const entrar = async () => {
     setErroLogin(null);
@@ -360,40 +337,21 @@ export function AdminPanel({
                 </button>
               </div>
 
-              <div className="mt-4 rounded-lg border border-pmpr-gold/25 bg-pmpr-gold/[0.07] p-3">
-                <p className="flex items-center gap-1.5 text-[0.64rem] font-bold uppercase tracking-[0.14em] text-pmpr-gold">
-                  <KeyRound size={11} />
-                  Acesso inicial
-                </p>
-                <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[0.76rem] text-pmpr-gold-soft/85">
-                  <span>
-                    Login: <span className="font-mono font-bold text-white">comando</span>
-                  </span>
-                  <span>
-                    Senha: <span className="font-mono font-bold text-white">1234</span>
-                  </span>
-                </div>
-                <p className="mt-1.5 text-[0.68rem] leading-relaxed text-emerald-100/40">
-                  Troque a senha depois do primeiro acesso, na aba <strong className="text-emerald-100/60">Login e senha</strong>.
-                </p>
-              </div>
-
               <div className="mt-2 flex items-center justify-between gap-2 rounded-lg border border-white/8 bg-white/[0.02] px-3 py-2">
                 <p className="text-[0.68rem] text-emerald-100/35">Problemas para entrar?</p>
                 <button
                   onClick={() => {
-                    // limpa tudo que pode estar guardado e já deixa o acesso pronto
                     setTokenAtivo(null);
                     setDados(null);
                     onSessaoExpirada();
                     setSessaoExpirada(false);
                     setErroLogin(null);
-                    setLogin('comando');
-                    setSenha('1234');
+                    setLogin('');
+                    setSenha('');
                   }}
-                  className="rounded border border-pmpr-gold/40 bg-pmpr-gold/10 px-2 py-1 text-[0.68rem] font-semibold text-pmpr-gold transition hover:bg-pmpr-gold/20"
+                  className="rounded border border-white/10 px-2 py-1 text-[0.68rem] font-semibold text-emerald-100/60 transition hover:border-pmpr-gold/40 hover:text-pmpr-gold"
                 >
-                  Limpar e preencher acesso
+                  Limpar sessão
                 </button>
               </div>
             </div>

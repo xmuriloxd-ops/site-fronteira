@@ -27,7 +27,9 @@ export default function App() {
   const [documentoAberto, setDocumentoAberto] = useState<string | null>(null);
   const [formularioAberto, setFormularioAberto] = useState(false);
   const [painelAberto, setPainelAberto] = useState(false);
-  const [token, setToken] = useState<string | null>(() => localStorage.getItem(TOKEN_KEY));
+  // Sessão sempre começa vazia: não há login automático.
+  // O comando precisa digitar login e senha a cada acesso.
+  const [token, setToken] = useState<string | null>(null);
   const [editalDiscord, setEditalDiscord] = useState<string | null>(null);
 
   /* ------------------------------ Configuração ----------------------------- */
@@ -47,6 +49,12 @@ export default function App() {
   useEffect(() => {
     void carregarConfig();
   }, [carregarConfig]);
+
+  // Versões antigas guardavam a sessão no navegador e entravam sozinhas.
+  // Isso acabou: limpamos o resquício para exigir login sempre.
+  useEffect(() => {
+    localStorage.removeItem(TOKEN_KEY);
+  }, []);
 
   // Remove o service worker de versões antigas do portal: ele podia servir
   // JavaScript em cache e manter o painel do comando no código velho.
@@ -122,18 +130,13 @@ export default function App() {
 
   const aoEntrar = (novoToken: string) => {
     setToken(novoToken);
-    localStorage.setItem(TOKEN_KEY, novoToken);
     setPainelAberto(true);
   };
 
   // O painel avisa quando consegue falar com o servidor: garante que o token
   // do App fique igual ao que está funcionando (evita voltar ao login).
   const sincronizarToken = (usado: string) => {
-    setToken((atual) => {
-      if (atual === usado) return atual;
-      localStorage.setItem(TOKEN_KEY, usado);
-      return usado;
-    });
+    setToken((atual) => (atual === usado ? atual : usado));
   };
 
   // Limpa apenas o token, mantendo o painel aberto para o login

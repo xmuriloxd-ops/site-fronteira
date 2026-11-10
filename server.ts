@@ -285,8 +285,6 @@ function tokenDaRequisicao(req: express.Request) {
   if (header?.startsWith('Bearer ')) return header.slice(7);
   const alternativa = req.headers['x-admin-token'];
   if (typeof alternativa === 'string' && alternativa) return alternativa;
-  const cookie = lerCookie(req, COOKIE_SESSAO);
-  if (cookie) return cookie;
   const query = req.query.token;
   return typeof query === 'string' ? query : undefined;
 }
@@ -472,13 +470,6 @@ async function startServer() {
     }
 
     const token = criarSessao(store, store.auth.login);
-    res.cookie(COOKIE_SESSAO, token, {
-      httpOnly: true,
-      sameSite: 'lax',
-      secure: req.secure,
-      maxAge: SESSION_TTL,
-      path: '/',
-    });
     res.json({ token, login: store.auth.login, expiraEmMs: SESSION_TTL });
   });
 
@@ -489,6 +480,7 @@ async function startServer() {
       const estado = carregarEstadoSessao();
       gravarEstadoSessao({ ...estado, revogados: [...estado.revogados, payload] });
     }
+    // limpa cookie de versões antigas (que permitiam reentrada automática)
     res.clearCookie(COOKIE_SESSAO, { path: '/' });
     res.json({ ok: true });
   });
@@ -555,13 +547,6 @@ async function startServer() {
     const token = criarSessao(store, store.auth.login);
     saveStore(store);
 
-    res.cookie(COOKIE_SESSAO, token, {
-      httpOnly: true,
-      sameSite: 'lax',
-      secure: req.secure,
-      maxAge: SESSION_TTL,
-      path: '/',
-    });
     res.json({ ok: true, login: store.auth.login, token, mensagem: 'Credenciais atualizadas.' });
   });
 
