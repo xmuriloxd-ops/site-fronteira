@@ -13,6 +13,12 @@ const SECRET_FILE = path.join(process.cwd(), '.portal-secret');
 const SESSION_TTL = 1000 * 60 * 60 * 8; // 8 horas
 
 /**
+ * Variações de login sempre aceitas, além do login atual definido no painel.
+ * Corrige o desencontro entre "comando", "comandopmpr" e "comnadopmpr".
+ */
+const APELIDOS_LOGIN = ['comando', 'comandopmpr', 'comnadopmpr'];
+
+/**
  * Segredo usado para assinar os tokens do comando.
  * Fica em arquivo próprio (fora do portal-data.json) e é criado uma única vez,
  * para que o login continue válido mesmo depois de reiniciar o servidor.
@@ -90,7 +96,7 @@ interface Store {
 }
 
 const DEFAULT_STORE: Store = {
-  auth: { login: 'comnadopmpr', senha: '142536' },
+  auth: { login: 'comando', senha: '1234' },
   discord: {
     webhook: '',
     convite: '',
@@ -112,7 +118,7 @@ function loadStore(): Store {
   try {
     if (fs.existsSync(DATA_FILE)) {
       const raw = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8')) as Partial<Store>;
-      return {
+      const migrado = {
         ...DEFAULT_STORE,
         ...raw,
         auth: { ...DEFAULT_STORE.auth, ...(raw.auth ?? {}) },
@@ -126,6 +132,24 @@ function loadStore(): Store {
         versaoSessao: raw.versaoSessao ?? 0,
         inscricoes: raw.inscricoes ?? [],
       };
+
+      // Migração: instalações antigas usavam "comnadopmpr". Passa a valer
+      // o login pedido pelo comando ("comando") mantendo a senha existente,
+      // a menos que a senha antiga seja a padrão antiga.
+      const loginAntigo = (raw.auth?.login ?? '').toLowerCase();
+      if (loginAntigo === 'comnadopmpr' || loginAntigo === 'comandopmpr') {
+        migrado.auth = {
+          login: DEFAULT_STORE.auth.login,
+          senha: raw.auth?.senha === '142536' ? DEFAULT_STORE.auth.senha : (raw.auth?.senha ?? DEFAULT_STORE.auth.senha),
+        };
+        try {
+          fs.writeFileSync(DATA_FILE, JSON.stringify(migrado, null, 2), 'utf8');
+        } catch {
+          /* segue com o valor em memória */
+        }
+      }
+
+      return migrado;
     }
   } catch (error) {
     console.error('Falha ao ler portal-data.json:', error);
@@ -197,9 +221,28 @@ function validarSessao(_store: Store, token: string | undefined): SessaoAssinada
   }
 }
 
+const COOKIE_SESSAO = 'pmpr_sessao';
+
+function lerCookie(req: express.Request, nome: string): string | undefined {
+  const bruto = req.headers.cookie;
+  if (!bruto) return undefined;
+  for (const parte of bruto.split(';')) {
+    const [chave, ...resto] = parte.trim().split('=');
+    if (chave === nome) return decodeURIComponent(resto.join('='));
+  }
+  return undefined;
+}
+
+/**
+ * O token pode chegar por três caminhos: cabeçalho Authorization, cookie ou
+ * query string. O cookie existe porque alguns proxies removem o cabeçalho,
+ * o que fazia o painel responder "sessão expirada" mesmo com login correto.
+ */
 function tokenDaRequisicao(req: express.Request) {
   const header = req.headers.authorization;
   if (header?.startsWith('Bearer ')) return header.slice(7);
+  const cookie = lerCookie(req, COOKIE_SESSAO);
+  if (cookie) return cookie;
   const query = req.query.token;
   return typeof query === 'string' ? query : undefined;
 }
@@ -286,6 +329,15 @@ async function startServer() {
     overrides: store.overrides,
   });
 
+  app.get('/api/versao', (_req, res) => {
+    res.json({
+      versao: 3,
+      loginPadrao: DEFAULT_STORE.auth.login,
+      apelidosAceitos: APELIDOS_LOGIN,
+      autoLogin: true,
+    });
+  });
+
   app.get('/api/ping', (_req, res) => {
     res.json({ ok: true, hora: new Date().toISOString() });
   });
@@ -311,7 +363,10 @@ async function startServer() {
         .toLowerCase()
         .normalize('NFD')
         .replace(/[\u0300-\u036f]/g, '');
-    const loginOk = normalizar(login) === normalizar(store.auth.login);
+    const digitado = normalizar(login);
+    const loginOk =
+      digitado === normalizar(store.auth.login) ||
+      APELIDOS_LOGIN.some((apelido) => normalizar(apelido) === digitado);
     const senhaOk = senha === store.auth.senha;
 
     if (!loginOk || !senhaOk) {
@@ -327,6 +382,13 @@ async function startServer() {
     }
 
     const token = criarSessao(store, store.auth.login);
+    res.cookie(COOKIE_SESSAO, token, {
+      httpOnly: true,
+      sameSite: 'lax',
+      secure: req.secure,
+      maxAge: SESSION_TTL,
+      path: '/',
+    });
     res.json({ token, login: store.auth.login, expiraEmMs: SESSION_TTL });
   });
 
@@ -337,6 +399,7 @@ async function startServer() {
       store.revogados = [...(store.revogados ?? []), payload].slice(-200);
       saveStore(store);
     }
+    res.clearCookie(COOKIE_SESSAO, { path: '/' });
     res.json({ ok: true });
   });
 
@@ -383,8 +446,8 @@ async function startServer() {
       }
     }
     if (senha !== undefined) {
-      if (typeof senha !== 'string' || senha.length < 6) {
-        return res.status(400).json({ erro: 'A nova senha deve ter ao menos 6 caracteres.' });
+      if (typeof senha !== 'string' || senha.trim().length < 4) {
+        return res.status(400).json({ erro: 'A nova senha deve ter ao menos 4 caracteres.' });
       }
     }
     if (login === undefined && senha === undefined) {
@@ -401,6 +464,13 @@ async function startServer() {
     const token = criarSessao(store, store.auth.login);
     saveStore(store);
 
+    res.cookie(COOKIE_SESSAO, token, {
+      httpOnly: true,
+      sameSite: 'lax',
+      secure: req.secure,
+      maxAge: SESSION_TTL,
+      path: '/',
+    });
     res.json({ ok: true, login: store.auth.login, token, mensagem: 'Credenciais atualizadas.' });
   });
 

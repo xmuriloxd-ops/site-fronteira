@@ -141,6 +141,7 @@ export function AdminPanel({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ login, senha }),
+        credentials: 'same-origin',
       });
       const d = await r.json();
       if (!r.ok) {
@@ -148,6 +149,9 @@ export function AdminPanel({
         return;
       }
       // ativa a sessão de imediato (sem esperar novo render do App)
+      setTokenAtivo(d.token);
+      setSessaoExpirada(false);
+      setErroConexao(null);
       setTokenAtivo(d.token);
       setSessaoExpirada(false);
       setErroConexao(null);
@@ -288,10 +292,10 @@ export function AdminPanel({
                 </p>
                 <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[0.76rem] text-pmpr-gold-soft/85">
                   <span>
-                    Login: <span className="font-mono font-bold text-white">comnadopmpr</span>
+                    Login: <span className="font-mono font-bold text-white">comando</span>
                   </span>
                   <span>
-                    Senha: <span className="font-mono font-bold text-white">142536</span>
+                    Senha: <span className="font-mono font-bold text-white">1234</span>
                   </span>
                 </div>
                 <p className="mt-1.5 text-[0.68rem] leading-relaxed text-emerald-100/40">
@@ -443,7 +447,12 @@ function DiscordTab({
     try {
       const corpo: Record<string, unknown> = { convite, canal, autoEnviar, mencionarHere };
       if (webhook.trim()) corpo.webhook = webhook.trim();
-      const r = await fetch(`${API}/discord`, { method: 'PATCH', headers: cabecalho(), body: JSON.stringify(corpo) });
+      const r = await fetch(`${API}/discord`, {
+        method: 'PATCH',
+        headers: cabecalho(),
+        body: JSON.stringify(corpo),
+        credentials: 'same-origin',
+      });
       const d = await r.json();
       setMsg({ tipo: r.ok ? 'ok' : 'erro', texto: d.mensagem ?? d.erro ?? 'Resposta inesperada.' });
       if (r.ok) {
@@ -461,7 +470,7 @@ function DiscordTab({
     setTestando(true);
     setMsg(null);
     try {
-      const r = await fetch(`${API}/discord/teste`, { method: 'POST', headers: cabecalho() });
+      const r = await fetch(`${API}/discord/teste`, { method: 'POST', headers: cabecalho(), credentials: 'same-origin' });
       const d = await r.json();
       setMsg({ tipo: r.ok ? 'ok' : 'erro', texto: d.detalhe ?? (r.ok ? 'Mensagem enviada.' : 'Falha no teste.') });
       onAtualizar();
@@ -481,6 +490,7 @@ function DiscordTab({
       const r = await fetch(`${API}/envios`, {
         method: 'POST',
         headers: cabecalho(),
+        credentials: 'same-origin',
         body: JSON.stringify({
           editalId: edital.id,
           titulo: `${edital.sigla} — ${edital.nome}`,
@@ -614,7 +624,7 @@ function DiscordTab({
           {dados.envios.length > 0 && (
             <button
               onClick={async () => {
-                await fetch(`${API}/envios`, { method: 'DELETE', headers: cabecalho() });
+                await fetch(`${API}/envios`, { method: 'DELETE', headers: cabecalho(), credentials: 'same-origin' });
                 onAtualizar();
               }}
               className="flex items-center gap-1 text-[0.68rem] text-emerald-100/35 hover:text-rose-300"
@@ -695,6 +705,7 @@ function EditaisTab({
       const r = await fetch(`${API}/editais/${id}`, {
         method: 'PATCH',
         headers: cabecalho(),
+        credentials: 'same-origin',
         body: JSON.stringify({ ...estado[id], notificar }),
       });
       const d = await r.json();
@@ -839,6 +850,7 @@ function TropaTab({
                     await fetch(`${API}/interessados/${i.id}`, {
                       method: 'PATCH',
                       headers: cabecalho(),
+                      credentials: 'same-origin',
                       body: JSON.stringify({ vinculado: !i.vinculado }),
                     });
                     onAtualizar();
@@ -854,7 +866,7 @@ function TropaTab({
                 </button>
                 <button
                   onClick={async () => {
-                    await fetch(`${API}/interessados/${i.id}`, { method: 'DELETE', headers: cabecalho() });
+                    await fetch(`${API}/interessados/${i.id}`, { method: 'DELETE', headers: cabecalho(), credentials: 'same-origin' });
                     onAtualizar();
                   }}
                   className="rounded p-1.5 text-emerald-100/30 hover:bg-rose-500/10 hover:text-rose-300"
@@ -894,7 +906,7 @@ function RecrutamentoTab({ cabecalho }: { cabecalho: () => Record<string, string
 
   const carregar = async () => {
     try {
-      const r = await fetch(`${API}/inscricoes`, { headers: cabecalho() });
+      const r = await fetch(`${API}/inscricoes`, { headers: cabecalho(), credentials: 'same-origin' });
       if (!r.ok) return;
       const d = await r.json();
       setInscricoes(d.inscricoes ?? []);
@@ -914,6 +926,7 @@ function RecrutamentoTab({ cabecalho }: { cabecalho: () => Record<string, string
       await fetch(`${API}/inscricoes/${id}`, {
         method: 'PATCH',
         headers: cabecalho(),
+        credentials: 'same-origin',
         body: JSON.stringify(corpo),
       });
       await carregar();
@@ -923,7 +936,7 @@ function RecrutamentoTab({ cabecalho }: { cabecalho: () => Record<string, string
   };
 
   const remover = async (id: string) => {
-    await fetch(`${API}/inscricoes/${id}`, { method: 'DELETE', headers: cabecalho() });
+    await fetch(`${API}/inscricoes/${id}`, { method: 'DELETE', headers: cabecalho(), credentials: 'same-origin' });
     setAberta(null);
     await carregar();
   };
@@ -1145,7 +1158,12 @@ function CredenciaisTab({
       if (novoLogin.trim() && novoLogin.trim() !== dados.login) corpo.login = novoLogin.trim();
       if (novaSenha) corpo.senha = novaSenha;
 
-      const r = await fetch(`${API}/credenciais`, { method: 'PATCH', headers: cabecalho(), body: JSON.stringify(corpo) });
+      const r = await fetch(`${API}/credenciais`, {
+        method: 'PATCH',
+        headers: cabecalho(),
+        body: JSON.stringify(corpo),
+        credentials: 'same-origin',
+      });
       const d = await r.json();
       if (!r.ok) {
         setMsg({ tipo: 'erro', texto: d.erro ?? 'Não foi possível alterar.' });
