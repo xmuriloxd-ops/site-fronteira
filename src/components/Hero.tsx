@@ -32,14 +32,7 @@ export function Hero({
               do Paraná
             </h1>
 
-            <p className="mt-6 max-w-xl text-sm leading-relaxed text-emerald-50/65 sm:text-base">
-              Inscrição aberta para o <strong className="font-semibold text-pmpr-gold-soft">13º BPM</strong>, o{' '}
-              <strong className="font-semibold text-pmpr-gold-soft">ROTAM</strong> e a{' '}
-              <strong className="font-semibold text-slate-200">RONE</strong>. Preencha o formulário da unidade e o
-              envio chega direto ao comando, sem página externa.
-            </p>
-
-            <div className="mt-8 flex flex-wrap items-center gap-3">
+            <div className="mt-9 flex flex-wrap items-center gap-3">
               <a href="#fichas-unidade" className="btn-gold text-sm">
                 Formulários ROTAM e RONE
                 <ArrowRight size={16} />
