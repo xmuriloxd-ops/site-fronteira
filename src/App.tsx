@@ -106,6 +106,12 @@ export default function App() {
     setPainelAberto(true);
   };
 
+  // Limpa apenas o token, mantendo o painel aberto para o login
+  const limparSessao = () => {
+    setToken(null);
+    localStorage.removeItem(TOKEN_KEY);
+  };
+
   const sair = () => {
     if (token) {
       void fetch('/api/admin/logout', { method: 'POST', headers: { Authorization: `Bearer ${token}` } });
@@ -205,6 +211,7 @@ export default function App() {
           onLogin={aoEntrar}
           onClose={() => setPainelAberto(false)}
           onLogout={sair}
+          onSessaoExpirada={limparSessao}
           onConfigChange={carregarConfig}
         />
       )}

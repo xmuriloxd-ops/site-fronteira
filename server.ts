@@ -225,6 +225,10 @@ async function startServer() {
     overrides: store.overrides,
   });
 
+  app.get('/api/ping', (_req, res) => {
+    res.json({ ok: true, hora: new Date().toISOString() });
+  });
+
   app.get('/api/health', (_req, res) => {
     res.json({ status: 'ok', editais: 3, interessados: store.interessados.length });
   });
@@ -240,7 +244,13 @@ async function startServer() {
     if (typeof login !== 'string' || typeof senha !== 'string') {
       return res.status(400).json({ erro: 'Informe login e senha.' });
     }
-    const loginOk = login.trim().toLowerCase() === store.auth.login.toLowerCase();
+    const normalizar = (v: string) =>
+      v
+        .trim()
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '');
+    const loginOk = normalizar(login) === normalizar(store.auth.login);
     const senhaOk = senha === store.auth.senha;
 
     if (!loginOk || !senhaOk) {

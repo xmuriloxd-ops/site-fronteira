@@ -45,13 +45,18 @@ export function FormularioModal({ onClose }: { onClose: () => void }) {
   }, [onClose]);
 
   const respondidas = useMemo(() => {
-    let total = 0;
-    if (nome.trim() && idade.trim() && idRp.trim()) total += 1;
+    // A identificação conta como um único bloco (nome + idade + ID).
+    let total = nome.trim() && idade.trim() && idRp.trim() ? 1 : 0;
+
     FORM.campos.forEach((c) => {
       if (c.tipo === 'identificacao') return;
-      const valor = c.id === 'escala' ? respostas.escala || outroEscala : respostas[c.id];
-      if (valor && valor.trim().length >= (c.minimoCaracteres ?? 1)) total += 1;
+      // Na pergunta da escala, vale a opção marcada OU o campo "Outro".
+      const valor = c.permiteOutro ? respostas[c.id] || outroEscala : respostas[c.id];
+      if (!valor) return;
+      if (c.minimoCaracteres && valor.trim().length < c.minimoCaracteres) return;
+      total += 1;
     });
+
     return total;
   }, [nome, idade, idRp, respostas, outroEscala]);
 
@@ -66,7 +71,7 @@ export function FormularioModal({ onClose }: { onClose: () => void }) {
 
     FORM.campos.forEach((c) => {
       if (c.tipo === 'identificacao') return;
-      const valor = c.id === 'escala' ? respostas.escala || outroEscala : respostas[c.id];
+      const valor = c.permiteOutro ? respostas[c.id] || outroEscala : respostas[c.id];
       if (c.obrigatorio && (!valor || !valor.trim())) {
         novos[c.id] = 'Esta resposta é obrigatória.';
       } else if (c.minimoCaracteres && valor && valor.trim().length < c.minimoCaracteres) {

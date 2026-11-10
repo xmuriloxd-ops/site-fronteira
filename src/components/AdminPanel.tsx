@@ -53,12 +53,14 @@ export function AdminPanel({
   onLogin,
   onClose,
   onLogout,
+  onSessaoExpirada,
   onConfigChange,
 }: {
   token: string | null;
   onLogin: (token: string) => void;
   onClose: () => void;
   onLogout: () => void;
+  onSessaoExpirada: () => void;
   onConfigChange: () => void;
 }) {
   const [login, setLogin] = useState('');
@@ -69,6 +71,8 @@ export function AdminPanel({
   const [aba, setAba] = useState<Aba>('discord');
   const [dados, setDados] = useState<AdminData | null>(null);
   const [carregando, setCarregando] = useState(false);
+  const [sessaoExpirada, setSessaoExpirada] = useState(false);
+  const [erroConexao, setErroConexao] = useState<string | null>(null);
 
   useEffect(() => {
     const aoTeclar = (e: KeyboardEvent) => {
@@ -94,12 +98,20 @@ export function AdminPanel({
     try {
       const r = await fetch(`${API}/data`, { headers: cabecalho() });
       if (r.status === 401) {
-        onLogout();
+        setDados(null);
+        setSessaoExpirada(true);
+        onSessaoExpirada();
         return;
       }
+      if (!r.ok) {
+        setErroConexao(`O servidor respondeu ${r.status}. Tente novamente em instantes.`);
+        return;
+      }
+      setSessaoExpirada(false);
+      setErroConexao(null);
       setDados(await r.json());
     } catch {
-      /* silencioso */
+      setErroConexao('Não foi possível falar com o servidor. Verifique a conexão e tente de novo.');
     } finally {
       setCarregando(false);
     }
@@ -155,11 +167,14 @@ export function AdminPanel({
             <div className="flex items-center gap-1.5">
               {token && (
                 <button
-                  onClick={onLogout}
-                  className="rounded-md border border-white/10 p-2 text-emerald-100/50 transition hover:border-rose-400/40 hover:text-rose-300"
-                  title="Sair"
+                  onClick={() => {
+                    onLogout();
+                  }}
+                  className="flex items-center gap-1.5 rounded-md border border-white/10 px-2 py-1.5 text-[0.7rem] font-semibold text-emerald-100/50 transition hover:border-rose-400/40 hover:text-rose-300"
+                  title="Encerrar sessão"
                 >
-                  <LogOut size={16} />
+                  <LogOut size={13} />
+                  <span className="hidden sm:inline">Sair</span>
                 </button>
               )}
               <button
@@ -190,6 +205,12 @@ export function AdminPanel({
               </div>
 
               <div className="mt-6 space-y-3">
+                {sessaoExpirada && (
+                  <div className="flex items-start gap-2 rounded-lg border border-amber-400/40 bg-amber-500/10 p-2.5 text-[0.76rem] leading-relaxed text-amber-200">
+                    <AlertCircle size={13} className="mt-0.5 shrink-0" />
+                    Sua sessão expirou. Entre novamente com login e senha.
+                  </div>
+                )}
                 <div>
                   <label className="label" htmlFor="admin-login">
                     Login
@@ -243,10 +264,37 @@ export function AdminPanel({
                 </button>
               </div>
 
-              <p className="mt-5 rounded-lg border border-white/8 bg-white/[0.02] p-3 text-center text-[0.7rem] leading-relaxed text-emerald-100/35">
-                As credenciais podem ser alteradas dentro do painel, na aba{' '}
-                <strong className="text-emerald-100/60">Login e senha</strong>.
-              </p>
+              <div className="mt-4 rounded-lg border border-pmpr-gold/25 bg-pmpr-gold/[0.07] p-3">
+                <p className="flex items-center gap-1.5 text-[0.64rem] font-bold uppercase tracking-[0.14em] text-pmpr-gold">
+                  <KeyRound size={11} />
+                  Acesso inicial
+                </p>
+                <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[0.76rem] text-pmpr-gold-soft/85">
+                  <span>
+                    Login: <span className="font-mono font-bold text-white">comnadopmpr</span>
+                  </span>
+                  <span>
+                    Senha: <span className="font-mono font-bold text-white">142536</span>
+                  </span>
+                </div>
+                <p className="mt-1.5 text-[0.68rem] leading-relaxed text-emerald-100/40">
+                  Troque a senha depois do primeiro acesso, na aba <strong className="text-emerald-100/60">Login e senha</strong>.
+                </p>
+              </div>
+
+              <div className="mt-2 flex items-center justify-between gap-2 rounded-lg border border-white/8 bg-white/[0.02] px-3 py-2">
+                <p className="text-[0.68rem] text-emerald-100/35">Problemas para entrar?</p>
+                <button
+                  onClick={() => {
+                    onSessaoExpirada();
+                    setSessaoExpirada(false);
+                    setErroLogin(null);
+                  }}
+                  className="rounded border border-white/10 px-2 py-1 text-[0.68rem] font-semibold text-emerald-100/60 transition hover:border-pmpr-gold/40 hover:text-pmpr-gold"
+                >
+                  Limpar sessão salva
+                </button>
+              </div>
             </div>
           </div>
         ) : (
@@ -281,8 +329,20 @@ export function AdminPanel({
 
             <div className="min-h-0 flex-1 overflow-y-auto p-5 sm:p-7">
               {carregando && !dados && (
-                <div className="flex items-center justify-center py-16 text-emerald-100/40">
+                <div className="flex flex-col items-center justify-center gap-2 py-16 text-emerald-100/40">
                   <Loader2 size={22} className="animate-spin" />
+                  <p className="text-[0.74rem]">Carregando dados do comando...</p>
+                </div>
+              )}
+
+              {!carregando && !dados && erroConexao && (
+                <div className="rounded-lg border border-rose-500/40 bg-rose-500/10 p-4 text-center">
+                  <AlertCircle size={20} className="mx-auto text-rose-300" />
+                  <p className="mt-2 text-[0.8rem] font-semibold text-rose-200">Falha ao carregar o painel</p>
+                  <p className="mt-1 text-[0.74rem] leading-relaxed text-rose-200/70">{erroConexao}</p>
+                  <button onClick={() => void carregarDados()} className="btn-ghost mx-auto mt-3 text-[0.76rem]">
+                    Tentar novamente
+                  </button>
                 </div>
               )}
 
