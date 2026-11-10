@@ -14,3 +14,6 @@ portal-data.json
 btz_access_logs.json
 btz_operators.json
 image-search/
+
+# Exemplos gerados localmente (não fazem parte do app)
+.exemplos/
