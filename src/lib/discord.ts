@@ -21,6 +21,8 @@ export interface MensagemDiscord {
   cor?: number;
   campos?: CampoEmbed[];
   mencionarHere?: boolean;
+  /** Imagem anexada à mensagem (cartaz de divulgação, por exemplo). */
+  arquivo?: File;
 }
 
 export interface ResultadoEnvio {
@@ -45,11 +47,13 @@ export function webhookPermitido(url: string): boolean {
 
 /**
  * Monta o corpo multipart. O boundary é obrigatório e o Discord espera
- * exatamente esta estrutura: `payload_json` como campo de formulário.
+ * exatamente esta estrutura: `payload_json` como campo de formulário e os
+ * arquivos em `files[0]`, `files[1]`...
  */
-function montarFormulario(payload: unknown): FormData {
+function montarFormulario(payload: unknown, arquivo?: File): FormData {
   const form = new FormData();
   form.append('payload_json', JSON.stringify(payload));
+  if (arquivo) form.append('files[0]', arquivo, arquivo.name);
   return form;
 }
 
@@ -66,6 +70,8 @@ export async function enviarPeloNavegador(
     return { ok: false, detalhe: 'Endereço de webhook inválido. Ele deve começar com https://discord.com/api/webhooks/' };
   }
 
+  const comAnexo = Boolean(mensagem.arquivo);
+
   const payload = {
     username: 'Portal de Inscrições PMPR',
     content: mensagem.mencionarHere ? '@here' : undefined,
@@ -77,6 +83,10 @@ export async function enviarPeloNavegador(
         url: mensagem.url,
         color: mensagem.cor ?? 0x0b6b3a,
         fields: mensagem.campos ?? [],
+        // Com o cartaz anexado, a imagem aparece dentro da mensagem.
+        ...(comAnexo && mensagem.arquivo
+          ? { image: { url: `attachment://${encodeURIComponent(mensagem.arquivo.name)}` } }
+          : {}),
         footer: { text: 'Polícia Militar do Paraná · Portal de Inscrições' },
         timestamp: new Date().toISOString(),
       },
@@ -86,7 +96,7 @@ export async function enviarPeloNavegador(
   try {
     const resposta = await fetch(webhook, {
       method: 'POST',
-      body: montarFormulario(payload),
+      body: montarFormulario(payload, mensagem.arquivo),
       // sem cabeçalho Content-Type: o navegador define o boundary sozinho
     });
 

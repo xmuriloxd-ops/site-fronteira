@@ -10,6 +10,7 @@ import {
   CheckCircle2,
   Clock4,
   Download,
+  Image as ImageIcon,
   Loader2,
   Megaphone,
   Printer,
@@ -19,15 +20,16 @@ import {
   UserCog,
 } from 'lucide-react';
 import { enviarPeloNavegador } from '../lib/discord';
+import { gerarCartaz, urlPreviaCartaz } from '../lib/cartaz';
 import { WebhookDiscord } from './WebhookDiscord';
 import type { ConfigDiscordPainel } from './WebhookDiscord';
+import { DocumentoDivulgacao } from './DocumentoDivulgacao';
 import {
   UNIDADES_DIVULGACAO,
-  DocumentoDivulgacao,
   camposDivulgacao,
   corpoDivulgacao,
   tituloDivulgacao,
-} from './DocumentoDivulgacao';
+} from '../lib/documentoTexto';
 import type { DivulgacaoInscricoes, EnvioDiscord } from '../types';
 
 const API = '/api/admin';
@@ -63,6 +65,10 @@ export function DivulgacaoTab({
     },
   );
   const [carregado, setCarregado] = useState(Boolean(inicial));
+  // Cartaz em imagem: prévia e anexo enviado ao Discord
+  const [previaCartaz, setPreviaCartaz] = useState<string | null>(null);
+  const [gerandoCartaz, setGerandoCartaz] = useState(false);
+  const [enviarCartaz, setEnviarCartaz] = useState(true);
   const [msg, setMsg] = useState<{ tipo: 'ok' | 'erro' | 'info'; texto: string } | null>(null);
   const [salvando, setSalvando] = useState(false);
   const [publicando, setPublicando] = useState(false);
@@ -91,6 +97,34 @@ export function DivulgacaoTab({
 
   const alterar = <K extends keyof DivulgacaoInscricoes>(campo: K, valor: DivulgacaoInscricoes[K]) =>
     setDoc((d) => ({ ...d, [campo]: valor }));
+
+  // Redesenha a prévia do cartaz um instante depois de cada edição
+  useEffect(() => {
+    let cancelado = false;
+    let revogar: (() => void) | undefined;
+    const t = setTimeout(async () => {
+      setGerandoCartaz(true);
+      try {
+        const previa = await urlPreviaCartaz(doc);
+        if (cancelado) {
+          previa.revogar();
+          return;
+        }
+        revogar = previa.revogar;
+        setPreviaCartaz(previa.url);
+      } catch {
+        /* imagem ainda indisponível: segue com o documento em texto */
+      } finally {
+        if (!cancelado) setGerandoCartaz(false);
+      }
+    }, 450);
+
+    return () => {
+      cancelado = true;
+      clearTimeout(t);
+      revogar?.();
+    };
+  }, [doc]);
 
   const alternarUnidade = (id: string) =>
     setDoc((d) => {
@@ -148,7 +182,21 @@ export function DivulgacaoTab({
         return;
       }
 
+      // Gera o cartaz em imagem para ir junto do texto
+      let cartaz: File | undefined;
+      if (enviarCartaz) {
+        setGerandoCartaz(true);
+        try {
+          cartaz = await gerarCartaz(doc, { selo: 'INSCRIÇÕES ABERTAS' });
+        } catch {
+          cartaz = undefined;
+        } finally {
+          setGerandoCartaz(false);
+        }
+      }
+
       const resultado = await enviarPeloNavegador(url, {
+        arquivo: cartaz,
         titulo: `📣 ${tituloDivulgacao(doc)}`,
         descricao: [
           doc.texto.trim(),
@@ -175,10 +223,32 @@ export function DivulgacaoTab({
         /* o envio já aconteceu */
       });
 
-      setMsg({ tipo: resultado.ok ? 'ok' : 'erro', texto: resultado.detalhe });
+      setMsg({
+        tipo: resultado.ok ? 'ok' : 'erro',
+        texto: resultado.ok
+          ? enviarCartaz && cartaz
+            ? 'Divulgação publicada no canal com o cartaz em imagem.'
+            : 'Divulgação publicada no canal.'
+          : resultado.detalhe,
+      });
       if (resultado.ok) onAtualizar();
     } finally {
       setPublicando(false);
+    }
+  };
+
+  /** Baixa o cartaz em PNG para uso fora do Discord. */
+  const baixarCartaz = async () => {
+    try {
+      const arquivo = await gerarCartaz(doc);
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(arquivo);
+      link.download = arquivo.name;
+      link.click();
+      setTimeout(() => URL.revokeObjectURL(link.href), 4000);
+      setMsg({ tipo: 'ok', texto: 'Cartaz baixado em PNG.' });
+    } catch {
+      setMsg({ tipo: 'erro', texto: 'Não foi possível gerar o cartaz neste navegador.' });
     }
   };
 
@@ -335,6 +405,55 @@ export function DivulgacaoTab({
           {!carregado && (
             <p className="text-[0.68rem] text-emerald-100/35">Carregando o documento salvo...</p>
           )}
+
+          {/* Cartaz em imagem enviado junto do texto */}
+          <div className="rounded-xl border border-pmpr-gold/25 bg-ink-950/60 p-3">
+            <div className="flex items-center justify-between gap-2">
+              <p className="eyebrow text-emerald-100/45">Cartaz da divulgação (imagem)</p>
+              <button
+                onClick={baixarCartaz}
+                className="flex items-center gap-1 rounded border border-white/12 px-2 py-1 text-[0.66rem] font-semibold text-emerald-100/60 transition hover:border-pmpr-gold/40 hover:text-pmpr-gold"
+              >
+                <Download size={10} />
+                Baixar PNG
+              </button>
+            </div>
+
+            <div className="relative mt-2 overflow-hidden rounded-lg border border-white/10 bg-black/40">
+              {previaCartaz ? (
+                <img src={previaCartaz} alt="Prévia do cartaz de divulgação" className="w-full" />
+              ) : (
+                <div className="flex h-40 items-center justify-center text-emerald-100/30">
+                  <ImageIcon size={18} />
+                </div>
+              )}
+              {gerandoCartaz && (
+                <div className="absolute inset-0 flex items-center justify-center bg-black/55">
+                  <Loader2 size={18} className="animate-spin text-pmpr-gold" />
+                </div>
+              )}
+            </div>
+
+            <button
+              onClick={() => setEnviarCartaz((v) => !v)}
+              className={`mt-2 flex w-full items-center gap-2 rounded-lg border p-2 text-left transition ${
+                enviarCartaz
+                  ? 'border-emerald-500/40 bg-emerald-500/8'
+                  : 'border-white/10 bg-white/[0.02] hover:border-white/25'
+              }`}
+            >
+              <span
+                className={`flex h-4 w-4 shrink-0 items-center justify-center rounded border ${
+                  enviarCartaz ? 'border-emerald-400 bg-emerald-500 text-ink-950' : 'border-white/25'
+                }`}
+              >
+                {enviarCartaz && <CheckCircle2 size={11} strokeWidth={3} />}
+              </span>
+              <span className="text-[0.72rem] font-semibold text-white/85">
+                Enviar o cartaz junto do texto no Discord
+              </span>
+            </button>
+          </div>
         </div>
       </div>
 
