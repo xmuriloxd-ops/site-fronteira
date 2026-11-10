@@ -22,10 +22,12 @@ const ICONES = {
 export function EditaisSection({
   editais,
   onAbrir,
+  onLerDocumento,
   onDiscord,
 }: {
   editais: Edital[];
   onAbrir: (id: string) => void;
+  onLerDocumento: (id: string) => void;
   onDiscord: (id: string) => void;
 }) {
   return (
@@ -98,19 +100,27 @@ export function EditaisSection({
                   ))}
                 </div>
 
-                <div className="mt-auto flex gap-2 pt-5">
-                  <button onClick={() => onAbrir(edital.id)} className="btn-gold flex-1 px-3 py-2.5 text-[0.8rem]">
+                <div className="mt-auto space-y-1.5 pt-5">
+                  <button onClick={() => onLerDocumento(edital.id)} className="btn-gold w-full px-3 py-2.5 text-[0.8rem]">
                     <FileText size={14} />
-                    Abrir edital
+                    Ler edital completo
                     <ArrowRight size={13} />
                   </button>
-                  <button
-                    onClick={() => onDiscord(edital.id)}
-                    title="Receber este edital no Discord"
-                    className="rounded-lg border border-pmpr-gold/25 px-3 py-2.5 text-pmpr-gold/85 transition hover:bg-pmpr-gold/10 hover:text-pmpr-gold"
-                  >
-                    <Send size={15} />
-                  </button>
+                  <div className="flex gap-1.5">
+                    <button
+                      onClick={() => onAbrir(edital.id)}
+                      className="flex-1 rounded-lg border border-white/10 px-3 py-2 text-[0.74rem] font-semibold text-emerald-50/65 transition hover:border-pmpr-gold/30 hover:text-pmpr-gold"
+                    >
+                      Resumo rápido
+                    </button>
+                    <button
+                      onClick={() => onDiscord(edital.id)}
+                      title="Receber este edital no Discord"
+                      className="rounded-lg border border-pmpr-gold/25 px-3 py-2 text-pmpr-gold/85 transition hover:bg-pmpr-gold/10 hover:text-pmpr-gold"
+                    >
+                      <Send size={14} />
+                    </button>
+                  </div>
                 </div>
               </div>
             </article>

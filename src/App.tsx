@@ -5,6 +5,9 @@ import { Header } from './components/Header';
 import { Hero } from './components/Hero';
 import { EditaisSection } from './components/EditaisSection';
 import { EditalModal } from './components/EditalModal';
+import { EditalDocumento } from './components/EditalDocumento';
+import { getDocumento } from './data/documentos';
+import { DocumentosSection } from './components/DocumentosSection';
 import { UnidadesSection } from './components/UnidadesSection';
 import { ProvasSection } from './components/ProvasSection';
 import { SimuladoSection } from './components/SimuladoSection';
@@ -19,6 +22,7 @@ export default function App() {
   const [config, setConfig] = useState<AppConfigPublica | null>(null);
   const [overrides, setOverrides] = useState<Record<string, EditalOverride>>({});
   const [editalAberto, setEditalAberto] = useState<string | null>(null);
+  const [documentoAberto, setDocumentoAberto] = useState<string | null>(null);
   const [painelAberto, setPainelAberto] = useState(false);
   const [token, setToken] = useState<string | null>(() => localStorage.getItem(TOKEN_KEY));
   const [editalDiscord, setEditalDiscord] = useState<string | null>(null);
@@ -73,6 +77,18 @@ export default function App() {
     setEditalAberto(id);
   };
 
+  const documentoSelecionado = useMemo(() => {
+    if (!documentoAberto) return null;
+    const edital = editais.find((e) => e.id === documentoAberto);
+    const doc = getDocumento(documentoAberto);
+    return edital && doc ? { edital, doc } : null;
+  }, [documentoAberto, editais]);
+
+  const lerDocumento = (id: string) => {
+    setEditalAberto(null);
+    setDocumentoAberto(id);
+  };
+
   const irParaDiscord = (editalId: string) => {
     setEditalDiscord(editalId);
     setEditalAberto(null);
@@ -105,9 +121,14 @@ export default function App() {
       />
 
       <main>
-        <Hero editais={editais} onAbrir={abrirEdital} />
+        <Hero editais={editais} onAbrir={abrirEdital} onLerDocumento={lerDocumento} />
 
-        <EditaisSection editais={editais} onAbrir={abrirEdital} onDiscord={irParaDiscord} />
+        <EditaisSection
+          editais={editais}
+          onAbrir={abrirEdital}
+          onLerDocumento={lerDocumento}
+          onDiscord={irParaDiscord}
+        />
 
         {/* Faixa de avisos do comando */}
         {avisos.length > 0 && (
@@ -127,6 +148,8 @@ export default function App() {
             </div>
           </Section>
         )}
+
+        <DocumentosSection editais={editais} onLerDocumento={lerDocumento} />
 
         <UnidadesSection />
 
@@ -153,6 +176,16 @@ export default function App() {
           aviso={overrides[editalSelecionado.id]?.aviso}
           onClose={() => setEditalAberto(null)}
           onDiscord={irParaDiscord}
+          onLerDocumento={lerDocumento}
+        />
+      )}
+
+      {documentoSelecionado && (
+        <EditalDocumento
+          doc={documentoSelecionado.doc}
+          edital={documentoSelecionado.edital}
+          publicacao={overrides[documentoSelecionado.edital.id]?.publicacao}
+          onClose={() => setDocumentoAberto(null)}
         />
       )}
 

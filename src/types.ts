@@ -108,6 +108,8 @@ export interface ConfigDiscord {
 export interface EditalOverride {
   status?: EditalStatus;
   aviso?: string;
+  /** Texto adicional publicado pelo comando, exibido no fim do documento. */
+  publicacao?: string;
 }
 
 export interface AdminData {

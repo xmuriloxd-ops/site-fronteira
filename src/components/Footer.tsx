@@ -1,4 +1,4 @@
-import { Phone, MapPin, ShieldCheck, ExternalLink } from 'lucide-react';
+import { Phone, MapPin, ShieldCheck } from 'lucide-react';
 import { Brasao } from './ui';
 
 export function Footer({ onAdminClick }: { onAdminClick: () => void }) {
@@ -26,26 +26,10 @@ export function Footer({ onAdminClick }: { onAdminClick: () => void }) {
               Portal demonstrativo de editais das seleções da PMPR, do ROTAM e da RONE. As informações são
               compiladas de fontes públicas e não substituem as publicações oficiais da corporação.
             </p>
-            <div className="mt-4 flex flex-wrap gap-2">
-              <a
-                href="https://www.pmpr.pr.gov.br"
-                target="_blank"
-                rel="noreferrer noopener"
-                className="inline-flex items-center gap-1.5 rounded-md border border-white/10 px-2.5 py-1.5 text-[0.72rem] font-semibold text-emerald-50/60 transition hover:border-pmpr-gold/35 hover:text-pmpr-gold"
-              >
-                Site oficial da PMPR
-                <ExternalLink size={11} />
-              </a>
-              <a
-                href="https://www.ibfc.org.br"
-                target="_blank"
-                rel="noreferrer noopener"
-                className="inline-flex items-center gap-1.5 rounded-md border border-white/10 px-2.5 py-1.5 text-[0.72rem] font-semibold text-emerald-50/60 transition hover:border-pmpr-gold/35 hover:text-pmpr-gold"
-              >
-                Banca IBFC
-                <ExternalLink size={11} />
-              </a>
-            </div>
+            <p className="mt-4 inline-flex items-center gap-1.5 rounded-md border border-emerald-500/25 bg-emerald-500/[0.06] px-2.5 py-1.5 text-[0.7rem] font-semibold text-emerald-300">
+              <ShieldCheck size={11} />
+              Editais publicados integralmente neste portal
+            </p>
           </div>
 
           <div>
@@ -53,7 +37,9 @@ export function Footer({ onAdminClick }: { onAdminClick: () => void }) {
             <ul className="mt-3 space-y-2">
               {[
                 ['Editais', '#editais'],
-                ['Provas anteriores', '#provas'],
+                ['Documentos na íntegra', '#documentos'],
+                ['Unidades', '#unidades'],
+                ['Banco de questões', '#questoes'],
                 ['Simulado', '#simulado'],
                 ['Discord', '#discord'],
               ].map(([label, href]) => (

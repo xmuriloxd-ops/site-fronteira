@@ -4,9 +4,9 @@ import { Brasao } from './ui';
 
 const LINKS = [
   { label: 'Editais', href: '#editais' },
+  { label: 'Documentos', href: '#documentos' },
   { label: 'Unidades', href: '#unidades' },
-  { label: 'Provas anteriores', href: '#provas' },
-  { label: 'Simulado', href: '#simulado' },
+  { label: 'Questões', href: '#questoes' },
   { label: 'Discord', href: '#discord' },
 ];
 

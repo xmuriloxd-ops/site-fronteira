@@ -17,18 +17,21 @@ import {
   Send,
   Users,
   Megaphone,
+  FileCheck2,
+  Download,
 } from 'lucide-react';
 import type { Edital } from '../types';
-import { getProvasDoEdital } from '../data/provas';
+import { getDocumento } from '../data/documentos';
+import { EditalDocumento } from './EditalDocumento';
 import { StatusBadge, TOM_COLORS } from './ui';
 
-type Aba = 'visao' | 'conteudo' | 'cronograma' | 'provas';
+type Aba = 'visao' | 'conteudo' | 'cronograma' | 'documento';
 
 const ABAS: { id: Aba; label: string; Icon: typeof FileText }[] = [
   { id: 'visao', label: 'Visão geral', Icon: ClipboardList },
   { id: 'conteudo', label: 'Conteúdo', Icon: BookOpen },
   { id: 'cronograma', label: 'Cronograma', Icon: CalendarDays },
-  { id: 'provas', label: 'Provas', Icon: FileText },
+  { id: 'documento', label: 'Edital completo', Icon: FileText },
 ];
 
 export function EditalModal({
@@ -36,15 +39,18 @@ export function EditalModal({
   aviso,
   onClose,
   onDiscord,
+  onLerDocumento,
 }: {
   edital: Edital;
   aviso?: string;
   onClose: () => void;
   onDiscord: (editalId: string) => void;
+  onLerDocumento: (id: string) => void;
 }) {
   const [aba, setAba] = useState<Aba>('visao');
+  const [documentoAberto, setDocumentoAberto] = useState(false);
   const tom = TOM_COLORS[edital.tom];
-  const provas = getProvasDoEdital(edital.id);
+  const documento = getDocumento(edital.id);
 
   useEffect(() => {
     const aoTeclar = (e: KeyboardEvent) => {
@@ -250,46 +256,73 @@ export function EditalModal({
             </div>
           )}
 
-          {aba === 'provas' && (
-            <div className="space-y-3">
-              <p className="text-[0.8rem] leading-relaxed text-emerald-50/55">
-                Provas anteriores e materiais públicos para treinar no formato da banca. Os links abrem em uma nova
-                aba.
-              </p>
-              {provas.map((p) => (
-                <a
-                  key={p.id}
-                  href={p.url}
-                  target="_blank"
-                  rel="noreferrer noopener"
-                  className="group flex items-start justify-between gap-3 rounded-lg border border-white/8 bg-white/[0.02] p-3.5 transition hover:border-pmpr-gold/35 hover:bg-white/[0.05]"
-                >
-                  <div className="min-w-0">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span
-                        className="rounded px-1.5 py-0.5 text-[0.6rem] font-bold uppercase tracking-wider"
-                        style={{ background: `${tom.cor}33`, color: tom.texto }}
-                      >
-                        {p.tipo}
-                      </span>
-                      <span className="text-[0.7rem] text-emerald-100/45">
-                        {p.ano} · {p.banca}
-                      </span>
-                    </div>
-                    <p className="mt-1 text-[0.84rem] font-semibold text-white">
-                      {p.cargo} — {p.orgao}
+          {aba === 'documento' && (
+            <div className="space-y-4">
+              {documento ? (
+                <>
+                  <div className="rounded-lg border border-pmpr-gold/20 bg-pmpr-gold/[0.06] p-4">
+                    <p className="flex items-center gap-2 text-[0.7rem] font-bold uppercase tracking-[0.14em] text-pmpr-gold">
+                      <FileCheck2 size={13} />
+                      Publicado neste portal
                     </p>
-                    {p.observacao && <p className="text-[0.75rem] text-emerald-50/50">{p.observacao}</p>}
-                    <p className="mt-1 text-[0.68rem] uppercase tracking-wider text-emerald-100/35">
-                      Fonte: {p.fonte}
+                    <p className="mt-1.5 text-[0.78rem] leading-relaxed text-emerald-50/60">
+                      O texto integral do edital está hospedado aqui, sem links externos. Você pode ler capítulo por
+                      capítulo, imprimir ou baixar uma cópia em texto.
                     </p>
                   </div>
-                  <ArrowUpRight
-                    size={16}
-                    className="mt-1 shrink-0 text-emerald-100/40 transition group-hover:text-pmpr-gold"
-                  />
-                </a>
-              ))}
+
+                  <div className="grid gap-2 sm:grid-cols-3">
+                    <div className="rounded-lg border border-white/8 bg-black/25 px-3 py-2.5">
+                      <p className="text-[0.58rem] font-bold uppercase tracking-[0.14em] text-emerald-100/35">
+                        Documento
+                      </p>
+                      <p className="mt-0.5 text-[0.76rem] font-semibold text-white">{documento.numero}</p>
+                    </div>
+                    <div className="rounded-lg border border-white/8 bg-black/25 px-3 py-2.5">
+                      <p className="text-[0.58rem] font-bold uppercase tracking-[0.14em] text-emerald-100/35">
+                        Capítulos
+                      </p>
+                      <p className="font-display mt-0.5 text-[0.92rem] font-bold text-white">
+                        {documento.secoes.length}
+                      </p>
+                    </div>
+                    <div className="rounded-lg border border-white/8 bg-black/25 px-3 py-2.5">
+                      <p className="text-[0.58rem] font-bold uppercase tracking-[0.14em] text-emerald-100/35">
+                        Versão
+                      </p>
+                      <p className="mt-0.5 text-[0.76rem] font-semibold text-white">
+                        {documento.versao} · {documento.atualizadoEm}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="rounded-lg border border-white/8 bg-white/[0.02] p-4">
+                    <p className="eyebrow text-emerald-100/40">Sumário</p>
+                    <ol className="mt-2 space-y-1">
+                      {documento.secoes.map((secao, i) => (
+                        <li key={secao.chave} className="flex gap-2 text-[0.78rem] leading-snug text-emerald-50/60">
+                          <span className="font-display shrink-0 text-[0.68rem] font-bold text-pmpr-gold/60">
+                            {String(i + 1).padStart(2, '0')}
+                          </span>
+                          {secao.titulo}
+                        </li>
+                      ))}
+                    </ol>
+                  </div>
+
+                  <button onClick={() => setDocumentoAberto(true)} className="btn-gold w-full text-sm">
+                    <FileText size={15} />
+                    Ler o edital completo
+                    <ArrowUpRight size={14} />
+                  </button>
+
+                  <p className="text-center text-[0.68rem] leading-relaxed text-emerald-100/30">
+                    {documento.rodape}
+                  </p>
+                </>
+              ) : (
+                <p className="text-[0.8rem] text-emerald-50/50">Documento em elaboração.</p>
+              )}
             </div>
           )}
         </div>
@@ -300,13 +333,27 @@ export function EditalModal({
             <p className="text-[0.68rem] text-emerald-100/35">
               Projeto demonstrativo · confira sempre o edital oficial da PMPR
             </p>
-            <button onClick={() => onDiscord(edital.id)} className="btn-gold px-3 py-2 text-[0.78rem]">
-              <Send size={13} />
-              Receber no Discord
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={() => onLerDocumento(edital.id)}
+                className="btn-ghost px-3 py-2 text-[0.78rem]"
+                disabled={!documento}
+              >
+                <Download size={13} />
+                Edital completo
+              </button>
+              <button onClick={() => onDiscord(edital.id)} className="btn-gold px-3 py-2 text-[0.78rem]">
+                <Send size={13} />
+                Receber no Discord
+              </button>
+            </div>
           </div>
         </div>
       </div>
+
+      {documentoAberto && documento && (
+        <EditalDocumento doc={documento} edital={edital} onClose={() => setDocumentoAberto(false)} />
+      )}
     </div>
   );
 }

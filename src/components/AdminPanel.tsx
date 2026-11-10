@@ -37,7 +37,7 @@ interface AdminData {
   };
   interessados: Interessado[];
   envios: EnvioDiscord[];
-  overrides: Record<string, { status?: EditalStatus; aviso?: string }>;
+  overrides: Record<string, { status?: EditalStatus; aviso?: string; publicacao?: string }>;
 }
 
 const API = '/api/admin';
@@ -582,13 +582,18 @@ function EditaisTab({
   cabecalho: () => Record<string, string>;
   onAtualizar: () => void;
 }) {
-  const [estado, setEstado] = useState<Record<string, { status: EditalStatus; aviso: string }>>(() =>
-    Object.fromEntries(
-      EDITAIS.map((e) => [
-        e.id,
-        { status: dados.overrides[e.id]?.status ?? e.status, aviso: dados.overrides[e.id]?.aviso ?? '' },
-      ]),
-    ),
+  const [estado, setEstado] = useState<Record<string, { status: EditalStatus; aviso: string; publicacao: string }>>(
+    () =>
+      Object.fromEntries(
+        EDITAIS.map((e) => [
+          e.id,
+          {
+            status: dados.overrides[e.id]?.status ?? e.status,
+            aviso: dados.overrides[e.id]?.aviso ?? '',
+            publicacao: dados.overrides[e.id]?.publicacao ?? '',
+          },
+        ]),
+      ),
   );
   const [salvandoId, setSalvandoId] = useState<string | null>(null);
   const [msg, setMsg] = useState<{ tipo: 'ok' | 'erro'; texto: string } | null>(null);
@@ -615,8 +620,10 @@ function EditaisTab({
   return (
     <div className="space-y-4">
       <p className="text-[0.78rem] leading-relaxed text-emerald-50/50">
-        Altere o status exibido no portal e publique um aviso para a tropa. Com o envio automático ativo, a
-        mudança também é notificada no Discord.
+        Altere o status exibido no portal, publique um aviso para a tropa e complemente o texto do edital. O campo
+        <strong className="text-emerald-100/70"> Publicação complementar </strong>
+        aparece no fim do documento oficial do site. Com o envio automático ativo, a mudança também é notificada no
+        Discord.
       </p>
 
       {EDITAIS.map((e) => (
@@ -645,6 +652,19 @@ function EditaisTab({
             onChange={(ev) => setEstado((s) => ({ ...s, [e.id]: { ...s[e.id], aviso: ev.target.value } }))}
             placeholder="Aviso exibido no portal (opcional)"
           />
+
+          <div className="mt-2">
+            <label className="text-[0.62rem] font-bold uppercase tracking-[0.14em] text-emerald-100/35">
+              Publicação complementar no documento ({estado[e.id].publicacao.length}/4000)
+            </label>
+            <textarea
+              className="field mt-1 min-h-[80px] resize-y text-[0.8rem]"
+              value={estado[e.id].publicacao}
+              maxLength={4000}
+              onChange={(ev) => setEstado((s) => ({ ...s, [e.id]: { ...s[e.id], publicacao: ev.target.value } }))}
+              placeholder="Ex.: Retificação do item 4.2 — nova data de pagamento da taxa."
+            />
+          </div>
 
           <div className="mt-2.5 flex flex-wrap gap-2">
             <button

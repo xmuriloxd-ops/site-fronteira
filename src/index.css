@@ -246,3 +246,69 @@ body {
     scroll-behavior: auto;
   }
 }
+
+/* ---------------- Impressão do edital ---------------- */
+
+@media print {
+  @page {
+    size: A4;
+    margin: 18mm 16mm;
+  }
+
+  html,
+  body {
+    background: #fff !important;
+    color: #111 !important;
+  }
+
+  /* Esconde tudo o que não faz parte do documento */
+  header,
+  footer,
+  nav,
+  aside,
+  .print\:hidden {
+    display: none !important;
+  }
+
+  /* O leitor ocupa a página inteira */
+  .fixed {
+    position: static !important;
+    inset: auto !important;
+    display: block !important;
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+    background: #fff !important;
+  }
+
+  .absolute.inset-0 {
+    display: none !important;
+  }
+
+  article {
+    max-width: none !important;
+    padding: 0 !important;
+    color: #111 !important;
+  }
+
+  article h1,
+  article h2,
+  article p,
+  article li,
+  article td,
+  article th {
+    color: #111 !important;
+  }
+
+  article section {
+    break-inside: avoid;
+  }
+
+  article table {
+    break-inside: avoid;
+  }
+
+  a[href]::after {
+    content: '';
+  }
+}

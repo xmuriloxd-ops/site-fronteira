@@ -2,7 +2,15 @@ import { ArrowRight, BadgeCheck, CalendarDays, MapPin, Users } from 'lucide-reac
 import type { Edital } from '../types';
 import { Brasao, StatusBadge, TOM_COLORS } from './ui';
 
-export function Hero({ editais, onAbrir }: { editais: Edital[]; onAbrir: (id: string) => void }) {
+export function Hero({
+  editais,
+  onAbrir,
+  onLerDocumento,
+}: {
+  editais: Edital[];
+  onAbrir: (id: string) => void;
+  onLerDocumento: (id: string) => void;
+}) {
   return (
     <div className="relative overflow-hidden">
       <div className="absolute inset-0 bg-radial-green" />
@@ -34,8 +42,8 @@ export function Hero({ editais, onAbrir }: { editais: Edital[]; onAbrir: (id: st
             </p>
 
             <div className="mt-8 flex flex-wrap items-center gap-3">
-              <button onClick={() => onAbrir('pmpr-soldado')} className="btn-gold text-sm">
-                Ver edital do Soldado
+              <button onClick={() => onLerDocumento('pmpr-soldado')} className="btn-gold text-sm">
+                Ler edital do Soldado
                 <ArrowRight size={16} />
               </button>
               <a href="#editais" className="btn-ghost text-sm">
@@ -88,7 +96,7 @@ export function Hero({ editais, onAbrir }: { editais: Edital[]; onAbrir: (id: st
             return (
               <button
                 key={e.id}
-                onClick={() => onAbrir(e.id)}
+                onClick={() => onLerDocumento(e.id)}
                 style={{ animationDelay: `${180 + idx * 80}ms` }}
                 className="group animate-fade-up relative overflow-hidden rounded-xl border border-white/8 bg-white/[0.03] p-5 text-left transition hover:border-pmpr-gold/35 hover:bg-white/[0.055]"
               >

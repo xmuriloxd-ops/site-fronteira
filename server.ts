@@ -43,7 +43,7 @@ interface Store {
   discord: DiscordConfig;
   interessados: Interessado[];
   envios: EnvioDiscord[];
-  overrides: Record<string, { status?: string; aviso?: string }>;
+  overrides: Record<string, { status?: string; aviso?: string; publicacao?: string }>;
   logs: { id: string; criadoEm: string; ip: string; ua: string }[];
   sessions: Record<string, { login: string; expiraEm: number }>;
 }
@@ -396,7 +396,7 @@ async function startServer() {
 
   app.patch('/api/admin/editais/:id', exigirAdmin, async (req, res) => {
     const { id } = req.params;
-    const { status, aviso, notificar } = req.body ?? {};
+    const { status, aviso, publicacao, notificar } = req.body ?? {};
 
     const permitido = ['aberto', 'em-breve', 'encerrado'];
     if (status !== undefined && !permitido.includes(status)) {
@@ -407,6 +407,7 @@ async function startServer() {
       ...(store.overrides[id] ?? {}),
       ...(status !== undefined ? { status } : {}),
       ...(aviso !== undefined ? { aviso: String(aviso) } : {}),
+      ...(publicacao !== undefined ? { publicacao: String(publicacao).slice(0, 4000) } : {}),
     };
     saveStore(store);
 
