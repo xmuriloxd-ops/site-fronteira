@@ -629,9 +629,22 @@ async function startServer() {
     });
   }
 
-  app.listen(PORT, '0.0.0.0', () => {
-    console.log(`Portal de Editais PMPR em http://0.0.0.0:${PORT}`);
-  });
+  // O preview da plataforma expõe portas específicas. Escutamos na porta
+  // principal e também na 24678, que é a porta acompanhada pelo preview.
+  const PORTAS = Array.from(new Set([PORT, Number(process.env.PREVIEW_PORT) || 24678]));
+
+  for (const porta of PORTAS) {
+    const servidor = app.listen(porta, '0.0.0.0', () => {
+      console.log(`Portal de Editais PMPR em http://0.0.0.0:${porta}`);
+    });
+    servidor.on('error', (erro: NodeJS.ErrnoException) => {
+      if (erro.code === 'EADDRINUSE') {
+        console.error(`Porta ${porta} já está em uso — seguindo com as demais.`);
+      } else {
+        console.error(`Falha ao escutar na porta ${porta}:`, erro.message);
+      }
+    });
+  }
 }
 
 startServer();
