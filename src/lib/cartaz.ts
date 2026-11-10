@@ -20,23 +20,89 @@ const PRETO = '#0a0a0a';
 const FONTE_TITULO = '"Anton", "Arial Narrow", Impact, sans-serif';
 const FONTE_TEXTO = '"Barlow Condensed", "Arial Narrow", sans-serif';
 
+/** Textos e arte de cada unidade divulgada. */
+export interface TemaCartaz {
+  id: 'pmpr' | 'rotam' | 'rone';
+  /** Nome usado no selo de identificação do cartaz. */
+  nome: string;
+  /** Foto de fundo. */
+  fundo: string;
+  /** Frase da faixa amarela. */
+  selo: string;
+  /** Linha pequena acima da palavra grande. */
+  chamada: string;
+  /** Palavra grande em destaque. */
+  destaque: string;
+  /** Frase de apoio. */
+  apoio: string;
+  /** Três blocos com ícone no rodapé da arte. */
+  blocos: { titulo: string; titulo2: string; icone: 'documento' | 'escudo' | 'pessoas' }[];
+}
+
+/**
+ * A arte muda conforme a unidade da divulgação: foto, faixa, palavra grande,
+ * frase de apoio e blocos. Estas são as três tropas do portal.
+ */
+export const TEMAS_CARTAZ: Record<TemaCartaz['id'], TemaCartaz> = {
+  pmpr: {
+    id: 'pmpr',
+    nome: 'Polícia Militar do Paraná',
+    fundo: '/divulgacao/pano-de-fundo.jpg',
+    selo: 'EDITAL ABERTO',
+    chamada: 'CONCURSO PARA',
+    destaque: 'SOLDADO',
+    apoio: 'INGRESSE NA MAIOR FORÇA DE SEGURANÇA PÚBLICA DO PARANÁ',
+    blocos: [
+      { titulo: 'EDITAL', titulo2: 'PUBLICADO', icone: 'documento' },
+      { titulo: 'VAGAS PARA', titulo2: 'SOLDADO', icone: 'escudo' },
+      { titulo: 'NÍVEL MÉDIO', titulo2: 'COMPLETO', icone: 'pessoas' },
+    ],
+  },
+  rotam: {
+    id: 'rotam',
+    nome: 'ROTAM',
+    fundo: '/divulgacao/pano-rotam.jpg',
+    selo: 'INSCRIÇÕES ABERTAS',
+    chamada: 'SELEÇÃO INTERNA',
+    destaque: 'ROTAM',
+    apoio: 'RONDA TÁTICA EM TODO O PARANÁ, A QUALQUER HORA',
+    blocos: [
+      { titulo: 'CURSO', titulo2: 'OPERACIONAL', icone: 'escudo' },
+      { titulo: 'SELEÇÃO', titulo2: 'INTERNA', icone: 'documento' },
+      { titulo: 'EFETIVO DA', titulo2: 'ATIVA', icone: 'pessoas' },
+    ],
+  },
+  rone: {
+    id: 'rone',
+    nome: 'RONE',
+    fundo: '/divulgacao/pano-rone.jpg',
+    selo: 'INSCRIÇÕES ABERTAS',
+    chamada: 'SELEÇÃO INTERNA',
+    destaque: 'RONE',
+    apoio: 'OPERAÇÕES ESPECIAIS — A TROPA DE ELITE DA PMPR',
+    blocos: [
+      { titulo: 'CURSO DE', titulo2: 'OPERAÇÕES', icone: 'escudo' },
+      { titulo: 'SELEÇÃO', titulo2: 'INTERNA', icone: 'documento' },
+      { titulo: 'EFETIVO DA', titulo2: 'ATIVA', icone: 'pessoas' },
+    ],
+  },
+};
+
+/** Textos fixos da arte, iguais em qualquer unidade. */
 const textoFixo = {
   orgao: 'POLÍCIA MILITAR',
   orgao2: 'DO PARANÁ',
   lema: 'DISCIPLINA   |   LEALDADE   |   SERVIÇO',
   canto1: 'JUNTE-SE A NÓS',
   canto2: 'E FAÇA A DIFERENÇA',
-  selo: 'EDITAL ABERTO',
-  chamada: 'CONCURSO PARA',
-  destaque: 'SOLDADO',
-  apoio: 'INGRESSE NA MAIOR FORÇA DE SEGURANÇA PÚBLICA DO PARANÁ',
-  blocos: [
-    { titulo: 'EDITAL', titulo2: 'PUBLICADO', icone: 'documento' as const },
-    { titulo: 'VAGAS PARA', titulo2: 'SOLDADO', icone: 'escudo' as const },
-    { titulo: 'NÍVEL MÉDIO', titulo2: 'COMPLETO', icone: 'pessoas' as const },
-  ],
   governo: 'GOVERNO DO ESTADO',
 };
+
+/** Tema do cartaz a partir da unidade escolhida. */
+export function temaDoCartaz(unidade?: string | null): TemaCartaz {
+  if (unidade && unidade in TEMAS_CARTAZ) return TEMAS_CARTAZ[unidade as TemaCartaz['id']];
+  return TEMAS_CARTAZ.pmpr;
+}
 
 /* ----------------------------- carregamento ----------------------------- */
 
@@ -221,6 +287,32 @@ const ICONES = {
   pessoas: iconePessoas,
 };
 
+/**
+ * Desenha um texto numa camada do tamanho da faixa e cola só essa fatia.
+ * Assim nenhuma marca da fonte (como a cedilha do Ç) aparece fora da faixa,
+ * qualquer que seja o renderizador.
+ */
+function textoNaFaixa(
+  ctx: CanvasRenderingContext2D,
+  texto: string,
+  x: number,
+  linhaDeBase: number,
+  topo: number,
+  altura: number,
+  fonte: string,
+  cor: string,
+) {
+  const camada = document.createElement('canvas');
+  camada.width = ctx.canvas.width;
+  camada.height = altura;
+  const c = camada.getContext('2d');
+  if (!c) return;
+  c.fillStyle = cor;
+  c.font = fonte;
+  c.fillText(texto, x, linhaDeBase - topo);
+  ctx.drawImage(camada, 0, topo);
+}
+
 /** Espera as fontes do cartaz, com prazo para não travar a prévia. */
 async function carregarFontes() {
   if (typeof document === 'undefined' || !('fonts' in document)) return;
@@ -240,10 +332,12 @@ async function carregarFontes() {
  * Desenha o cartaz e devolve o canvas pronto.
  */
 export async function desenharCartaz(
-  _divulgacao: DivulgacaoInscricoes,
-  _opcoes: OpcoesCartaz = {},
+  divulgacao: DivulgacaoInscricoes,
+  opcoes: OpcoesCartaz = {},
 ): Promise<HTMLCanvasElement> {
   await carregarFontes();
+
+  const tema = temaDoCartaz(opcoes.unidade ?? divulgacao.unidades[0]);
 
   const tela = document.createElement('canvas');
   tela.width = LARGURA;
@@ -252,7 +346,7 @@ export async function desenharCartaz(
   if (!ctx) throw new Error('Este navegador não suporta geração de imagem.');
 
   const [fundo, brasaoImg] = await Promise.all([
-    carregarImagem('/divulgacao/pano-de-fundo.jpg'),
+    carregarImagem(tema.fundo),
     carregarImagem('/pmpr-brasao.png').catch(() => null),
   ]);
   const brasao = brasaoImg ? imagemSemFundo(brasaoImg) : null;
@@ -341,6 +435,8 @@ export async function desenharCartaz(
   /* ----------------------------- Faixa amarela ---------------------------- */
   const faixaY = 236;
   const faixaH = 96;
+  // retângulo de base garante que nenhuma letra fique acima da faixa
+  ctx.fillRect(0, faixaY, LARGURA * 0.57, faixaH);
   ctx.beginPath();
   ctx.moveTo(0, faixaY);
   ctx.lineTo(LARGURA * 0.57, faixaY);
@@ -350,49 +446,77 @@ export async function desenharCartaz(
   ctx.fillStyle = AMARELO;
   ctx.fill();
 
-  ctx.fillStyle = PRETO;
-  ctx.font = `400 74px ${FONTE_TITULO}`;
-  ctx.fillText(textoFixo.selo, margem, faixaY + faixaH - 18);
+  // O texto só existe dentro da faixa: nenhuma marca da fonte escapa para cima
+  textoNaFaixa(
+    ctx,
+    tema.selo,
+    margem,
+    faixaY + faixaH - 18,
+    faixaY,
+    faixaH,
+    `400 74px ${FONTE_TITULO}`,
+    PRETO,
+  );
 
   /* ---------------------- Concurso para + destaque ---------------------- */
   ctx.fillStyle = BRANCO;
   ctx.font = `400 58px ${FONTE_TITULO}`;
-  ctx.fillText(textoFixo.chamada, margem - 4, 392);
+  ctx.fillText(tema.chamada, margem - 4, 392);
 
   // Palavra grande: encolhe até caber na metade esquerda
   let tamanho = 182;
   const limite = LARGURA * 0.53;
   ctx.font = `400 ${tamanho}px ${FONTE_TITULO}`;
-  while (ctx.measureText(textoFixo.destaque).width > limite && tamanho > 60) {
+  while (ctx.measureText(tema.destaque).width > limite && tamanho > 60) {
     tamanho -= 4;
     ctx.font = `400 ${tamanho}px ${FONTE_TITULO}`;
   }
   ctx.fillStyle = BRANCO;
   ctx.shadowColor = 'rgba(0,0,0,0.6)';
   ctx.shadowBlur = 18;
-  ctx.fillText(textoFixo.destaque, margem - 6, 404 + tamanho * 0.86);
+  ctx.fillText(tema.destaque, margem - 6, 404 + tamanho * 0.86);
   ctx.shadowBlur = 0;
 
   /* --------------------------- Frase de apoio --------------------------- */
   const apoioY = 404 + tamanho * 0.86 + 42;
   ctx.fillStyle = BRANCO;
-  ctx.font = `600 28px ${FONTE_TEXTO}`;
-  ctx.fillText(textoFixo.apoio, margem, apoioY, LARGURA * 0.62);
+  const limiteApoio = LARGURA * 0.66;
+  let tamApoio = 28;
+  ctx.font = `600 ${tamApoio}px ${FONTE_TEXTO}`;
+  while (ctx.measureText(tema.apoio).width > limiteApoio && tamApoio > 17) {
+    tamApoio -= 1;
+    ctx.font = `600 ${tamApoio}px ${FONTE_TEXTO}`;
+  }
+  ctx.fillText(tema.apoio, margem, apoioY);
 
   /* ------------------------ Blocos com ícones ------------------------ */
   const blocoY = apoioY + 56;
   const coluna = 320;
-  textoFixo.blocos.forEach((bloco, i) => {
+  tema.blocos.forEach((bloco, i) => {
     const bx = margem + i * coluna;
     ICONES[bloco.icone](ctx, bx, blocoY, 64);
 
     ctx.fillStyle = BRANCO;
-    ctx.font = `700 30px ${FONTE_TEXTO}`;
+    const larguraColuna = coluna - 56;
+    const ajustar = (texto: string) => {
+      let t = 30;
+      ctx.font = `700 ${t}px ${FONTE_TEXTO}`;
+      while (ctx.measureText(texto).width > larguraColuna && t > 20) {
+        t -= 1;
+        ctx.font = `700 ${t}px ${FONTE_TEXTO}`;
+      }
+      return t;
+    };
+    const cor = 'rgba(255,255,255,1)';
+    ctx.fillStyle = cor;
+    ajustar(bloco.titulo);
     ctx.fillText(bloco.titulo, bx, blocoY + 110);
+    ctx.fillStyle = cor;
+    ajustar(bloco.titulo2);
     ctx.fillText(bloco.titulo2, bx, blocoY + 142);
 
     // Separador entre os blocos
-    if (i < textoFixo.blocos.length - 1) {
+    if (i < tema.blocos.length - 1) {
       ctx.save();
       ctx.strokeStyle = 'rgba(255,255,255,0.35)';
       ctx.lineWidth = 1.5;
@@ -461,11 +585,8 @@ export function canvasParaBlob(tela: HTMLCanvasElement): Promise<Blob> {
 }
 
 export interface OpcoesCartaz {
-  /** Mantido por compatibilidade: o cartaz agora tem texto fixo. */
-  selo?: string;
-  quando?: string;
-  textoChamada?: string;
-  apoio?: string;
+  /** Unidade cuja arte será usada: pmpr, rotam ou rone. */
+  unidade?: string;
 }
 
 /** Gera o cartaz e devolve como arquivo pronto para anexar. */
@@ -475,8 +596,13 @@ export async function gerarCartaz(
 ): Promise<File> {
   const tela = await desenharCartaz(divulgacao, opcoes);
   const blob = await canvasParaBlob(tela);
-  const nome = 'edital-aberto-soldado-pmpr.png';
+  const nome = arquivoDoCartaz(temaDoCartaz(opcoes.unidade ?? divulgacao.unidades[0]));
   return new File([blob], nome, { type: 'image/png' });
+}
+
+/** Nome do arquivo enviado ao Discord. */
+export function arquivoDoCartaz(tema: TemaCartaz): string {
+  return tema.id === 'pmpr' ? 'edital-aberto-soldado-pmpr.png' : `divulgacao-${tema.id}.png`;
 }
 
 /** URL da prévia, com função para revogar o objeto. */

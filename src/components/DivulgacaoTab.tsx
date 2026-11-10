@@ -20,7 +20,7 @@ import {
   UserCog,
 } from 'lucide-react';
 import { enviarPeloNavegador } from '../lib/discord';
-import { gerarCartaz, urlPreviaCartaz } from '../lib/cartaz';
+import { TEMAS_CARTAZ, gerarCartaz, temaDoCartaz, urlPreviaCartaz } from '../lib/cartaz';
 import { WebhookDiscord } from './WebhookDiscord';
 import type { ConfigDiscordPainel } from './WebhookDiscord';
 import { DocumentoDivulgacao } from './DocumentoDivulgacao';
@@ -66,6 +66,8 @@ export function DivulgacaoTab({
   const [carregado, setCarregado] = useState(Boolean(inicial));
   // Cartaz em imagem: prévia e anexo enviado ao Discord
   const [previaCartaz, setPreviaCartaz] = useState<string | null>(null);
+  // Unidade cuja arte aparece no cartaz. Clicar na unidade troca o cartaz.
+  const [unidadeCartaz, setUnidadeCartaz] = useState<string | null>(inicial?.unidades[0] ?? null);
   const [gerandoCartaz, setGerandoCartaz] = useState(false);
   const [msg, setMsg] = useState<{ tipo: 'ok' | 'erro' | 'info'; texto: string } | null>(null);
   const [salvando, setSalvando] = useState(false);
@@ -81,6 +83,7 @@ export function DivulgacaoTab({
         const d = (await r.json()) as { divulgacao?: DivulgacaoInscricoes };
         if (vivo && d.divulgacao) {
           setDoc(d.divulgacao);
+          setUnidadeCartaz((u) => u ?? d.divulgacao!.unidades[0] ?? null);
           setCarregado(true);
         }
       } catch {
@@ -103,7 +106,7 @@ export function DivulgacaoTab({
     const t = setTimeout(async () => {
       setGerandoCartaz(true);
       try {
-        const previa = await urlPreviaCartaz(doc);
+        const previa = await urlPreviaCartaz(doc, { unidade: unidadeCartaz ?? undefined });
         if (cancelado) {
           previa.revogar();
           return;
@@ -122,14 +125,17 @@ export function DivulgacaoTab({
       clearTimeout(t);
       revogar?.();
     };
-  }, [doc]);
+  }, [doc, unidadeCartaz]);
 
-  const alternarUnidade = (id: string) =>
+  const alternarUnidade = (id: string) => {
+    // Clicar na unidade também troca a arte do cartaz (foto e texto).
+    setUnidadeCartaz(id);
     setDoc((d) => {
       const tem = d.unidades.includes(id);
       const proximas = tem ? d.unidades.filter((u) => u !== id) : [...d.unidades, id];
       return { ...d, unidades: proximas.length ? proximas : d.unidades };
     });
+  };
 
   const textoCompleto = useMemo(() => {
     const linhas = corpoDivulgacao(doc);
@@ -184,7 +190,7 @@ export function DivulgacaoTab({
       setGerandoCartaz(true);
       let cartaz: File;
       try {
-        cartaz = await gerarCartaz(doc);
+        cartaz = await gerarCartaz(doc, { unidade: unidadeCartaz ?? undefined });
       } catch {
         setMsg({ tipo: 'erro', texto: 'Não foi possível gerar o cartaz neste navegador.' });
         return;
@@ -226,7 +232,7 @@ export function DivulgacaoTab({
   /** Baixa o cartaz em PNG para uso fora do Discord. */
   const baixarCartaz = async () => {
     try {
-      const arquivo = await gerarCartaz(doc);
+      const arquivo = await gerarCartaz(doc, { unidade: unidadeCartaz ?? undefined });
       const link = document.createElement('a');
       link.href = URL.createObjectURL(arquivo);
       link.download = arquivo.name;
@@ -397,7 +403,10 @@ export function DivulgacaoTab({
           {/* Cartaz em imagem enviado junto do texto */}
           <div className="rounded-xl border border-pmpr-gold/25 bg-ink-950/60 p-3">
             <div className="flex items-center justify-between gap-2">
-              <p className="eyebrow text-emerald-100/45">Cartaz da divulgação (imagem)</p>
+              <p className="eyebrow text-emerald-100/45">
+                Cartaz da divulgação ·{' '}
+                <span className="text-pmpr-gold">{temaDoCartaz(unidadeCartaz).nome.toUpperCase()}</span>
+              </p>
               <button
                 onClick={baixarCartaz}
                 className="flex items-center gap-1 rounded border border-white/12 px-2 py-1 text-[0.66rem] font-semibold text-emerald-100/60 transition hover:border-pmpr-gold/40 hover:text-pmpr-gold"
@@ -423,8 +432,30 @@ export function DivulgacaoTab({
             </div>
 
             <p className="mt-2 text-[0.66rem] leading-relaxed text-emerald-100/35">
-              Arte fixa do modelo oficial: o que muda é só o que estiver marcado nas unidades.
+              A arte acompanha a unidade: clique em PMPR, ROTAM ou RONE para trocar a foto e os textos do
+              cartaz. O texto dentro da arte é automático.
             </p>
+
+            <div className="mt-2 grid grid-cols-3 gap-1">
+              {(Object.keys(TEMAS_CARTAZ) as (keyof typeof TEMAS_CARTAZ)[]).map((id) => {
+                const tema = TEMAS_CARTAZ[id];
+                const ativo = temaDoCartaz(unidadeCartaz).id === id;
+                return (
+                  <button
+                    key={id}
+                    onClick={() => setUnidadeCartaz(id)}
+                    className={`rounded border px-1.5 py-1 text-[0.64rem] font-bold transition ${
+                      ativo
+                        ? 'border-pmpr-gold/60 bg-pmpr-gold/15 text-pmpr-gold'
+                        : 'border-white/10 text-emerald-100/50 hover:border-white/25 hover:text-white'
+                    }`}
+                    title={`Cartaz da ${tema.nome}`}
+                  >
+                    {tema.id === 'pmpr' ? 'PMPR' : tema.id.toUpperCase()}
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
       </div>
