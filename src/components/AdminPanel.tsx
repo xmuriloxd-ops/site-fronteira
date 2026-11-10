@@ -23,7 +23,6 @@ import {
   UserCheck,
   Clock4,
   XCircle,
-  Info,
 } from 'lucide-react';
 import { EDITAIS } from '../data/editais';
 import type { EditalStatus, Interessado, EnvioDiscord, InscricaoRecrutamento } from '../types';
@@ -64,15 +63,17 @@ export function AdminPanel({
   onSessaoExpirada: () => void;
   onConfigChange: () => void;
 }) {
-  const [login, setLogin] = useState('');
-  const [senha, setSenha] = useState('');
+  // já vem preenchido com o acesso padrão do comando
+  const [login, setLogin] = useState('comando');
+  const [senha, setSenha] = useState('1234');
   const [verSenha, setVerSenha] = useState(false);
   const [erroLogin, setErroLogin] = useState<string | null>(null);
   const [entrando, setEntrando] = useState(false);
   const [aba, setAba] = useState<Aba>('discord');
   const [dados, setDados] = useState<AdminData | null>(null);
   const [carregando, setCarregando] = useState(false);
-  const [sessaoExpirada, setSessaoExpirada] = useState(false);
+  // mantido para a lógica de sessão; a mensagem não é mais exibida
+  const [, setSessaoExpirada] = useState(false);
   const [erroConexao, setErroConexao] = useState<string | null>(null);
   // token em uso pelo painel: começa com o token salvo e passa a valer
   // imediatamente após o login, sem depender de um novo render do App.
@@ -102,15 +103,18 @@ export function AdminPanel({
 
   const carregarDados = async (paraToken?: string | null) => {
     const uso = paraToken ?? tokenAtivo;
-    if (!uso) return;
     setCarregando(true);
     try {
       const r = await fetch(`${API}/data`, {
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${uso}` },
+        headers: uso
+          ? { 'Content-Type': 'application/json', Authorization: `Bearer ${uso}` }
+          : { 'Content-Type': 'application/json' },
+        credentials: 'same-origin',
       });
       if (r.status === 401) {
         setDados(null);
-        setSessaoExpirada(true);
+        // só é fim de sessão se havia uma sessão para terminar
+        setSessaoExpirada(Boolean(uso));
         setTokenAtivo(null);
         onSessaoExpirada();
         return;
@@ -134,6 +138,29 @@ export function AdminPanel({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tokenAtivo]);
 
+  // Sem token salvo, tenta reaproveitar a sessão do cookie gravado no login:
+  // se o servidor reconhecer, o painel abre direto, sem pedir nada.
+  useEffect(() => {
+    if (tokenAtivo) return;
+    let ativo = true;
+    (async () => {
+      try {
+        const r = await fetch(`${API}/data`, {
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'same-origin',
+        });
+        if (!ativo || !r.ok) return;
+        setDados(await r.json());
+      } catch {
+        /* sem cookie válido: mostra o login */
+      }
+    })();
+    return () => {
+      ativo = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const entrar = async () => {
     setErroLogin(null);
     setEntrando(true);
@@ -149,10 +176,7 @@ export function AdminPanel({
         setErroLogin(d.erro ?? 'Não foi possível entrar.');
         return;
       }
-      // ativa a sessão de imediato (sem esperar novo render do App)
-      setTokenAtivo(d.token);
-      setSessaoExpirada(false);
-      setErroConexao(null);
+      // ativa a sessão de imediato, sem esperar novo render do App
       setTokenAtivo(d.token);
       setSessaoExpirada(false);
       setErroConexao(null);
@@ -227,12 +251,6 @@ export function AdminPanel({
               </div>
 
               <div className="mt-6 space-y-3">
-                {sessaoExpirada && (
-                  <div className="flex items-start gap-2 rounded-lg border border-white/12 bg-white/[0.04] p-2.5 text-[0.76rem] leading-relaxed text-emerald-100/60">
-                    <Info size={13} className="mt-0.5 shrink-0" />
-                    Sessão anterior encerrada. Entre com o login e a senha abaixo.
-                  </div>
-                )}
                 <div>
                   <label className="label" htmlFor="admin-login">
                     Login
