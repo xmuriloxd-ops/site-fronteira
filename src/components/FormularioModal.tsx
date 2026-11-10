@@ -13,18 +13,28 @@ import {
   CalendarDays,
 } from 'lucide-react';
 import { FORMULARIO_RECRUTAMENTO } from '../data/recrutamento';
-import type { InscricaoRecrutamento } from '../types';
+import type { FormularioRecrutamento, InscricaoRecrutamento } from '../types';
 
 type Respostas = Record<string, string>;
 
-const FORM = FORMULARIO_RECRUTAMENTO;
-
-export function FormularioModal({ onClose }: { onClose: () => void }) {
+/**
+ * Formulário preenchível. Aceita qualquer ficha (13º BPM, ROTAM, RONE...):
+ * o padrão é o edital de recrutamento, mas o componente não depende dele.
+ */
+export function FormularioModal({
+  onClose,
+  formulario = FORMULARIO_RECRUTAMENTO,
+}: {
+  onClose: () => void;
+  formulario?: FormularioRecrutamento;
+}) {
+  const FORM = formulario;
   const [nome, setNome] = useState('');
   const [idade, setIdade] = useState('');
   const [idRp, setIdRp] = useState('');
   const [respostas, setRespostas] = useState<Respostas>({});
-  const [outroEscala, setOutroEscala] = useState('');
+  // texto do "Outro:" de cada pergunta que permite alternativa
+  const [outros, setOutros] = useState<Record<string, string>>({});
   const [erros, setErros] = useState<Record<string, string>>({});
   const [enviando, setEnviando] = useState(false);
   const [enviado, setEnviado] = useState<InscricaoRecrutamento | null>(null);
@@ -51,14 +61,14 @@ export function FormularioModal({ onClose }: { onClose: () => void }) {
     FORM.campos.forEach((c) => {
       if (c.tipo === 'identificacao') return;
       // Na pergunta da escala, vale a opção marcada OU o campo "Outro".
-      const valor = c.permiteOutro ? respostas[c.id] || outroEscala : respostas[c.id];
+      const valor = c.permiteOutro ? respostas[c.id] || outros[c.id] : respostas[c.id];
       if (!valor) return;
       if (c.minimoCaracteres && valor.trim().length < c.minimoCaracteres) return;
       total += 1;
     });
 
     return total;
-  }, [nome, idade, idRp, respostas, outroEscala]);
+  }, [nome, idade, idRp, respostas, outros]);
 
   const totalCampos = FORM.campos.length;
   const progresso = Math.round((respondidas / totalCampos) * 100);
@@ -71,7 +81,7 @@ export function FormularioModal({ onClose }: { onClose: () => void }) {
 
     FORM.campos.forEach((c) => {
       if (c.tipo === 'identificacao') return;
-      const valor = c.permiteOutro ? respostas[c.id] || outroEscala : respostas[c.id];
+      const valor = c.permiteOutro ? respostas[c.id] || outros[c.id] : respostas[c.id];
       if (c.obrigatorio && (!valor || !valor.trim())) {
         novos[c.id] = 'Esta resposta é obrigatória.';
       } else if (c.minimoCaracteres && valor && valor.trim().length < c.minimoCaracteres) {
@@ -93,6 +103,14 @@ export function FormularioModal({ onClose }: { onClose: () => void }) {
 
     setEnviando(true);
     try {
+      // texto livre de "Outro:" por campo (substitui a opção quando preenchido)
+      const outrosPreenchidos: Record<string, string> = {};
+      const pares = Object.keys(outros).map((k) => [k, outros[k]] as [string, string]);
+      for (const [chave, texto] of pares) {
+        const limpo = texto.trim();
+        if (limpo) outrosPreenchidos[chave] = respostas[chave] || limpo;
+      }
+
       const corpo = {
         formularioId: FORM.id,
         nome: nome.trim(),
@@ -100,7 +118,8 @@ export function FormularioModal({ onClose }: { onClose: () => void }) {
         idRp: idRp.trim(),
         respostas: {
           ...respostas,
-          ...(outroEscala.trim() ? { escala: outroEscala.trim() } : {}),
+          // o texto livre de "Outro:" entra no lugar da opção, por campo
+          ...outrosPreenchidos,
         },
       };
       const r = await fetch('/api/public/recrutamento', {
@@ -348,15 +367,28 @@ export function FormularioModal({ onClose }: { onClose: () => void }) {
                         <div className="mt-2 pl-5">
                           {(campo.tipo === 'texto' || campo.tipo === 'texto-longo') && (
                             <>
-                              <textarea
-                                className="w-full resize-y rounded border border-pmpr-green/30 bg-white px-2.5 py-2 text-[0.82rem] leading-relaxed text-[#1a2419] outline-none focus:border-pmpr-green"
-                                rows={campo.tipo === 'texto-longo' ? 4 : 2}
-                                value={valor}
-                                placeholder={campo.placeholder ?? 'Escreva sua resposta...'}
-                                onChange={(e) =>
-                                  setRespostas((r) => ({ ...r, [campo.id]: e.target.value }))
-                                }
-                              />
+                              {campo.tipo === 'texto' ? (
+                                // resposta curta (QRA, UND): uma linha só
+                                <input
+                                  type="text"
+                                  className="w-full rounded border border-pmpr-green/30 bg-white px-2.5 py-2 text-[0.82rem] leading-relaxed text-[#1a2419] outline-none focus:border-pmpr-green"
+                                  value={valor}
+                                  placeholder={campo.placeholder ?? 'Escreva sua resposta...'}
+                                  onChange={(e) =>
+                                    setRespostas((r) => ({ ...r, [campo.id]: e.target.value }))
+                                  }
+                                />
+                              ) : (
+                                <textarea
+                                  className="w-full resize-y rounded border border-pmpr-green/30 bg-white px-2.5 py-2 text-[0.82rem] leading-relaxed text-[#1a2419] outline-none focus:border-pmpr-green"
+                                  rows={4}
+                                  value={valor}
+                                  placeholder={campo.placeholder ?? 'Escreva sua resposta...'}
+                                  onChange={(e) =>
+                                    setRespostas((r) => ({ ...r, [campo.id]: e.target.value }))
+                                  }
+                                />
+                              )}
                               <div className="mt-1 flex items-center justify-between text-[0.64rem]">
                                 <span className={erro ? 'font-semibold text-rose-600' : 'text-[#7a8a7a]'}>
                                   {erro ?? (minimo ? `Mínimo de ${minimo} caracteres` : '')}
@@ -414,7 +446,7 @@ export function FormularioModal({ onClose }: { onClose: () => void }) {
                                     type="button"
                                     onClick={() => {
                                       setRespostas((r) => ({ ...r, [campo.id]: opcao }));
-                                      setOutroEscala('');
+                                      setOutros((o) => ({ ...o, [campo.id]: '' }));
                                     }}
                                     className={`flex w-full items-center gap-2 rounded border px-2.5 py-2 text-left text-[0.8rem] transition ${
                                       ativo
@@ -439,11 +471,12 @@ export function FormularioModal({ onClose }: { onClose: () => void }) {
                                 </span>
                                 <input
                                   className="mt-1 w-full rounded border border-pmpr-green/30 bg-white px-2.5 py-2 text-[0.82rem] text-[#1a2419] outline-none focus:border-pmpr-green"
-                                  value={outroEscala}
+                                  value={outros[campo.id] ?? ''}
                                   placeholder="Descreva outra condição, se houver"
                                   onChange={(e) => {
-                                    setOutroEscala(e.target.value);
-                                    if (e.target.value.trim()) {
+                                    const texto = e.target.value;
+                                    setOutros((o) => ({ ...o, [campo.id]: texto }));
+                                    if (texto.trim()) {
                                       setRespostas((r) => ({ ...r, [campo.id]: '' }));
                                     }
                                   }}

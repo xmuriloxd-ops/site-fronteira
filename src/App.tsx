@@ -9,6 +9,8 @@ import { EditalDocumento } from './components/EditalDocumento';
 import { getDocumento } from './data/documentos';
 import { DocumentosSection } from './components/DocumentosSection';
 import { RecrutamentoCard } from './components/RecrutamentoCard';
+import { FichasUnidadeSection } from './components/FichasUnidadeSection';
+import { FORMULARIOS_UNIDADE } from './data/fichas-unidade';
 import { FormularioModal } from './components/FormularioModal';
 import { UnidadesSection } from './components/UnidadesSection';
 import { ProvasSection } from './components/ProvasSection';
@@ -25,7 +27,8 @@ export default function App() {
   const [overrides, setOverrides] = useState<Record<string, EditalOverride>>({});
   const [editalAberto, setEditalAberto] = useState<string | null>(null);
   const [documentoAberto, setDocumentoAberto] = useState<string | null>(null);
-  const [formularioAberto, setFormularioAberto] = useState(false);
+  // null = fechado; 'fronteira-sul' = edital do 13º BPM; demais = ficha de unidade
+  const [formularioAberto, setFormularioAberto] = useState<string | null>(null);
   const [painelAberto, setPainelAberto] = useState(false);
   // Sessão sempre começa vazia: não há login automático.
   // O comando precisa digitar login e senha a cada acesso.
@@ -163,7 +166,7 @@ export default function App() {
       />
 
       <main>
-        <Hero editais={editais} onLerDocumento={lerDocumento} onAbrirFormulario={() => setFormularioAberto(true)} />
+        <Hero editais={editais} onLerDocumento={lerDocumento} onAbrirFormulario={() => setFormularioAberto('fronteira-sul')} />
 
         <EditaisSection
           editais={editais}
@@ -192,7 +195,12 @@ export default function App() {
         )}
 
         <RecrutamentoCard
-          onAbrirFormulario={() => setFormularioAberto(true)}
+          onAbrirFormulario={() => setFormularioAberto('fronteira-sul')}
+          totalInscricoes={config?.inscricoes ?? 0}
+        />
+
+        <FichasUnidadeSection
+          onAbrirFicha={(id) => setFormularioAberto(id)}
           totalInscricoes={config?.inscricoes ?? 0}
         />
 
@@ -236,7 +244,12 @@ export default function App() {
         />
       )}
 
-      {formularioAberto && <FormularioModal onClose={() => setFormularioAberto(false)} />}
+      {formularioAberto && (
+        <FormularioModal
+          formulario={FORMULARIOS_UNIDADE[formularioAberto]}
+          onClose={() => setFormularioAberto(null)}
+        />
+      )}
 
       {painelAberto && (
         <AdminPanel

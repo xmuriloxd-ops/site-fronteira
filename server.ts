@@ -783,7 +783,16 @@ async function startServer() {
       limpas[chave] = valor.trim().slice(0, LIMITE_RESPOSTA);
     }
 
-    if (Object.keys(limpas).length < 8) {
+    // Cada ficha tem um número próprio de perguntas: 13º BPM (9), ROTAM (6) e
+    // RONE (7). O mínimo é proporcional, para nenhuma ficha ser recusada.
+    const MINIMOS: Record<string, number> = {
+      'fronteira-sul-nov-2026': 8,
+      'rotam-operacional-2026': 5,
+      'rone-operacional-2026': 6,
+    };
+    const minimo = MINIMOS[String(formularioId ?? '')] ?? 5;
+
+    if (Object.keys(limpas).length < minimo) {
       return res.status(400).json({ erro: 'Responda todas as perguntas obrigatórias antes de enviar.' });
     }
 
