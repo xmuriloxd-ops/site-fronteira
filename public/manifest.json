@@ -1,7 +1,7 @@
 {
   "name": "Portal de Inscrições - Polícia Militar do Paraná",
   "short_name": "Inscrições PMPR",
-  "description": "Formulários de inscrição da PMPR, ROTAM e RONE, com envio direto ao comando e avisos no Discord.",
+  "description": "Portal de inscrições da Polícia Militar do Paraná: fichas da PMPR, ROTAM e RONE com envio direto ao comando.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#04110c",
@@ -13,6 +13,13 @@
       "sizes": "1200x1200",
       "type": "image/png",
       "purpose": "any"
+    },
+    {
+      "src": "/pmpr-brasao.png",
+      "sizes": "1200x1200",
+      "type": "image/png",
+      "purpose": "maskable"
     }
-  ]
+  ],
+  "lang": "pt-BR"
 }

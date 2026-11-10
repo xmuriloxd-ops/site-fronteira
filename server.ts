@@ -1,4 +1,5 @@
 import express from 'express';
+import compression from 'compression';
 import path from 'path';
 import fs from 'fs';
 import crypto from 'crypto';
@@ -8,9 +9,21 @@ import { createServer as createViteServer } from 'vite';
 /* Persistência simples em arquivo JSON                                */
 /* ------------------------------------------------------------------ */
 
-const DATA_FILE = path.join(process.cwd(), 'portal-data.json');
-const SECRET_FILE = path.join(process.cwd(), '.portal-secret');
-const SESSION_STATE_FILE = path.join(process.cwd(), '.portal-sessao.json');
+/**
+ * Pasta dos dados do portal.
+ * `PORTAL_DATA_DIR` permite apontar para um volume (ex.: /app/dados no
+ * Docker), assim um novo deploy não apaga cadastros, webhook nem senha.
+ */
+const DATA_DIR = process.env.PORTAL_DATA_DIR || process.cwd();
+try {
+  if (DATA_DIR !== process.cwd()) fs.mkdirSync(DATA_DIR, { recursive: true });
+} catch {
+  /* sem permissão de escrita: segue no diretório atual */
+}
+
+const DATA_FILE = path.join(DATA_DIR, 'portal-data.json');
+const SECRET_FILE = path.join(DATA_DIR, '.portal-secret');
+const SESSION_STATE_FILE = path.join(DATA_DIR, '.portal-sessao.json');
 const SESSION_TTL = 1000 * 60 * 60 * 8; // 8 horas
 
 /**
@@ -453,6 +466,18 @@ async function startServer() {
   let store = loadStore();
 
   app.use(express.json({ limit: '256kb' }));
+
+  // Compressão das respostas (HTML, JS, CSS e JSON) — reduz o que o visitante baixa.
+  app.use(compression());
+
+  // Cabeçalhos de segurança aplicados a tudo.
+  app.use((_req, res, next) => {
+    res.set('X-Content-Type-Options', 'nosniff');
+    res.set('X-Frame-Options', 'SAMEORIGIN');
+    res.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+    res.set('Permissions-Policy', 'geolocation=(), microphone=(), camera=()');
+    next();
+  });
 
   // Nenhuma resposta de API deve ser cacheada: um 401 antigo em cache faria
   // o painel voltar para a tela de login mesmo com sessão válida.
@@ -1084,15 +1109,25 @@ async function startServer() {
         },
       }),
     );
+    // API inexistente responde JSON, não a página do portal
+    app.use('/api', (_req, res) => {
+      res.status(404).json({ erro: 'Rota da API não encontrada.' });
+    });
+
     app.get('*', (_req, res) => {
       res.set('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
       res.sendFile(path.join(distPath, 'index.html'));
     });
   }
 
-  // O preview da plataforma expõe portas específicas. Escutamos na porta
-  // principal e também na 24678, que é a porta acompanhada pelo preview.
-  const PORTAS = Array.from(new Set([PORT, Number(process.env.PREVIEW_PORT) || 24678]));
+  /**
+   * Em produção escutamos só a PORT (o host escolhe a porta). Fora de produção
+   * também abrimos a 24678, que é a porta acompanhada pelo preview local.
+   */
+  const PORTAS =
+    process.env.NODE_ENV === 'production'
+      ? [PORT]
+      : Array.from(new Set([PORT, Number(process.env.PREVIEW_PORT) || 24678]));
 
   for (const porta of PORTAS) {
     const servidor = app.listen(porta, '0.0.0.0', () => {
@@ -1107,5 +1142,18 @@ async function startServer() {
     });
   }
 }
+
+/* ------------------------------------------------------------------ */
+/* Encerramento limpo (Docker, Fly, Render, etc.)                      */
+/* ------------------------------------------------------------------ */
+
+process.on('SIGTERM', () => {
+  console.log('Encerrando o portal...');
+  process.exit(0);
+});
+process.on('SIGINT', () => {
+  console.log('Encerrando o portal...');
+  process.exit(0);
+});
 
 startServer();

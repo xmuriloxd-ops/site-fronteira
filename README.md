@@ -1,125 +1,134 @@
-# Portal de Editais · Polícia Militar do Paraná
+# Portal de Inscrições · Polícia Militar do Paraná
 
-Portal web com os editais da **PMPR**, do **ROTAM**, da **RONE** e o edital de
-recrutamento do **13º Batalhão — Fronteira Sul** em formato de formulário.
+Portal de inscrições da **PMPR**, da **ROTAM** e da **RONE**: cada unidade tem
+seu formulário próprio, aberto pelas abas do topo, e toda ficha preenchida cai
+no canal do Discord do comando. O comando ainda publica **cartazes de
+divulgação em imagem** direto no Discord.
 
-Todo o conteúdo é publicado dentro do próprio site: o texto integral dos três
-editais, banco de questões com gabarito comentado, simulado, integração com o
-Discord da tropa e uma **aba do comando** protegida por login. Não há links para
-sites de terceiros em nenhuma etapa.
+Não há editais, banco de questões nem simulado: o portal é de inscrições.
 
 ## Como rodar
 
 ```bash
 npm install
-npm run dev      # http://localhost:3000
+npm run dev      # http://localhost:3000 (Vite + servidor)
 ```
 
 Build de produção:
 
 ```bash
 npm run build
-npm start
+npm start        # NODE_ENV=production node dist/server.cjs
 ```
+
+Para colocar no ar (Docker, VPS, Fly.io, Render), siga **[PUBLICAR.md](./PUBLICAR.md)**.
+
+## Abas do topo
+
+| Aba | O que faz |
+| --- | --- |
+| **13º BPM** | abre a ficha de recrutamento do batalhão |
+| **ROTAM** | abre a ficha da ROTAM |
+| **RONE** | abre a ficha da RONE |
+| **Unidades** | apresenta as três tropas e o documento de divulgação |
+
+Os formulários **só** são acessados por essas abas. A seção *Unidades* mostra o
+documento de divulgação publicado pelo comando.
 
 ## Aba do Comando
 
-Acesso pelo botão **Aba do Comando** no cabeçalho ou no rodapé.
+Acesso pelo botão **Aba do Comando** no cabeçalho.
 
 | Campo | Valor inicial |
-| ----- | ------------- |
-| Login | `comnadopmpr` |
-| Senha | `142536` |
+| --- | --- |
+| Login | `comando` |
+| Senha | `1234` |
 
-Dentro do painel é possível:
+> **Troque a senha antes de publicar** (aba *Login e senha*).
 
-- **Discord** — cadastrar o webhook do canal, definir o nome do canal, o convite
-  do servidor, ligar o envio automático e a menção `@here`. Há botão de teste e
-  envio manual de qualquer um dos três editais.
-- **Editais** — alterar o status exibido no site (aberto, em breve, encerrado),
-  publicar um aviso que aparece no portal e escrever uma **publicação
-  complementar** (retificação, errata, novo prazo) que entra no fim do documento
-  oficial do site.
-- **Tropa** — ver quem vinculou o Discord, marcar como vinculado e remover.
-- **Login e senha** — trocar o login e a senha (exige a senha atual). Todas as
-  sessões são encerradas e um novo token é emitido.
+Dentro do painel:
 
-As credenciais, o webhook e os cadastros ficam em `portal-data.json`, criado na
-raiz do projeto na primeira execução (arquivo ignorado pelo Git).
+- **Divulgação** — documento das inscrições abertas (unidades, texto, data,
+  horário, responsável) e o **cartaz em imagem**, com prévia ao vivo. Clicar na
+  unidade troca a arte: foto, faixa, palavra em destaque e blocos.
+  - **PMPR** — *Edital Aberto / Soldado*
+  - **ROTAM** — foto real da viatura; inclui **data, horário e local da prova**
+  - **RONE** — foto real da tropa; inclui **data, horário e local da prova**
+  - O local da prova é escolhido numa lista de **batalhões da PMPR** e entra
+    no cartaz automaticamente.
+  - **Enviar só o cartaz ao Discord** publica a imagem, sem texto junto.
+- **Canais do Discord** — dois cadastros independentes:
+  | Canal | Recebe |
+  | --- | --- |
+  | **Canal das fichas** | toda ficha preenchida |
+  | **Canal das divulgações** | os cartazes publicados |
+
+  Cada um tem URL de webhook, nome do canal e opção de `@here`. Se o canal das
+  divulgações ficar vazio, os cartazes usam o das fichas.
+- **Recrutamento** — fichas recebidas, com respostas e status do envio.
+- **Tropa** — quem vinculou o Discord e o histórico de envios.
+- **Login e senha** — troca as credenciais e encerra as sessões.
 
 ### Como pegar o webhook do Discord
 
-No servidor: **Configurações do canal → Integrações → Webhooks → Novo webhook →
-Copiar URL do webhook**. Cole a URL na aba Discord e clique em *Enviar teste*.
+No Discord: **Configurações do canal → Integrações → Webhooks → Novo webhook →
+Copiar URL do webhook**. Cole na aba *Divulgação* e use **Enviar teste**.
 
-## Editais publicados no próprio site
+O envio sai do **navegador** de quem publica (o servidor do portal não acessa o
+Discord): a URL do webhook nunca é usada pelo servidor para postar.
 
-O texto integral dos três editais fica em `src/data/documentos.ts`, dividido em
-capítulos, incisos e tabelas. O leitor de documento (`EditalDocumento`) oferece:
+## Cartaz de divulgação
 
-- sumário lateral com busca interna;
-- navegação capítulo anterior / próximo;
-- **Impressão em formato oficial** (A4, com cabeçalho, brasão, tabelas e
-  assinaturas) via CSS `@media print`;
-- **download em texto** gerado no navegador, sem servidor externo.
+Gerado no navegador em `<canvas>`, 1600×900, na arte do modelo oficial:
 
-Nenhum link aponta para fora do portal. A única URL externa é a do webhook do
-Discord, informada pelo próprio comando no painel.
+- cabeçalho com brasão, lema e *“Junte-se a nós”*
+- faixa amarela inclinada com o selo da unidade
+- **CONCURSO PARA SOLDADO** (PMPR) ou **SELEÇÃO INTERNA ROTAM/RONE**
+- frase de apoio e três blocos com ícones
+- rodapé do Governo do Paraná
+- **prova de ingresso** (data, horário e local) nos cartazes da ROTAM e da RONE
 
-## Recrutamento RP — 13º Batalhão
-
-O edital de recrutamento é um formulário de 10 campos (identificação + 8 perguntas
-+ redação de 8 linhas + duas perguntas de concordância com escala e ausências).
-O candidato preenche no próprio site, com barra de progresso, limite mínimo de
-caracteres por resposta e validação no cliente e no servidor.
-
-As inscrições caem na aba **Recrutamento** do painel do comando, com protocolo,
-filtro por status, busca e exportação visual de cada resposta. O texto do
-formulário fica em `src/data/recrutamento.ts`.
+Fontes: **Anton** e **Barlow Condensed**, self-hosted em `public/fontes`
+(SIL Open Font License — veja os arquivos `OFL-*.txt`).
 
 ## Estrutura
 
 ```
-src/
-  data/editais.ts        resumo estruturado dos três editais
-  data/documentos.ts     TEXTO INTEGRAL dos editais (capítulos e tabelas)
-  data/questoes.ts       banco de questões autorais + gabarito comentado
-  data/recrutamento.ts   edital-formulário do 13º BPM (Fronteira Sul)
-  components/            Header, Hero, EditaisSection, EditalModal,
-                         EditalDocumento, DocumentosSection, UnidadesSection,
-                         RecrutamentoCard, FormularioModal, ProvasSection,
-                         SimuladoSection, DiscordSection, AdminPanel, Footer, ui
-server.ts                API Express + Vite (login, Discord, dados do painel)
-public/pmpr-brasao.png   brasão da PMPR (Wikimedia Commons)
+server.ts                  servidor Express: API, sessão, estáticos, SPA
+src/App.tsx                portal (abas, formulários, seção de unidades)
+src/components/            Header, Hero, UnidadesSection, formulários, painel
+src/data/                  fichas das unidades, batalhões da PMPR
+src/lib/cartaz.ts          desenho do cartaz no canvas
+src/lib/discord.ts         envio ao Discord pelo navegador
+src/lib/documentoTexto.ts  texto do documento de divulgação
+public/                    brasão, fotos do cartaz, fontes, manifest
 ```
 
-## Endpoints principais
+### Dados persistidos
 
-| Método | Rota | Descrição |
-| ------ | ---- | --------- |
-| POST | `/api/admin/login` | autentica o comando e devolve um token |
-| PATCH | `/api/admin/credenciais` | troca login/senha (exige `senhaAtual`) |
-| GET | `/api/admin/data` | interessados, envios e status dos editais |
-| PATCH | `/api/admin/discord` | salva webhook, canal, convite e opções |
-| POST | `/api/admin/discord/teste` | envia mensagem de teste ao canal |
-| POST | `/api/admin/envios` | publica um edital no Discord |
-| PATCH | `/api/admin/editais/:id` | status, aviso e publicação complementar |
-| POST | `/api/public/interesse` | vincula o Discord do candidato aos editais |
-| POST | `/api/public/recrutamento` | recebe a inscrição do formulário do 13º BPM |
-| GET | `/api/admin/inscricoes` | lista as inscrições recebidas |
-| PATCH | `/api/admin/inscricoes/:id` | altera status e observação do comando |
+Criados na primeira execução, fora do Git (ou em `PORTAL_DATA_DIR`):
 
-Rotas `/api/admin/*` exigem o cabeçalho `Authorization: Bearer <token>`, com
-sessão de 8 horas.
+- `portal-data.json` — fichas, divulgação, canais, login e senha
+- `.portal-secret` — assinatura das sessões
+- `.portal-sessao.json` — sessões encerradas
 
-## Fontes
+## API (resumo)
 
-- Dados do concurso de Soldado (2.000 vagas, banca IBFC, R$ 6.101,87, estrutura
-  de 60 questões e índices do TAF): Edital 01/2025 e coberturas de imprensa
-  especializada.
-- Histórico da PMPR, ROTAM e RONE: portal oficial da PMPR e imprensa paranaense.
-- Questões e texto dos editais: produzidos para este portal, com base no
-  conteúdo programático e na estrutura dos documentos originais.
+| Rota | O que faz |
+| --- | --- |
+| `GET /api/health` | status do portal |
+| `GET /api/public/config` | dados públicos do site |
+| `POST /api/public/recrutamento` | recebe a ficha e devolve o destino no Discord |
+| `POST /api/admin/login` | login do comando (token) |
+| `GET /api/admin/data` | dados do painel |
+| `GET/PATCH /api/admin/divulgacao` | documento de divulgação |
+| `GET /api/admin/discord/webhook?finalidade=divulgacao` | webhook do canal das divulgações |
+| `PATCH /api/admin/discord` | cadastro dos dois canais |
+| `PATCH /api/admin/credenciais` | troca login e senha |
 
-> Projeto demonstrativo, sem vínculo oficial com a Polícia Militar do Paraná.
-> Confira sempre o edital publicado pela corporação.
+## Verificações
+
+```bash
+npm run lint     # tsc --noEmit
+npm run build    # build de produção
+```
