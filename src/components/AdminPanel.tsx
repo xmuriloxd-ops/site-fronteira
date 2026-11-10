@@ -515,6 +515,29 @@ function DiscordTab({
     }
   };
 
+  const [diagnostico, setDiagnostico] = useState<{
+    redeOk: boolean;
+    motivoRede: string;
+    webhookValido: boolean;
+  } | null>(null);
+
+  useEffect(() => {
+    let ativo = true;
+    void (async () => {
+      try {
+        const r = await apiFetch('/discord/diagnostico', {}, cabecalho()['x-admin-token']);
+        if (!ativo || !r.ok) return;
+        setDiagnostico(await r.json());
+      } catch {
+        /* diagnóstico é opcional */
+      }
+    })();
+    return () => {
+      ativo = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const testar = async () => {
     setTestando(true);
     setMsg(null);
@@ -587,6 +610,29 @@ function DiscordTab({
           </p>
         </div>
       </div>
+
+      {diagnostico && (
+        <div
+          className={`rounded-lg border p-3 text-[0.74rem] leading-relaxed ${
+            diagnostico.redeOk
+              ? 'border-emerald-500/30 bg-emerald-500/8 text-emerald-200'
+              : 'border-amber-400/35 bg-amber-500/10 text-amber-200'
+          }`}
+        >
+          <p className="font-semibold">
+            {diagnostico.redeOk
+              ? 'Servidor com acesso ao Discord'
+              : 'Servidor sem acesso ao Discord'}
+          </p>
+          <p className="mt-1 opacity-80">{diagnostico.motivoRede}</p>
+          {!diagnostico.redeOk && (
+            <p className="mt-1 opacity-80">
+              O webhook fica salvo, mas o envio automático só acontece quando o servidor
+              conseguir alcançar o Discord. Use o botão <strong>Enviar teste</strong> para conferir.
+            </p>
+          )}
+        </div>
+      )}
 
       <Bloco titulo="Webhook do canal" Icon={Link2} descricao="No Discord: Configurações do canal → Integrações → Webhooks → Copiar URL.">
         <input

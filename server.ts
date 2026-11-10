@@ -270,6 +270,35 @@ interface EmbedField {
   inline?: boolean;
 }
 
+/**
+ * Verifica se o servidor consegue falar com o Discord.
+ * Sem isso, "fetch failed" não diz nada ao comando sobre o que consertar.
+ */
+async function testarAlcanceDiscord(): Promise<{ alcancavel: boolean; motivo: string }> {
+  try {
+    const controle = new AbortController();
+    const t = setTimeout(() => controle.abort(), 6000);
+    const r = await fetch('https://discord.com/api/v10/gateway', {
+      method: 'GET',
+      signal: controle.signal,
+    });
+    clearTimeout(t);
+    if (r.status >= 200 && r.status < 500) {
+      return { alcancavel: true, motivo: `Discord respondeu ${r.status}.` };
+    }
+    return { alcancavel: false, motivo: `Discord respondeu ${r.status}.` };
+  } catch (error) {
+    const msg = (error as Error).message || '';
+    const abortou = /abort/i.test(msg);
+    return {
+      alcancavel: false,
+      motivo: abortou
+        ? 'O servidor não conseguiu conectar ao Discord (tempo esgotado).'
+        : 'O servidor não tem acesso à internet para o Discord (rede bloqueada).',
+    };
+  }
+}
+
 async function enviarDiscord(
   config: DiscordConfig,
   payload: { titulo: string; descricao: string; url?: string; cor?: number; fields?: EmbedField[] },
@@ -307,7 +336,15 @@ async function enviarDiscord(
     }
     return { ok: true, detalhe: 'Mensagem entregue ao canal.' };
   } catch (error) {
-    return { ok: false, detalhe: `Falha de conexão: ${(error as Error).message}` };
+    const msg = (error as Error).message || 'erro desconhecido';
+    const rede = await testarAlcanceDiscord();
+    return {
+      ok: false,
+      detalhe: rede.alcancavel
+        ? `Não foi possível entregar a mensagem (${msg}). Confira se o webhook ainda existe no canal.`
+        : `${rede.motivo} O webhook está salvo, mas o envio só funciona quando o servidor tiver acesso ao Discord.`,
+      semRede: !rede.alcancavel,
+    };
   }
 }
 
@@ -509,6 +546,19 @@ async function startServer() {
       ok: true,
       vinculado: Boolean(store.discord.webhook && webhookValido(store.discord.webhook)),
       mensagem: 'Configuração do Discord salva.',
+    });
+  });
+
+  app.get('/api/admin/discord/diagnostico', exigirAdmin, async (_req, res) => {
+    const rede = await testarAlcanceDiscord();
+    const url = store.discord.webhook;
+    res.json({
+      redeOk: rede.alcancavel,
+      motivoRede: rede.motivo,
+      webhookSalvo: Boolean(url),
+      webhookValido: Boolean(url && webhookValido(url)),
+      canal: store.discord.canal,
+      vinculado: Boolean(url && webhookValido(url)),
     });
   });
 
