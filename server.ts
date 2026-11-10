@@ -241,6 +241,8 @@ function lerCookie(req: express.Request, nome: string): string | undefined {
 function tokenDaRequisicao(req: express.Request) {
   const header = req.headers.authorization;
   if (header?.startsWith('Bearer ')) return header.slice(7);
+  const alternativa = req.headers['x-admin-token'];
+  if (typeof alternativa === 'string' && alternativa) return alternativa;
   const cookie = lerCookie(req, COOKIE_SESSAO);
   if (cookie) return cookie;
   const query = req.query.token;
@@ -319,6 +321,15 @@ async function startServer() {
   let store = loadStore();
 
   app.use(express.json({ limit: '256kb' }));
+
+  // Nenhuma resposta de API deve ser cacheada: um 401 antigo em cache faria
+  // o painel voltar para a tela de login mesmo com sessão válida.
+  app.use('/api', (_req, res, next) => {
+    res.set('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
+    res.set('Pragma', 'no-cache');
+    res.set('Expires', '0');
+    next();
+  });
 
   const publicConfig = () => ({
     discordVinculado: Boolean(store.discord.webhook && webhookValido(store.discord.webhook)),

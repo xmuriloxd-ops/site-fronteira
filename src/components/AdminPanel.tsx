@@ -48,6 +48,34 @@ interface AdminData {
 
 const API = '/api/admin';
 
+/**
+ * Requisição autenticada ao painel.
+ * O token viaja por três canais ao mesmo tempo (Authorization, x-admin-token e
+ * query string) porque o proxy do preview pode remover cabeçalhos e cookies.
+ * Qualquer um que sobreviva já autentica a requisição.
+ */
+async function apiFetch(caminho: string, opcoes: RequestInit = {}, token?: string | null) {
+  const passados = (opcoes.headers as Record<string, string>) ?? {};
+  // o token pode vir explícito ou já dentro dos cabeçalhos de cabecalho()
+  const efetivo =
+    token ??
+    passados['x-admin-token'] ??
+    (passados.Authorization?.startsWith('Bearer ') ? passados.Authorization.slice(7) : null);
+
+  const url = efetivo
+    ? `${API}${caminho}${caminho.includes('?') ? '&' : '?'}token=${encodeURIComponent(efetivo)}`
+    : `${API}${caminho}`;
+  const cabecalhos: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...passados,
+  };
+  if (efetivo) {
+    cabecalhos.Authorization = `Bearer ${efetivo}`;
+    cabecalhos['x-admin-token'] = efetivo;
+  }
+  return fetch(url, { ...opcoes, headers: cabecalhos, credentials: 'same-origin' });
+}
+
 export function AdminPanel({
   token,
   onLogin,
@@ -55,6 +83,7 @@ export function AdminPanel({
   onLogout,
   onSessaoExpirada,
   onConfigChange,
+  onTokenConfirmado,
 }: {
   token: string | null;
   onLogin: (token: string) => void;
@@ -62,6 +91,7 @@ export function AdminPanel({
   onLogout: () => void;
   onSessaoExpirada: () => void;
   onConfigChange: () => void;
+  onTokenConfirmado?: (token: string) => void;
 }) {
   // já vem preenchido com o acesso padrão do comando
   const [login, setLogin] = useState('comando');
@@ -95,6 +125,7 @@ export function AdminPanel({
   const cabecalho = () => ({
     'Content-Type': 'application/json',
     Authorization: `Bearer ${tokenAtivo ?? ''}`,
+    'x-admin-token': tokenAtivo ?? '',
   });
 
   useEffect(() => {
@@ -105,18 +136,10 @@ export function AdminPanel({
     const uso = paraToken ?? tokenAtivo;
     setCarregando(true);
     try {
-      const r = await fetch(`${API}/data`, {
-        headers: uso
-          ? { 'Content-Type': 'application/json', Authorization: `Bearer ${uso}` }
-          : { 'Content-Type': 'application/json' },
-        credentials: 'same-origin',
-      });
+      const r = await apiFetch('/data', {}, uso);
       if (r.status === 401) {
-        setDados(null);
-        // só é fim de sessão se havia uma sessão para terminar
-        setSessaoExpirada(Boolean(uso));
-        setTokenAtivo(null);
-        onSessaoExpirada();
+        // mantém o token: a próxima tentativa pode passar pelo cookie ou pela URL
+        setErroConexao('O servidor não reconheceu a sessão. Clique em "Tentar novamente".');
         return;
       }
       if (!r.ok) {
@@ -126,8 +149,10 @@ export function AdminPanel({
       setSessaoExpirada(false);
       setErroConexao(null);
       setDados(await r.json());
+      // mantém o App com o mesmo token que acabou de funcionar
+      if (uso) onTokenConfirmado?.(uso);
     } catch {
-      setErroConexao('Não foi possível falar com o servidor. Verifique a conexão e tente de novo.');
+      setErroConexao('Não foi possível carregar os dados do painel. Clique em "Tentar novamente".');
     } finally {
       setCarregando(false);
     }
@@ -171,19 +196,26 @@ export function AdminPanel({
         body: JSON.stringify({ login, senha }),
         credentials: 'same-origin',
       });
-      const d = await r.json();
+      const d = await r.json().catch(() => ({}));
       if (!r.ok) {
         setErroLogin(d.erro ?? 'Não foi possível entrar.');
         return;
       }
-      // ativa a sessão de imediato, sem esperar novo render do App
+      if (!d.token) {
+        setErroLogin('O servidor não devolveu a sessão. Tente novamente.');
+        return;
+      }
+      // Login aceito: a sessão passa a valer imediatamente e NUNCA é desfeita
+      // por uma falha de leitura depois. Era isso que devolvia ao login.
       setTokenAtivo(d.token);
       setSessaoExpirada(false);
       setErroConexao(null);
       onLogin(d.token);
       setSenha('');
+      // busca os dados do painel sem bloquear a entrada
+      void carregarDados(d.token);
     } catch {
-      setErroLogin('Falha de conexão com o servidor.');
+      setErroLogin('Falha de conexão com o servidor. Tente novamente.');
     } finally {
       setEntrando(false);
     }
@@ -469,12 +501,7 @@ function DiscordTab({
     try {
       const corpo: Record<string, unknown> = { convite, canal, autoEnviar, mencionarHere };
       if (webhook.trim()) corpo.webhook = webhook.trim();
-      const r = await fetch(`${API}/discord`, {
-        method: 'PATCH',
-        headers: cabecalho(),
-        body: JSON.stringify(corpo),
-        credentials: 'same-origin',
-      });
+      const r = await apiFetch('/discord', { method: 'PATCH', body: JSON.stringify(corpo) });
       const d = await r.json();
       setMsg({ tipo: r.ok ? 'ok' : 'erro', texto: d.mensagem ?? d.erro ?? 'Resposta inesperada.' });
       if (r.ok) {
@@ -492,7 +519,7 @@ function DiscordTab({
     setTestando(true);
     setMsg(null);
     try {
-      const r = await fetch(`${API}/discord/teste`, { method: 'POST', headers: cabecalho(), credentials: 'same-origin' });
+      const r = await apiFetch('/discord/teste', { method: 'POST' });
       const d = await r.json();
       setMsg({ tipo: r.ok ? 'ok' : 'erro', texto: d.detalhe ?? (r.ok ? 'Mensagem enviada.' : 'Falha no teste.') });
       onAtualizar();
@@ -646,7 +673,7 @@ function DiscordTab({
           {dados.envios.length > 0 && (
             <button
               onClick={async () => {
-                await fetch(`${API}/envios`, { method: 'DELETE', headers: cabecalho(), credentials: 'same-origin' });
+                await apiFetch('/envios', { method: 'DELETE' });
                 onAtualizar();
               }}
               className="flex items-center gap-1 text-[0.68rem] text-emerald-100/35 hover:text-rose-300"
@@ -888,7 +915,7 @@ function TropaTab({
                 </button>
                 <button
                   onClick={async () => {
-                    await fetch(`${API}/interessados/${i.id}`, { method: 'DELETE', headers: cabecalho(), credentials: 'same-origin' });
+                    await apiFetch(`/interessados/${i.id}`, { method: 'DELETE' });
                     onAtualizar();
                   }}
                   className="rounded p-1.5 text-emerald-100/30 hover:bg-rose-500/10 hover:text-rose-300"
@@ -928,7 +955,7 @@ function RecrutamentoTab({ cabecalho }: { cabecalho: () => Record<string, string
 
   const carregar = async () => {
     try {
-      const r = await fetch(`${API}/inscricoes`, { headers: cabecalho(), credentials: 'same-origin' });
+      const r = await apiFetch('/inscricoes');
       if (!r.ok) return;
       const d = await r.json();
       setInscricoes(d.inscricoes ?? []);
@@ -958,7 +985,7 @@ function RecrutamentoTab({ cabecalho }: { cabecalho: () => Record<string, string
   };
 
   const remover = async (id: string) => {
-    await fetch(`${API}/inscricoes/${id}`, { method: 'DELETE', headers: cabecalho(), credentials: 'same-origin' });
+    await apiFetch(`/inscricoes/${id}`, { method: 'DELETE' });
     setAberta(null);
     await carregar();
   };
@@ -1180,12 +1207,7 @@ function CredenciaisTab({
       if (novoLogin.trim() && novoLogin.trim() !== dados.login) corpo.login = novoLogin.trim();
       if (novaSenha) corpo.senha = novaSenha;
 
-      const r = await fetch(`${API}/credenciais`, {
-        method: 'PATCH',
-        headers: cabecalho(),
-        body: JSON.stringify(corpo),
-        credentials: 'same-origin',
-      });
+      const r = await apiFetch('/credenciais', { method: 'PATCH', body: JSON.stringify(corpo) });
       const d = await r.json();
       if (!r.ok) {
         setMsg({ tipo: 'erro', texto: d.erro ?? 'Não foi possível alterar.' });

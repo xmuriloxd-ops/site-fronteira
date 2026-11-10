@@ -126,6 +126,16 @@ export default function App() {
     setPainelAberto(true);
   };
 
+  // O painel avisa quando consegue falar com o servidor: garante que o token
+  // do App fique igual ao que está funcionando (evita voltar ao login).
+  const sincronizarToken = (usado: string) => {
+    setToken((atual) => {
+      if (atual === usado) return atual;
+      localStorage.setItem(TOKEN_KEY, usado);
+      return usado;
+    });
+  };
+
   // Limpa apenas o token, mantendo o painel aberto para o login
   const limparSessao = () => {
     setToken(null);
@@ -229,6 +239,7 @@ export default function App() {
         <AdminPanel
           token={token}
           onLogin={aoEntrar}
+          onTokenConfirmado={sincronizarToken}
           onClose={() => setPainelAberto(false)}
           onLogout={sair}
           onSessaoExpirada={limparSessao}
