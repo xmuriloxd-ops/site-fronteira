@@ -73,6 +73,9 @@ export function AdminPanel({
   const [carregando, setCarregando] = useState(false);
   const [sessaoExpirada, setSessaoExpirada] = useState(false);
   const [erroConexao, setErroConexao] = useState<string | null>(null);
+  // token em uso pelo painel: começa com o token salvo e passa a valer
+  // imediatamente após o login, sem depender de um novo render do App.
+  const [tokenAtivo, setTokenAtivo] = useState<string | null>(token);
 
   useEffect(() => {
     const aoTeclar = (e: KeyboardEvent) => {
@@ -89,17 +92,25 @@ export function AdminPanel({
 
   const cabecalho = () => ({
     'Content-Type': 'application/json',
-    Authorization: `Bearer ${token}`,
+    Authorization: `Bearer ${tokenAtivo ?? ''}`,
   });
 
-  const carregarDados = async () => {
-    if (!token) return;
+  useEffect(() => {
+    setTokenAtivo(token);
+  }, [token]);
+
+  const carregarDados = async (paraToken?: string | null) => {
+    const uso = paraToken ?? tokenAtivo;
+    if (!uso) return;
     setCarregando(true);
     try {
-      const r = await fetch(`${API}/data`, { headers: cabecalho() });
+      const r = await fetch(`${API}/data`, {
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${uso}` },
+      });
       if (r.status === 401) {
         setDados(null);
         setSessaoExpirada(true);
+        setTokenAtivo(null);
         onSessaoExpirada();
         return;
       }
@@ -118,9 +129,9 @@ export function AdminPanel({
   };
 
   useEffect(() => {
-    if (token) void carregarDados();
+    if (tokenAtivo) void carregarDados(tokenAtivo);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [token]);
+  }, [tokenAtivo]);
 
   const entrar = async () => {
     setErroLogin(null);
@@ -136,6 +147,10 @@ export function AdminPanel({
         setErroLogin(d.erro ?? 'Não foi possível entrar.');
         return;
       }
+      // ativa a sessão de imediato (sem esperar novo render do App)
+      setTokenAtivo(d.token);
+      setSessaoExpirada(false);
+      setErroConexao(null);
       onLogin(d.token);
       setSenha('');
     } catch {
@@ -165,9 +180,11 @@ export function AdminPanel({
               </div>
             </div>
             <div className="flex items-center gap-1.5">
-              {token && (
+              {tokenAtivo && (
                 <button
                   onClick={() => {
+                    setTokenAtivo(null);
+                    setDados(null);
                     onLogout();
                   }}
                   className="flex items-center gap-1.5 rounded-md border border-white/10 px-2 py-1.5 text-[0.7rem] font-semibold text-emerald-100/50 transition hover:border-rose-400/40 hover:text-rose-300"
@@ -188,7 +205,7 @@ export function AdminPanel({
           </div>
         </div>
 
-        {!token ? (
+        {!tokenAtivo ? (
           /* ----------------------------- Login ----------------------------- */
           <div className="flex flex-1 items-center justify-center overflow-y-auto p-6">
             <div className="w-full max-w-sm">
@@ -286,6 +303,8 @@ export function AdminPanel({
                 <p className="text-[0.68rem] text-emerald-100/35">Problemas para entrar?</p>
                 <button
                   onClick={() => {
+                    setTokenAtivo(null);
+                    setDados(null);
                     onSessaoExpirada();
                     setSessaoExpirada(false);
                     setErroLogin(null);

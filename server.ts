@@ -9,7 +9,31 @@ import { createServer as createViteServer } from 'vite';
 /* ------------------------------------------------------------------ */
 
 const DATA_FILE = path.join(process.cwd(), 'portal-data.json');
+const SECRET_FILE = path.join(process.cwd(), '.portal-secret');
 const SESSION_TTL = 1000 * 60 * 60 * 8; // 8 horas
+
+/**
+ * Segredo usado para assinar os tokens do comando.
+ * Fica em arquivo próprio (fora do portal-data.json) e é criado uma única vez,
+ * para que o login continue válido mesmo depois de reiniciar o servidor.
+ */
+function carregarSegredo(): string {
+  if (process.env.PORTAL_SECRET) return process.env.PORTAL_SECRET;
+  try {
+    if (fs.existsSync(SECRET_FILE)) {
+      const salvo = fs.readFileSync(SECRET_FILE, 'utf8').trim();
+      if (salvo.length >= 32) return salvo;
+    }
+    const novo = crypto.randomBytes(32).toString('hex');
+    fs.writeFileSync(SECRET_FILE, novo, { encoding: 'utf8', mode: 0o600 });
+    return novo;
+  } catch {
+    // último recurso: segredo em memória (sessões caem no próximo reinício)
+    return crypto.randomBytes(32).toString('hex');
+  }
+}
+
+const SECRET = carregarSegredo();
 
 interface Interessado {
   id: string;
@@ -57,7 +81,11 @@ interface Store {
   envios: EnvioDiscord[];
   overrides: Record<string, { status?: string; aviso?: string; publicacao?: string }>;
   logs: { id: string; criadoEm: string; ip: string; ua: string }[];
-  sessions: Record<string, { login: string; expiraEm: number }>;
+  sessions?: Record<string, { login: string; expiraEm: number }>;
+  /** Tokens encerrados manualmente (logout) que precisam ser recusados. */
+  revogados?: string[];
+  /** Incrementa a cada troca de credenciais para invalidar tokens antigos. */
+  versaoSessao?: number;
   inscricoes: InscricaoRecrutamento[];
 }
 
@@ -75,6 +103,8 @@ const DEFAULT_STORE: Store = {
   overrides: {},
   logs: [],
   sessions: {},
+  revogados: [],
+  versaoSessao: 0,
   inscricoes: [],
 };
 
@@ -92,6 +122,8 @@ function loadStore(): Store {
         overrides: raw.overrides ?? {},
         logs: raw.logs ?? [],
         sessions: raw.sessions ?? {},
+        revogados: raw.revogados ?? [],
+        versaoSessao: raw.versaoSessao ?? 0,
         inscricoes: raw.inscricoes ?? [],
       };
     }
@@ -113,27 +145,56 @@ function saveStore(store: Store) {
 /* Sessões do comando                                                  */
 /* ------------------------------------------------------------------ */
 
-function criarSessao(store: Store, login: string) {
-  // limpa sessões vencidas
-  for (const [chave, sessao] of Object.entries(store.sessions)) {
-    if (sessao.expiraEm < Date.now()) delete store.sessions[chave];
-  }
-  const token = crypto.randomBytes(24).toString('hex');
-  store.sessions[token] = { login, expiraEm: Date.now() + SESSION_TTL };
-  saveStore(store);
-  return token;
+interface SessaoAssinada {
+  login: string;
+  expiraEm: number;
+  versao: number;
 }
 
-function validarSessao(store: Store, token: string | undefined) {
+function assinar(payload: string) {
+  return crypto.createHmac('sha256', SECRET).update(payload).digest('base64url');
+}
+
+function criarSessao(store: Store, login: string) {
+  const sessao: SessaoAssinada = {
+    login,
+    expiraEm: Date.now() + SESSION_TTL,
+    versao: store.versaoSessao ?? 0,
+  };
+  const payload = Buffer.from(JSON.stringify(sessao), 'utf8').toString('base64url');
+  // mantém o registro em disco apenas como histórico (não é mais fonte de verdade)
+  store.sessions = store.sessions ?? {};
+  store.sessions[payload] = sessao;
+  saveStore(store);
+  return `${payload}.${assinar(payload)}`;
+}
+
+/**
+ * Valida o token assinado. Não depende de estado em memória nem do JSON,
+ * então continua funcionando após reinícios e limpeza do portal-data.json.
+ */
+function validarSessao(_store: Store, token: string | undefined): SessaoAssinada | null {
   if (!token) return null;
-  const sessao = store.sessions[token];
-  if (!sessao) return null;
-  if (sessao.expiraEm < Date.now()) {
-    delete store.sessions[token];
-    saveStore(store);
+  const [payload, assinatura] = token.split('.');
+  if (!payload || !assinatura) return null;
+
+  if ((_store.revogados ?? []).includes(payload)) return null;
+
+  const esperada = assinar(payload);
+  const a = Buffer.from(assinatura);
+  const b = Buffer.from(esperada);
+  if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) return null;
+
+  try {
+    const sessao = JSON.parse(Buffer.from(payload, 'base64url').toString('utf8')) as SessaoAssinada;
+    if (typeof sessao?.expiraEm !== 'number' || sessao.expiraEm < Date.now()) return null;
+    if (typeof sessao.login !== 'string') return null;
+    // token emitido antes de uma troca de credenciais deixa de valer
+    if ((sessao.versao ?? 0) !== (_store.versaoSessao ?? 0)) return null;
+    return sessao;
+  } catch {
     return null;
   }
-  return sessao;
 }
 
 function tokenDaRequisicao(req: express.Request) {
@@ -271,8 +332,9 @@ async function startServer() {
 
   app.post('/api/admin/logout', (req, res) => {
     const token = tokenDaRequisicao(req);
-    if (token && store.sessions[token]) {
-      delete store.sessions[token];
+    const payload = token?.split('.')[0];
+    if (payload && validarSessao(store, token)) {
+      store.revogados = [...(store.revogados ?? []), payload].slice(-200);
       saveStore(store);
     }
     res.json({ ok: true });
@@ -332,7 +394,9 @@ async function startServer() {
     if (login !== undefined) store.auth.login = login.trim();
     if (senha !== undefined) store.auth.senha = senha;
 
-    // Derruba todas as sessões antigas por segurança
+    // Derruba todas as sessões antigas por segurança (troca a versão dos tokens)
+    store.versaoSessao = (store.versaoSessao ?? 0) + 1;
+    store.revogados = [];
     store.sessions = {};
     const token = criarSessao(store, store.auth.login);
     saveStore(store);
