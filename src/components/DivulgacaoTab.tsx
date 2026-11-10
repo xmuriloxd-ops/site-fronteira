@@ -45,7 +45,7 @@ export function DivulgacaoTab({
 }: {
   cabecalho: () => Record<string, string>;
   onAtualizar: () => void;
-  obterWebhook: () => Promise<string | null>;
+  obterWebhook: (finalidade?: 'divulgacao') => Promise<string | null>;
   inicial?: DivulgacaoInscricoes;
   /** Configuração do canal salva no servidor. */
   discord: ConfigDiscordPainel;
@@ -179,11 +179,11 @@ export function DivulgacaoTab({
       const salvou = await salvar(false);
       if (!salvou) return;
 
-      const url = await obterWebhook();
+      const url = await obterWebhook('divulgacao');
       if (!url) {
         setMsg({
           tipo: 'erro',
-          texto: 'Cadastre e salve o webhook do canal antes de divulgar.',
+          texto: 'Cadastre e salve o webhook do canal das divulgações (ou o das fichas) antes de publicar.',
         });
         return;
       }

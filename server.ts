@@ -122,6 +122,19 @@ interface DiscordConfig {
   mencionarHere: boolean;
 }
 
+/**
+ * Canal das divulgações.
+ *
+ * Fica separado do canal das fichas: o comando pode publicar os cartazes de
+ * inscrições num canal e receber as fichas preenchidas em outro. Vazio = usa
+ * o mesmo canal das fichas.
+ */
+interface DiscordDivulgacaoConfig {
+  webhook: string;
+  canal: string;
+  mencionarHere: boolean;
+}
+
 interface InscricaoRecrutamento {
   id: string;
   formularioId: string;
@@ -150,6 +163,8 @@ interface Store {
   inscricoes: InscricaoRecrutamento[];
   /** Documento de divulgação das inscrições abertas. */
   divulgacao?: DivulgacaoInscricoes;
+  /** Canal próprio para publicar as divulgações (opcional). */
+  discordDivulgacao?: DiscordDivulgacaoConfig;
 }
 
 const DEFAULT_STORE: Store = {
@@ -162,6 +177,7 @@ const DEFAULT_STORE: Store = {
     autoEnviar: true,
     mencionarHere: true,
   },
+  discordDivulgacao: { webhook: '', canal: '', mencionarHere: true },
   interessados: [],
   envios: [],
   logs: [],
@@ -193,6 +209,10 @@ function loadStore(): Store {
         ...raw,
         auth: { ...DEFAULT_STORE.auth, ...(raw.auth ?? {}) },
         discord: { ...DEFAULT_STORE.discord, ...(raw.discord ?? {}) },
+        discordDivulgacao: {
+          ...DEFAULT_STORE.discordDivulgacao!,
+          ...(raw.discordDivulgacao ?? {}),
+        },
         interessados: raw.interessados ?? [],
         envios: raw.envios ?? [],
         logs: raw.logs ?? [],
@@ -224,7 +244,12 @@ function loadStore(): Store {
   } catch (error) {
     console.error('Falha ao ler portal-data.json:', error);
   }
-  return { ...DEFAULT_STORE, auth: { ...DEFAULT_STORE.auth }, discord: { ...DEFAULT_STORE.discord } };
+  return {
+    ...DEFAULT_STORE,
+    auth: { ...DEFAULT_STORE.auth },
+    discord: { ...DEFAULT_STORE.discord },
+    discordDivulgacao: { ...DEFAULT_STORE.discordDivulgacao! },
+  };
 }
 
 function saveStore(store: Store) {
@@ -543,6 +568,18 @@ async function startServer() {
         autoEnviar: store.discord.autoEnviar,
         mencionarHere: store.discord.mencionarHere,
         vinculado: Boolean(store.discord.webhook && webhookValido(store.discord.webhook)),
+        // Canal das divulgações (separado das fichas)
+        divulgacaoWebhookConfigurado: Boolean(store.discordDivulgacao?.webhook),
+        divulgacaoWebhookMascarado: store.discordDivulgacao?.webhook
+          ? store.discordDivulgacao.webhook.replace(/\/[\w-]{20,}$/, '/••••••••')
+          : '',
+        divulgacaoCanal: store.discordDivulgacao?.canal ?? '',
+        divulgacaoMencionarHere: store.discordDivulgacao?.mencionarHere ?? true,
+        divulgacaoVinculada: Boolean(
+          store.discordDivulgacao?.webhook && webhookValido(store.discordDivulgacao.webhook),
+        ),
+        // Quando a divulgação usa o mesmo canal das fichas
+        divulgacaoUsaCanalDasFichas: !store.discordDivulgacao?.webhook,
       },
       interessados: store.interessados,
       envios: store.envios.slice(0, 40),
@@ -589,7 +626,16 @@ async function startServer() {
   /* ------------------------------ Discord ---------------------------- */
 
   app.patch('/api/admin/discord', exigirAdmin, (req, res) => {
-    const { webhook, convite, canal, autoEnviar, mencionarHere } = req.body ?? {};
+    const {
+      webhook,
+      convite,
+      canal,
+      autoEnviar,
+      mencionarHere,
+      divulgacaoWebhook,
+      divulgacaoCanal,
+      divulgacaoMencionarHere,
+    } = req.body ?? {};
 
     if (webhook !== undefined) {
       const limpo = String(webhook).trim();
@@ -604,6 +650,21 @@ async function startServer() {
     if (canal !== undefined) store.discord.canal = String(canal).trim();
     if (typeof autoEnviar === 'boolean') store.discord.autoEnviar = autoEnviar;
     if (typeof mencionarHere === 'boolean') store.discord.mencionarHere = mencionarHere;
+
+    // Canal próprio das divulgações
+    const d = store.discordDivulgacao ?? { webhook: '', canal: '', mencionarHere: true };
+    if (divulgacaoWebhook !== undefined) {
+      const limpo = String(divulgacaoWebhook).trim();
+      if (limpo && !webhookValido(limpo)) {
+        return res
+          .status(400)
+          .json({ erro: 'Informe uma URL de webhook válida para o canal das divulgações.' });
+      }
+      d.webhook = limpo;
+    }
+    if (divulgacaoCanal !== undefined) d.canal = String(divulgacaoCanal).trim().slice(0, 100);
+    if (typeof divulgacaoMencionarHere === 'boolean') d.mencionarHere = divulgacaoMencionarHere;
+    store.discordDivulgacao = d;
 
     saveStore(store);
     res.json({
@@ -632,11 +693,39 @@ async function startServer() {
    * CORS), porque este servidor não alcança o Discord. Só um administrador
    * autenticado recebe a URL.
    */
-  app.get('/api/admin/discord/webhook', exigirAdmin, (_req, res) => {
-    if (!store.discord.webhook || !webhookValido(store.discord.webhook)) {
-      return res.status(404).json({ erro: 'Nenhum webhook válido configurado.' });
+  /**
+   * Webhook para o navegador enviar a mensagem.
+   * `?finalidade=divulgacao` devolve o canal das divulgações; sem o parâmetro,
+   * o canal das fichas. Se a divulgação não tiver canal próprio, usa o das
+   * fichas — assim nada deixa de ser publicado.
+   */
+  app.get('/api/admin/discord/webhook', exigirAdmin, (req, res) => {
+    const divulgar = req.query.finalidade === 'divulgacao';
+
+    const canalDivulgacao = store.discordDivulgacao;
+    if (divulgar && canalDivulgacao?.webhook && webhookValido(canalDivulgacao.webhook)) {
+      return res.json({
+        webhook: canalDivulgacao.webhook,
+        canal: canalDivulgacao.canal || 'divulgações',
+        mencionarHere: canalDivulgacao.mencionarHere,
+        origem: 'divulgacao',
+      });
     }
-    res.json({ webhook: store.discord.webhook, canal: store.discord.canal });
+
+    if (!store.discord.webhook || !webhookValido(store.discord.webhook)) {
+      return res.status(404).json({
+        erro: divulgar
+          ? 'Cadastre o webhook do canal das divulgações (ou o canal das fichas) antes de publicar.'
+          : 'Nenhum webhook válido configurado.',
+      });
+    }
+
+    res.json({
+      webhook: store.discord.webhook,
+      canal: store.discord.canal,
+      mencionarHere: store.discord.mencionarHere,
+      origem: divulgar ? 'fichas' : 'fichas',
+    });
   });
 
   // O teste de envio é feito pelo navegador do comando (src/lib/discord.ts):

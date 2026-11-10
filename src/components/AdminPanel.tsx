@@ -37,6 +37,11 @@ interface AdminData {
     autoEnviar: boolean;
     mencionarHere: boolean;
     vinculado: boolean;
+    divulgacaoWebhookMascarado?: string;
+    divulgacaoCanal?: string;
+    divulgacaoMencionarHere?: boolean;
+    divulgacaoVinculada?: boolean;
+    divulgacaoUsaCanalDasFichas?: boolean;
   };
   interessados: Interessado[];
   envios: EnvioDiscord[];
@@ -90,10 +95,15 @@ async function apiFetch(caminho: string, opcoes: RequestInit = {}, token?: strin
   return fetch(url, { ...opcoes, headers: cabecalhos, credentials: 'same-origin' });
 }
 
-/** Webhook salvo no servidor, usando o token da sessão atual. */
-async function obterWebhookGlobal(): Promise<string | null> {
+/**
+ * Webhook salvo no servidor, usando o token da sessão atual.
+ * `finalidade: 'divulgacao'` busca o canal das divulgações (e recai no das
+ * fichas quando ele não estiver cadastrado).
+ */
+async function obterWebhookGlobal(finalidade?: 'divulgacao'): Promise<string | null> {
   try {
-    const r = await apiFetch('/discord/webhook');
+    const url = finalidade ? `/discord/webhook?finalidade=${finalidade}` : '/discord/webhook';
+    const r = await apiFetch(url);
     if (!r.ok) return null;
     const d = (await r.json()) as { webhook?: string };
     return d.webhook ?? null;

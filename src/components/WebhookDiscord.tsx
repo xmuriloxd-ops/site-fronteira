@@ -28,6 +28,12 @@ export interface ConfigDiscordPainel {
   autoEnviar: boolean;
   mencionarHere: boolean;
   vinculado: boolean;
+  /** Canal próprio das divulgações (cartazes). Vazio = usa o das fichas. */
+  divulgacaoWebhookMascarado?: string;
+  divulgacaoCanal?: string;
+  divulgacaoMencionarHere?: boolean;
+  divulgacaoVinculada?: boolean;
+  divulgacaoUsaCanalDasFichas?: boolean;
 }
 
 /** Interruptor simples, no estilo do painel. */
@@ -81,20 +87,27 @@ export function WebhookDiscord({
   const [convite, setConvite] = useState(config.convite);
   const [autoEnviar, setAutoEnviar] = useState(config.autoEnviar);
   const [mencionarHere, setMencionarHere] = useState(config.mencionarHere);
+
+  // Canal das divulgações (separado do canal das fichas)
+  const [webhookDivulgacao, setWebhookDivulgacao] = useState('');
+  const [canalDivulgacao, setCanalDivulgacao] = useState(config.divulgacaoCanal ?? '');
+  const [hereDivulgacao, setHereDivulgacao] = useState(config.divulgacaoMencionarHere ?? true);
   const [msg, setMsg] = useState<{ tipo: 'ok' | 'erro'; texto: string } | null>(null);
   const [salvando, setSalvando] = useState(false);
   const [testando, setTestando] = useState(false);
 
   /** URL salva no servidor, usada para o teste sair do navegador. */
-  const obterWebhook = async (): Promise<string | null> => {
+  const obterWebhook = async (finalidade?: 'divulgacao'): Promise<string | null> => {
     try {
-      const r = await fetch(`${API}/discord/webhook`, {
+      const alvo = finalidade ? `${API}/discord/webhook?finalidade=${finalidade}` : `${API}/discord/webhook`;
+      const r = await fetch(alvo, {
         headers: cabecalho(),
         credentials: 'same-origin',
       });
       if (!r.ok) return null;
       const d = (await r.json()) as { webhook?: string };
       return d.webhook ?? null;
+      /* o canal (fichas ou divulgações) é decidido pelo servidor */
     } catch {
       return null;
     }
@@ -104,8 +117,16 @@ export function WebhookDiscord({
     setSalvando(true);
     setMsg(null);
     try {
-      const corpo: Record<string, unknown> = { convite, canal, autoEnviar, mencionarHere };
+      const corpo: Record<string, unknown> = {
+        convite,
+        canal,
+        autoEnviar,
+        mencionarHere,
+        divulgacaoCanal: canalDivulgacao,
+        divulgacaoMencionarHere: hereDivulgacao,
+      };
       if (webhook.trim()) corpo.webhook = webhook.trim();
+      if (webhookDivulgacao.trim()) corpo.divulgacaoWebhook = webhookDivulgacao.trim();
 
       const r = await fetch(`${API}/discord`, {
         method: 'PATCH',
@@ -122,11 +143,12 @@ export function WebhookDiscord({
 
       setMsg({
         tipo: 'ok',
-        texto: d.vinculado
-          ? 'Webhook cadastrado. As fichas e as divulgações já podem ir para este canal.'
+        texto: d.vinculado || config.divulgacaoVinculada
+          ? 'Canais salvos. As fichas vão para o canal das fichas e as divulgações para o canal das divulgações.'
           : (d.mensagem ?? 'Configuração salva.'),
       });
       setWebhook('');
+      setWebhookDivulgacao('');
       onAtualizar();
     } catch {
       setMsg({ tipo: 'erro', texto: 'Falha de conexão ao salvar o webhook.' });
@@ -174,10 +196,10 @@ export function WebhookDiscord({
         </span>
         <div className="min-w-0 flex-1">
           <p className="text-[0.84rem] font-semibold text-white">
-            {config.vinculado ? 'Webhook cadastrado' : 'Cadastre o webhook do Discord'}
+            Canal das fichas · {config.vinculado ? 'cadastrado' : 'não cadastrado'}
           </p>
           <p className="truncate text-[0.7rem] text-emerald-50/45">
-            {config.webhookMascarado || 'Cole a URL do webhook do canal onde as divulgações serão publicadas.'}
+            {config.webhookMascarado || 'Cole a URL do webhook do canal que recebe as fichas preenchidas.'}
           </p>
         </div>
         {config.vinculado && (
@@ -248,6 +270,76 @@ export function WebhookDiscord({
           titulo="Mencionar @here"
           descricao="Avisa os membros online."
         />
+      </div>
+
+      {/* ------------------------ Canal das divulgações ------------------------ */}
+      <div className="rounded-lg border border-pmpr-gold/25 bg-pmpr-gold/[0.04] p-3">
+        <div className="flex items-center gap-2">
+          <span
+            className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-md ${
+              config.divulgacaoVinculada
+                ? 'bg-emerald-500/15 text-emerald-300'
+                : 'bg-amber-500/15 text-amber-300'
+            }`}
+          >
+            <Radio size={13} />
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="text-[0.8rem] font-semibold text-white">
+              Canal das divulgações · {config.divulgacaoVinculada ? 'cadastrado' : 'não cadastrado'}
+            </p>
+            <p className="truncate text-[0.68rem] text-emerald-50/45">
+              {config.divulgacaoWebhookMascarado ||
+                (config.divulgacaoUsaCanalDasFichas
+                  ? 'Sem canal próprio: as divulgações usam o canal das fichas.'
+                  : 'Cole a URL do webhook do canal que recebe os cartazes.')}
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-2 grid gap-2 sm:grid-cols-2">
+          <div>
+            <label className="label" htmlFor="webhook-divulgacao-url">
+              <Link2 size={11} className="mr-1 inline" />
+              URL do webhook (divulgações)
+            </label>
+            <input
+              id="webhook-divulgacao-url"
+              className="field"
+              value={webhookDivulgacao}
+              onChange={(e) => setWebhookDivulgacao(e.target.value)}
+              placeholder="https://discord.com/api/webhooks/..."
+              type="url"
+              autoComplete="off"
+            />
+          </div>
+          <div>
+            <label className="label" htmlFor="webhook-divulgacao-canal">
+              Nome do canal (divulgações)
+            </label>
+            <input
+              id="webhook-divulgacao-canal"
+              className="field"
+              value={canalDivulgacao}
+              onChange={(e) => setCanalDivulgacao(e.target.value)}
+              placeholder="divulgacao-pmpr"
+            />
+          </div>
+        </div>
+
+        <div className="mt-2">
+          <Toggle
+            ativo={hereDivulgacao}
+            onChange={setHereDivulgacao}
+            titulo="Mencionar @here nas divulgações"
+            descricao="Avisa os membros online quando um cartaz é publicado."
+          />
+        </div>
+
+        <p className="mt-2 text-[0.64rem] leading-relaxed text-emerald-100/35">
+          Deixe vazio para continuar publicando no canal das fichas. Com a URL preenchida, os cartazes vão só
+          para este canal e as fichas continuam no canal de cima.
+        </p>
       </div>
 
       <div className="flex flex-wrap gap-2">
