@@ -23,13 +23,15 @@ import {
   UserCheck,
   Clock4,
   XCircle,
+  Megaphone,
 } from 'lucide-react';
 import { FORMULARIOS_UNIDADE } from '../data/fichas-unidade';
 import { enviarPeloNavegador } from '../lib/discord';
-import type { Interessado, EnvioDiscord, InscricaoRecrutamento } from '../types';
+import { DivulgacaoTab } from './DivulgacaoTab';
+import type { DivulgacaoInscricoes, Interessado, EnvioDiscord, InscricaoRecrutamento } from '../types';
 import { FORMULARIO_RECRUTAMENTO } from '../data/recrutamento';
 
-type Aba = 'discord' | 'credenciais' | 'recrutamento' | 'tropa';
+type Aba = 'discord' | 'divulgacao' | 'credenciais' | 'recrutamento' | 'tropa';
 
 interface AdminData {
   login: string;
@@ -44,6 +46,7 @@ interface AdminData {
   };
   interessados: Interessado[];
   envios: EnvioDiscord[];
+  divulgacao?: DivulgacaoInscricoes;
 }
 
 const API = '/api/admin';
@@ -91,6 +94,18 @@ async function apiFetch(caminho: string, opcoes: RequestInit = {}, token?: strin
     cabecalhos['x-admin-token'] = efetivo;
   }
   return fetch(url, { ...opcoes, headers: cabecalhos, credentials: 'same-origin' });
+}
+
+/** Webhook salvo no servidor, usando o token da sessão atual. */
+async function obterWebhookGlobal(): Promise<string | null> {
+  try {
+    const r = await apiFetch('/discord/webhook');
+    if (!r.ok) return null;
+    const d = (await r.json()) as { webhook?: string };
+    return d.webhook ?? null;
+  } catch {
+    return null;
+  }
 }
 
 export function AdminPanel({
@@ -363,6 +378,7 @@ export function AdminPanel({
                 {(
                   [
                     { id: 'discord', label: 'Discord', Icon: MessageSquare },
+                    { id: 'divulgacao', label: 'Divulgação', Icon: Megaphone },
                     { id: 'recrutamento', label: 'Recrutamento', Icon: ClipboardList },
                     { id: 'tropa', label: 'Tropa', Icon: Users },
                     { id: 'credenciais', label: 'Login e senha', Icon: KeyRound },
@@ -411,6 +427,18 @@ export function AdminPanel({
                     void carregarDados();
                     onConfigChange();
                   }}
+                />
+              )}
+
+              {dados && aba === 'divulgacao' && (
+                <DivulgacaoTab
+                  cabecalho={cabecalho}
+                  onAtualizar={() => {
+                    void carregarDados();
+                    onConfigChange();
+                  }}
+                  obterWebhook={obterWebhookGlobal}
+                  inicial={dados.divulgacao}
                 />
               )}
 

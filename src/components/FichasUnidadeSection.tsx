@@ -1,6 +1,8 @@
 import { ClipboardList, ArrowRight, FileText, ShieldCheck } from 'lucide-react';
 import { FORMULARIOS_UNIDADE } from '../data/fichas-unidade';
+import { DocumentoDivulgacao } from './DocumentoDivulgacao';
 import { Section, SectionHeading } from './ui';
+import type { DivulgacaoInscricoes } from '../types';
 
 /** Campos do padrão de inscrição das unidades especializadas. */
 const CAMPOS_PADRAO = [
@@ -19,9 +21,11 @@ const CAMPOS_PADRAO = [
 export function FichasUnidadeSection({
   onAbrirFicha,
   totalInscricoes,
+  divulgacao,
 }: {
   onAbrirFicha: (editalId: string) => void;
   totalInscricoes: number;
+  divulgacao?: DivulgacaoInscricoes;
 }) {
   const fichas = Object.entries(FORMULARIOS_UNIDADE);
 
@@ -37,6 +41,22 @@ export function FichasUnidadeSection({
         }
         description="A inscrição é feita direto no formulário da unidade. Todos os campos são obrigatórios e o envio chega imediatamente ao comando."
       />
+
+      {/* Documento de divulgação publicado pelo comando */}
+      {divulgacao && (
+        <div className="mt-8 grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.6fr)]">
+          <DocumentoDivulgacao divulgacao={divulgacao} />
+          <div className="flex flex-col justify-center rounded-xl border border-emerald-500/25 bg-emerald-900/20 p-5">
+            <p className="text-[0.68rem] font-bold uppercase tracking-[0.18em] text-pmpr-gold/80">
+              Divulgação oficial
+            </p>
+            <p className="mt-2 text-[0.82rem] leading-relaxed text-emerald-50/60">
+              Este é o documento das inscrições abertas publicado pelo comando. Confira a data, o horário e quem
+              está divulgando antes de preencher a ficha.
+            </p>
+          </div>
+        </div>
+      )}
 
       <div className="mt-8 grid gap-4 lg:grid-cols-2">
         {fichas.map(([editalId, ficha]) => {

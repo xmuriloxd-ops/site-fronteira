@@ -271,6 +271,18 @@ body {
     display: none !important;
   }
 
+  /* O documento de divulgação sai em fundo claro, legível no papel */
+  .documento-divulgacao,
+  .documento-divulgacao * {
+    color: #111 !important;
+    border-color: #bbb !important;
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+  .documento-divulgacao h3 {
+    color: #000 !important;
+  }
+
   /* O leitor ocupa a página inteira */
   .fixed {
     position: static !important;

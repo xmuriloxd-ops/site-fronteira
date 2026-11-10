@@ -100,6 +100,17 @@ interface EnvioDiscord {
   criadoEm: string;
 }
 
+interface DivulgacaoInscricoes {
+  unidades: string[];
+  texto: string;
+  data: string;
+  horario: string;
+  responsavel: string;
+  link: string;
+  observacoes: string;
+  atualizadoEm?: string;
+}
+
 interface DiscordConfig {
   webhook: string;
   convite: string;
@@ -134,6 +145,8 @@ interface Store {
   /** @deprecated mantido apenas para compatibilidade de leitura. */
   versaoSessao?: number;
   inscricoes: InscricaoRecrutamento[];
+  /** Documento de divulgação das inscrições abertas. */
+  divulgacao?: DivulgacaoInscricoes;
 }
 
 const DEFAULT_STORE: Store = {
@@ -152,6 +165,16 @@ const DEFAULT_STORE: Store = {
   revogados: [],
   versaoSessao: 0,
   inscricoes: [],
+  divulgacao: {
+    unidades: ['pmpr', 'rotam', 'rone'],
+    texto:
+      'Estão abertas as inscrições da Polícia Militar do Paraná, da ROTAM e da RONE. Preencha o formulário da unidade pretendida no portal; todas as fichas são analisadas pelo comando.',
+    data: new Date().toISOString().slice(0, 10),
+    horario: '20:00',
+    responsavel: 'Comando do 13º BPM',
+    link: '',
+    observacoes: 'Inscrições gratuitas. Leia os requisitos antes de enviar a ficha.',
+  },
 };
 
 function loadStore(): Store {
@@ -170,6 +193,7 @@ function loadStore(): Store {
         revogados: raw.revogados ?? [],
         versaoSessao: raw.versaoSessao ?? 0,
         inscricoes: raw.inscricoes ?? [],
+        divulgacao: { ...DEFAULT_STORE.divulgacao!, ...(raw.divulgacao ?? {}) },
       };
 
       // Migração: instalações antigas usavam "comnadopmpr". Passa a valer
@@ -413,6 +437,7 @@ async function startServer() {
     conviteDiscord: store.discord.convite,
     interessados: store.interessados.length,
     inscricoes: store.inscricoes.length,
+    divulgacao: store.divulgacao,
   });
 
   app.get('/api/versao', (_req, res) => {
@@ -514,6 +539,7 @@ async function startServer() {
       },
       interessados: store.interessados,
       envios: store.envios.slice(0, 40),
+      divulgacao: store.divulgacao,
     });
   });
 
@@ -609,6 +635,50 @@ async function startServer() {
   // O teste de envio é feito pelo navegador do comando (src/lib/discord.ts):
   // este servidor não alcança o Discord, então a rota antiga foi removida.
 
+  /* -------------------- Documento de divulgação ---------------------- */
+
+  const LIMITES_DIVULGACAO = { texto: 1200, responsavel: 120, link: 300, observacoes: 600 };
+
+  /** Normaliza o que o comando enviou, sem deixar campos quebrarem o documento. */
+  const limparDivulgacao = (corpo: Record<string, unknown>): DivulgacaoInscricoes => {
+    const atual = store.divulgacao ?? DEFAULT_STORE.divulgacao!;
+
+    const unidades = Array.isArray(corpo.unidades)
+      ? [
+          ...new Set(
+            corpo.unidades
+              .filter((u): u is string => typeof u === 'string')
+              .filter((u) => ['pmpr', 'rotam', 'rone'].includes(u)),
+          ),
+        ]
+      : atual.unidades;
+
+    const texto = (campo: keyof typeof LIMITES_DIVULGACAO, padrao: string) =>
+      typeof corpo[campo] === 'string' ? (corpo[campo] as string).slice(0, LIMITES_DIVULGACAO[campo]) : padrao;
+
+    return {
+      unidades: unidades.length ? unidades : atual.unidades,
+      texto: texto('texto', atual.texto),
+      data: typeof corpo.data === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(corpo.data) ? corpo.data : atual.data,
+      horario:
+        typeof corpo.horario === 'string' && /^\d{2}:\d{2}$/.test(corpo.horario) ? corpo.horario : atual.horario,
+      responsavel: texto('responsavel', atual.responsavel),
+      link: texto('link', atual.link),
+      observacoes: texto('observacoes', atual.observacoes),
+      atualizadoEm: new Date().toISOString(),
+    };
+  };
+
+  app.get('/api/admin/divulgacao', exigirAdmin, (_req, res) => {
+    res.json({ divulgacao: store.divulgacao ?? DEFAULT_STORE.divulgacao });
+  });
+
+  app.patch('/api/admin/divulgacao', exigirAdmin, (req, res) => {
+    store.divulgacao = limparDivulgacao((req.body ?? {}) as Record<string, unknown>);
+    saveStore(store);
+    res.json({ ok: true, divulgacao: store.divulgacao });
+  });
+
   /* ------------------- Registro de envios ao Discord ------------------ */
 
   app.post('/api/admin/envios', exigirAdmin, async (req, res) => {
@@ -638,6 +708,29 @@ async function startServer() {
     saveStore(store);
 
     res.status(resultado.ok ? 200 : 400).json({ ...resultado, envio });
+  });
+
+  /** Registra no histórico um envio feito pelo navegador do comando. */
+  app.post('/api/admin/envios/registrar', exigirAdmin, (req, res) => {
+    const { editalId, titulo, ok, detalhe } = req.body ?? {};
+    if (typeof titulo !== 'string' || !titulo.trim()) {
+      return res.status(400).json({ erro: 'Informe o título do envio.' });
+    }
+
+    const envio: EnvioDiscord = {
+      id: crypto.randomUUID(),
+      editalId: typeof editalId === 'string' ? editalId : 'portal',
+      titulo: titulo.trim().slice(0, 120),
+      destino: store.discord.canal || 'Discord',
+      status: ok ? 'sucesso' : 'erro',
+      detalhe: typeof detalhe === 'string' ? detalhe.slice(0, 300) : undefined,
+      criadoEm: new Date().toISOString(),
+    };
+    store.envios.unshift(envio);
+    store.envios = store.envios.slice(0, 100);
+    saveStore(store);
+
+    res.json({ ok: true, envio });
   });
 
   app.delete('/api/admin/envios', exigirAdmin, (_req, res) => {

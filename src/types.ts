@@ -54,6 +54,24 @@ export interface InscricaoRecrutamento {
   discordErro?: string;
 }
 
+/** Documento de divulgação das inscrições abertas, montado pelo comando. */
+export interface DivulgacaoInscricoes {
+  /** Unidades em destaque: quais inscrições estão abertas. */
+  unidades: string[];
+  /** Texto de chamada do anúncio (editável). */
+  texto: string;
+  /** Data do anúncio no formato ISO (aaaa-mm-dd), editável. */
+  data: string;
+  /** Horário no formato HH:mm, editável. */
+  horario: string;
+  /** Quem está divulgando (posto, nome ou setor). */
+  responsavel: string;
+  /** Link do formulário ou convite do servidor. */
+  link: string;
+  /** Observações finais (opcional). */
+  observacoes: string;
+}
+
 /** Destino de Discord devolvido pelo servidor para o envio automático. */
 export interface DestinoDiscord {
   /** URL do webhook do canal cadastrado pelo comando. */
@@ -117,4 +135,6 @@ export interface AppConfigPublica {
   conviteDiscord: string;
   interessados: number;
   inscricoes: number;
+  /** Documento de divulgação das inscrições abertas, publicado pelo comando. */
+  divulgacao?: DivulgacaoInscricoes;
 }

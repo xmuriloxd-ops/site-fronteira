@@ -116,6 +116,7 @@ export default function App() {
         <FichasUnidadeSection
           onAbrirFicha={(id) => setFormularioAberto(id)}
           totalInscricoes={config?.inscricoes ?? 0}
+          divulgacao={config?.divulgacao}
         />
 
         <UnidadesSection />
