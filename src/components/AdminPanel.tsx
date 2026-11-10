@@ -50,26 +50,43 @@ interface AdminData {
 const API = '/api/admin';
 
 /**
- * Requisição autenticada ao painel.
- * O token viaja por três canais ao mesmo tempo (Authorization, x-admin-token e
- * query string) porque o proxy do preview pode remover cabeçalhos e cookies.
- * Qualquer um que sobreviva já autentica a requisição.
+ * Token da sessão do comando.
+ * Fica no módulo (e não só no estado do React) para que TODA requisição do
+ * painel autentique automaticamente — inclusive as feitas pelas abas.
+ * Era essa a falha: chamadas que esqueciam de passar o token recebiam 401.
+ */
+let tokenSessao: string | null = null;
+
+function definirTokenSessao(token: string | null) {
+  tokenSessao = token;
+}
+
+/** Cabeçalhos de autenticação no formato esperado pelas abas. */
+function cabecalho() {
+  return {
+    'Content-Type': 'application/json',
+    Authorization: `Bearer ${tokenSessao ?? ''}`,
+    'x-admin-token': tokenSessao ?? '',
+  };
+}
+
+/**
+ * Requisição autenticada ao painel. O token vai por três canais ao mesmo tempo
+ * (Authorization, x-admin-token e query string) porque o proxy do preview pode
+ * remover cabeçalhos e cookies. Qualquer um que chegue já autentica.
  */
 async function apiFetch(caminho: string, opcoes: RequestInit = {}, token?: string | null) {
   const passados = (opcoes.headers as Record<string, string>) ?? {};
-  // o token pode vir explícito ou já dentro dos cabeçalhos de cabecalho()
   const efetivo =
     token ??
-    passados['x-admin-token'] ??
-    (passados.Authorization?.startsWith('Bearer ') ? passados.Authorization.slice(7) : null);
+    (passados['x-admin-token'] ||
+      (passados.Authorization?.startsWith('Bearer ') ? passados.Authorization.slice(7) : null) ||
+      tokenSessao);
 
   const url = efetivo
     ? `${API}${caminho}${caminho.includes('?') ? '&' : '?'}token=${encodeURIComponent(efetivo)}`
     : `${API}${caminho}`;
-  const cabecalhos: Record<string, string> = {
-    'Content-Type': 'application/json',
-    ...passados,
-  };
+  const cabecalhos: Record<string, string> = { 'Content-Type': 'application/json', ...passados };
   if (efetivo) {
     cabecalhos.Authorization = `Bearer ${efetivo}`;
     cabecalhos['x-admin-token'] = efetivo;
@@ -123,15 +140,16 @@ export function AdminPanel({
     };
   }, [onClose]);
 
-  const cabecalho = () => ({
-    'Content-Type': 'application/json',
-    Authorization: `Bearer ${tokenAtivo ?? ''}`,
-    'x-admin-token': tokenAtivo ?? '',
-  });
-
+  // mantém o token do módulo sempre sincronizado com o estado do painel,
+  // para que as abas autentiquem sem precisar receber o token por prop
   useEffect(() => {
     setTokenAtivo(token);
+    definirTokenSessao(token);
   }, [token]);
+
+  useEffect(() => {
+    definirTokenSessao(tokenAtivo);
+  }, [tokenAtivo]);
 
   const carregarDados = async (paraToken?: string | null) => {
     const uso = paraToken ?? tokenAtivo;
@@ -508,8 +526,17 @@ function DiscordTab({
       const corpo: Record<string, unknown> = { convite, canal, autoEnviar, mencionarHere };
       if (webhook.trim()) corpo.webhook = webhook.trim();
       const r = await apiFetch('/discord', { method: 'PATCH', body: JSON.stringify(corpo) });
-      const d = await r.json();
-      setMsg({ tipo: r.ok ? 'ok' : 'erro', texto: d.mensagem ?? d.erro ?? 'Resposta inesperada.' });
+      const d = await r.json().catch(() => ({}));
+      if (r.status === 401) {
+        setMsg({ tipo: 'erro', texto: 'A sessão não foi reconhecida. Saia e entre novamente para salvar.' });
+        return;
+      }
+      setMsg({
+        tipo: r.ok ? 'ok' : 'erro',
+        texto: r.ok
+          ? (d.mensagem ?? 'Configuração salva.')
+          : (d.erro ?? `O servidor respondeu ${r.status}. Tente novamente.`),
+      });
       if (r.ok) {
         setWebhook('');
         onAtualizar();
@@ -527,7 +554,7 @@ function DiscordTab({
     let ativo = true;
     void (async () => {
       try {
-        const r = await apiFetch('/discord/diagnostico', {}, cabecalho()['x-admin-token']);
+        const r = await apiFetch('/discord/diagnostico');
         if (!ativo || !r.ok) return;
         setDiagnostico(await r.json());
       } catch {
@@ -544,7 +571,7 @@ function DiscordTab({
   const obterWebhook = async (): Promise<string | null> => {
     try {
       // o token precisa ir explícito: apiFetch não conhece o estado do pai
-      const r = await apiFetch('/discord/webhook', {}, cabecalho()['x-admin-token']);
+      const r = await apiFetch('/discord/webhook');
       if (!r.ok) return null;
       const d = (await r.json()) as { webhook?: string };
       return d.webhook ?? null;
@@ -565,7 +592,8 @@ function DiscordTab({
       if (!url) {
         setMsg({
           tipo: 'erro',
-          texto: 'Nenhum webhook salvo ainda. Cole a URL do Discord e clique em salvar.',
+          texto:
+            'Nenhum webhook salvo ainda. Cole a URL do canal no campo acima e clique em "Salvar configuração".',
         });
         return;
       }

@@ -618,43 +618,8 @@ async function startServer() {
     res.json({ webhook: store.discord.webhook, canal: store.discord.canal });
   });
 
-  app.post('/api/admin/discord/teste', exigirAdmin, async (_req, res) => {
-    const resultado = await enviarDiscord(store.discord, {
-      titulo: 'Teste de integração ✅',
-      descricao:
-        'O Portal de Editais da Polícia Militar do Paraná está conectado a este canal. A partir de agora, os editais podem ser enviados automaticamente para a tropa.',
-      cor: 0x0b6b3a,
-      fields: [
-        { name: 'Canal', value: store.discord.canal || 'não informado', inline: true },
-        { name: 'Envio automático', value: store.discord.autoEnviar ? 'Ativado' : 'Desativado', inline: true },
-      ],
-    });
-    res.status(resultado.ok ? 200 : 400).json(resultado);
-  });
-
-  /**
-   * Registra o resultado de um envio feito pelo navegador do comando.
-   * O servidor não consegue falar com o Discord, mas o navegador do usuário
-   * consegue: aqui só guardamos o histórico e disparamos o modo automático.
-   */
-  app.post('/api/admin/envios/registrar', exigirAdmin, (req, res) => {
-    const { editalId, titulo, ok, detalhe } = req.body ?? {};
-    if (!editalId || typeof titulo !== 'string') {
-      return res.status(400).json({ erro: 'Dados incompletos.' });
-    }
-    const envio: EnvioDiscord = {
-      id: crypto.randomUUID(),
-      editalId: String(editalId),
-      titulo,
-      destino: store.discord.canal || 'Discord',
-      status: ok ? 'sucesso' : 'erro',
-      detalhe: typeof detalhe === 'string' ? detalhe.slice(0, 300) : undefined,
-      criadoEm: new Date().toISOString(),
-    };
-    store.envios = [envio, ...store.envios].slice(0, 100);
-    saveStore(store);
-    res.json({ ok: true, envio });
-  });
+  // O teste de envio é feito pelo navegador do comando (src/lib/discord.ts):
+  // este servidor não alcança o Discord, então a rota antiga foi removida.
 
   /* ---------------------- Envio de edital ao Discord ----------------- */
 
