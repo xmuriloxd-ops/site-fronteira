@@ -6,3 +6,9 @@ coverage/
 *.log
 .env*
 !.env.example
+
+# dados locais do portal
+portal-data.json
+btz_access_logs.json
+btz_operators.json
+image-search/

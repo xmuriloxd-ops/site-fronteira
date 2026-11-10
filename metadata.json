@@ -1,6 +1,6 @@
 {
-  "name": "Controle de Ração - Grupo Btz",
-  "description": "Aplicativo para controle de saldo de ração em 3 silos, com registro de pesador, setor, lote e histórico de movimentações.",
+  "name": "Portal de Editais - Polícia Militar do Paraná",
+  "description": "Portal de editais da PMPR, ROTAM e RONE: requisitos, etapas, cronograma, provas anteriores, simulado e integração com o Discord do comando.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

@@ -1,57 +1,127 @@
 /**
- * @license
- * SPDX-License-Identifier: Apache-2.0
+ * Tipos centrais do Portal de Editais da Polícia Militar do Paraná.
  */
 
-export interface Silo {
+export type EditalStatus = 'aberto' | 'em-breve' | 'encerrado';
+export type EditalTom = 'rotam' | 'rone' | 'pmpr';
+
+export interface EditalMateria {
+  titulo: string;
+  topicos: string[];
+}
+
+export interface EditalEtapa {
+  ordem: number;
+  nome: string;
+  descricao: string;
+  carater: 'Eliminatório' | 'Classificatório' | 'Eliminatório e classificatório';
+}
+
+export interface EditalCronogramaItem {
+  etapa: string;
+  periodo: string;
+  observacao?: string;
+}
+
+export interface EditalRequisito {
+  titulo: string;
+  detalhe: string;
+}
+
+export interface Edital {
   id: string;
-  name: string;
-  feedType: string;
-  currentBalance: number; // in kg
-  maxCapacity: number; // in kg
-  minThreshold: number; // in kg (alert threshold)
+  sigla: string;
+  nome: string;
+  unidade: string;
+  tom: EditalTom;
+  status: EditalStatus;
+  chamada: string;
+  resumo: string;
+  vagas: number;
+  vagasDetalhe: string;
+  publico: string;
+  remuneracao: string;
+  remuneracaoCurta: string;
+  taxa: string;
+  inscricoes: string;
+  prova: string;
+  banca: string;
+  escolaridade: string;
+  idade: string;
+  local: string;
+  destaque: string[];
+  requisitos: EditalRequisito[];
+  etapas: EditalEtapa[];
+  materias: EditalMateria[];
+  cronograma: EditalCronogramaItem[];
+  observacoes: string[];
 }
 
-export type TransactionType = 'consumption' | 'refill' | 'adjustment';
-
-export interface Transaction {
+export interface ProvaAnterior {
   id: string;
-  timestamp: string; // ISO String
-  siloId: string;
-  siloName: string;
-  type: TransactionType;
-  quantity: number; // in kg (positive for refill, negative/positive depending on UI, but absolute value here)
-  sector: string;
-  batch: string;
-  operatorName: string;
-  operatorId: string;
-  notes?: string;
+  orgao: string;
+  cargo: string;
+  ano: number;
+  banca: string;
+  tipo: 'Prova objetiva' | 'Gabarito' | 'Prova discursiva' | 'Prova completa';
+  url: string;
+  fonte: string;
+  observacao?: string;
 }
 
-export interface OperatorSession {
-  operatorName: string;
-  operatorId: string;
-  sector: string;
-  batch: string;
-}
-
-export interface OperatorAccount {
-  operatorId: string; // Used as the login ID (Matrícula)
-  operatorName: string; // Full name of the operator
-  password: string; // Plain password for local simulation
-  isAdmin?: boolean; // True if the operator is an administrator
-}
-
-export interface AdminNotification {
+export interface QuestaoSimulado {
   id: string;
-  timestamp: string;
-  operatorId: string;
-  operatorName: string;
-  siloName: string;
-  feedType: string;
-  type: 'consumption' | 'refill' | 'adjustment';
-  quantity: number;
-  sector: string;
-  batch: string;
-  read: boolean;
+  disciplina: string;
+  enunciado: string;
+  alternativas: string[];
+  correta: number;
+  explicacao: string;
+}
+
+export interface Interessado {
+  id: string;
+  nome: string;
+  discord: string;
+  editais: string[];
+  criadoEm: string;
+  vinculado: boolean;
+}
+
+export interface EnvioDiscord {
+  id: string;
+  editalId: string;
+  titulo: string;
+  destino: string;
+  status: 'sucesso' | 'erro';
+  detalhe?: string;
+  criadoEm: string;
+}
+
+export interface ConfigDiscord {
+  webhook: string;
+  canal: string;
+  autoEnviar: boolean;
+  mencionarHere: boolean;
+  vinculado: boolean;
+}
+
+export interface EditalOverride {
+  status?: EditalStatus;
+  aviso?: string;
+}
+
+export interface AdminData {
+  login: string;
+  discord: ConfigDiscord;
+  interessados: Interessado[];
+  envios: EnvioDiscord[];
+  overrides: Record<string, EditalOverride>;
+}
+
+export interface AppConfigPublica {
+  discordVinculado: boolean;
+  canalDiscord: string;
+  conviteDiscord: string;
+  interessados: number;
+  overrides: Record<string, EditalOverride>;
 }

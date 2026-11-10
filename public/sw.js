@@ -1,26 +1,21 @@
-const CACHE_NAME = 'btz-silos-cache-v3';
-
-// Install Event
-self.addEventListener('install', event => {
+// Service worker legado do projeto anterior. Este portal não usa cache offline
+// agressivo: ao instalar, limpamos os caches antigos e nos desregistramos.
+self.addEventListener('install', () => {
   self.skipWaiting();
 });
 
-// Activate Event - immediately clean up ALL caches
-self.addEventListener('activate', event => {
+self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then(cacheNames => {
-      return Promise.all(
-        cacheNames.map(cache => {
-          console.log('Deletando cache antigo:', cache);
-          return caches.delete(cache);
-        })
-      );
-    }).then(() => self.clients.claim())
+    (async () => {
+      const nomes = await caches.keys();
+      await Promise.all(nomes.map((nome) => caches.delete(nome)));
+      await self.registration.unregister();
+      const clientes = await self.clients.matchAll({ type: 'window' });
+      clientes.forEach((cliente) => cliente.navigate(cliente.url));
+    })(),
   );
 });
 
-// Direct Network-First Fetch without caching files
-self.addEventListener('fetch', event => {
-  // Always fetch directly from the network to avoid stale/cached HTML/JS bundle issues
+self.addEventListener('fetch', (event) => {
   event.respondWith(fetch(event.request));
 });

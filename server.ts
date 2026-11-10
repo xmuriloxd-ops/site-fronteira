@@ -1,211 +1,523 @@
-import express from "express";
-import path from "path";
-import fs from "fs";
-import { createServer as createViteServer } from "vite";
+import express from 'express';
+import path from 'path';
+import fs from 'fs';
+import crypto from 'crypto';
+import { createServer as createViteServer } from 'vite';
 
-interface AccessLog {
+/* ------------------------------------------------------------------ */
+/* Persistência simples em arquivo JSON                                */
+/* ------------------------------------------------------------------ */
+
+const DATA_FILE = path.join(process.cwd(), 'portal-data.json');
+const SESSION_TTL = 1000 * 60 * 60 * 8; // 8 horas
+
+interface Interessado {
   id: string;
-  timestamp: string;
-  userAgent: string;
-  platform: string;
-  language: string;
-  screenWidth: number;
-  screenHeight: number;
-  isMobile: boolean;
-  ip: string;
-  operatorId?: string;
-  operatorName?: string;
+  nome: string;
+  discord: string;
+  editais: string[];
+  criadoEm: string;
+  vinculado: boolean;
 }
 
-const LOGS_FILE_PATH = path.join(process.cwd(), "btz_access_logs.json");
+interface EnvioDiscord {
+  id: string;
+  editalId: string;
+  titulo: string;
+  destino: string;
+  status: 'sucesso' | 'erro';
+  detalhe?: string;
+  criadoEm: string;
+}
 
-// Helper to load logs from file
-function loadLogs(): AccessLog[] {
+interface DiscordConfig {
+  webhook: string;
+  convite: string;
+  canal: string;
+  autoEnviar: boolean;
+  mencionarHere: boolean;
+}
+
+interface Store {
+  auth: { login: string; senha: string };
+  discord: DiscordConfig;
+  interessados: Interessado[];
+  envios: EnvioDiscord[];
+  overrides: Record<string, { status?: string; aviso?: string }>;
+  logs: { id: string; criadoEm: string; ip: string; ua: string }[];
+  sessions: Record<string, { login: string; expiraEm: number }>;
+}
+
+const DEFAULT_STORE: Store = {
+  auth: { login: 'comnadopmpr', senha: '142536' },
+  discord: {
+    webhook: '',
+    convite: '',
+    canal: 'editais-pmpr',
+    autoEnviar: false,
+    mencionarHere: true,
+  },
+  interessados: [],
+  envios: [],
+  overrides: {},
+  logs: [],
+  sessions: {},
+};
+
+function loadStore(): Store {
   try {
-    if (fs.existsSync(LOGS_FILE_PATH)) {
-      const data = fs.readFileSync(LOGS_FILE_PATH, "utf8");
-      return JSON.parse(data);
+    if (fs.existsSync(DATA_FILE)) {
+      const raw = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8')) as Partial<Store>;
+      return {
+        ...DEFAULT_STORE,
+        ...raw,
+        auth: { ...DEFAULT_STORE.auth, ...(raw.auth ?? {}) },
+        discord: { ...DEFAULT_STORE.discord, ...(raw.discord ?? {}) },
+        interessados: raw.interessados ?? [],
+        envios: raw.envios ?? [],
+        overrides: raw.overrides ?? {},
+        logs: raw.logs ?? [],
+        sessions: raw.sessions ?? {},
+      };
     }
   } catch (error) {
-    console.error("Erro ao carregar logs de acesso:", error);
+    console.error('Falha ao ler portal-data.json:', error);
   }
-  return [];
+  return { ...DEFAULT_STORE, auth: { ...DEFAULT_STORE.auth }, discord: { ...DEFAULT_STORE.discord } };
 }
 
-// Helper to save logs to file
-function saveLogs(logs: AccessLog[]) {
+function saveStore(store: Store) {
   try {
-    fs.writeFileSync(LOGS_FILE_PATH, JSON.stringify(logs, null, 2), "utf8");
+    fs.writeFileSync(DATA_FILE, JSON.stringify(store, null, 2), 'utf8');
   } catch (error) {
-    console.error("Erro ao salvar logs de acesso:", error);
+    console.error('Falha ao gravar portal-data.json:', error);
   }
 }
 
-interface OperatorAccount {
-  operatorId: string;
-  operatorName: string;
-  password?: string;
-  isAdmin?: boolean;
+/* ------------------------------------------------------------------ */
+/* Sessões do comando                                                  */
+/* ------------------------------------------------------------------ */
+
+function criarSessao(store: Store, login: string) {
+  // limpa sessões vencidas
+  for (const [chave, sessao] of Object.entries(store.sessions)) {
+    if (sessao.expiraEm < Date.now()) delete store.sessions[chave];
+  }
+  const token = crypto.randomBytes(24).toString('hex');
+  store.sessions[token] = { login, expiraEm: Date.now() + SESSION_TTL };
+  saveStore(store);
+  return token;
 }
 
-const OPERATORS_FILE_PATH = path.join(process.cwd(), "btz_operators.json");
+function validarSessao(store: Store, token: string | undefined) {
+  if (!token) return null;
+  const sessao = store.sessions[token];
+  if (!sessao) return null;
+  if (sessao.expiraEm < Date.now()) {
+    delete store.sessions[token];
+    saveStore(store);
+    return null;
+  }
+  return sessao;
+}
 
-const DEFAULT_OPERATORS: OperatorAccount[] = [
-  { operatorId: '86887', operatorName: 'MURILO MENDES', password: '123' },
-  { operatorId: 'admin', operatorName: 'Administrador', password: 'admin', isAdmin: true },
-  { operatorId: 'administrador', operatorName: 'Administrador', password: 'admin', isAdmin: true }
-];
+function tokenDaRequisicao(req: express.Request) {
+  const header = req.headers.authorization;
+  if (header?.startsWith('Bearer ')) return header.slice(7);
+  const query = req.query.token;
+  return typeof query === 'string' ? query : undefined;
+}
 
-function loadOperators(): OperatorAccount[] {
+/* ------------------------------------------------------------------ */
+/* Discord                                                            */
+/* ------------------------------------------------------------------ */
+
+const DISCORD_HOSTS = ['discord.com', 'discordapp.com', 'ptb.discord.com', 'canary.discord.com'];
+
+function webhookValido(url: string) {
   try {
-    if (fs.existsSync(OPERATORS_FILE_PATH)) {
-      const data = fs.readFileSync(OPERATORS_FILE_PATH, "utf8");
-      return JSON.parse(data);
-    } else {
-      fs.writeFileSync(OPERATORS_FILE_PATH, JSON.stringify(DEFAULT_OPERATORS, null, 2), "utf8");
-      return DEFAULT_OPERATORS;
+    const parsed = new URL(url);
+    return parsed.protocol === 'https:' && DISCORD_HOSTS.includes(parsed.hostname);
+  } catch {
+    return false;
+  }
+}
+
+interface EmbedField {
+  name: string;
+  value: string;
+  inline?: boolean;
+}
+
+async function enviarDiscord(
+  config: DiscordConfig,
+  payload: { titulo: string; descricao: string; url?: string; cor?: number; fields?: EmbedField[] },
+) {
+  if (!config.webhook || !webhookValido(config.webhook)) {
+    return { ok: false, detalhe: 'Webhook do Discord não configurado ou inválido.' };
+  }
+
+  const body = {
+    username: 'Portal de Editais PMPR',
+    content: config.mencionarHere ? '@here' : undefined,
+    allowed_mentions: { parse: config.mencionarHere ? ['everyone'] : [] },
+    embeds: [
+      {
+        title: payload.titulo,
+        description: payload.descricao,
+        url: payload.url,
+        color: payload.cor ?? 0x0b6b3a,
+        fields: payload.fields ?? [],
+        footer: { text: 'Polícia Militar do Paraná · Portal de Editais' },
+        timestamp: new Date().toISOString(),
+      },
+    ],
+  };
+
+  try {
+    const resposta = await fetch(config.webhook, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    if (!resposta.ok) {
+      const texto = await resposta.text().catch(() => '');
+      return { ok: false, detalhe: `Discord respondeu ${resposta.status}: ${texto.slice(0, 180)}` };
     }
+    return { ok: true, detalhe: 'Mensagem entregue ao canal.' };
   } catch (error) {
-    console.error("Erro ao carregar operadores:", error);
+    return { ok: false, detalhe: `Falha de conexão: ${(error as Error).message}` };
   }
-  return DEFAULT_OPERATORS;
 }
 
-function saveOperators(operators: OperatorAccount[]) {
-  try {
-    fs.writeFileSync(OPERATORS_FILE_PATH, JSON.stringify(operators, null, 2), "utf8");
-  } catch (error) {
-    console.error("Erro ao salvar operadores:", error);
-  }
-}
+/* ------------------------------------------------------------------ */
+/* Servidor                                                           */
+/* ------------------------------------------------------------------ */
 
 async function startServer() {
   const app = express();
-  const PORT = 3000;
+  const PORT = Number(process.env.PORT) || 3000;
+  let store = loadStore();
 
-  // Middleware to parse JSON bodies
-  app.use(express.json());
+  app.use(express.json({ limit: '256kb' }));
 
-  let accessLogs: AccessLog[] = loadLogs();
-  let operatorsList: OperatorAccount[] = loadOperators();
-
-  // API Routes
-  app.get("/api/health", (req, res) => {
-    res.json({ status: "ok" });
+  const publicConfig = () => ({
+    discordVinculado: Boolean(store.discord.webhook && webhookValido(store.discord.webhook)),
+    canalDiscord: store.discord.canal,
+    conviteDiscord: store.discord.convite,
+    interessados: store.interessados.length,
+    overrides: store.overrides,
   });
 
-  // Get list of registered operators
-  app.get("/api/operators", (req, res) => {
-    try {
-      operatorsList = loadOperators();
-      res.json({ success: true, operators: operatorsList });
-    } catch (err) {
-      console.error("Erro ao obter operadores:", err);
-      res.status(500).json({ error: "Erro ao carregar operadores" });
+  app.get('/api/health', (_req, res) => {
+    res.json({ status: 'ok', editais: 3, interessados: store.interessados.length });
+  });
+
+  app.get('/api/public/config', (_req, res) => {
+    res.json(publicConfig());
+  });
+
+  /* ------------------------------ Login ------------------------------ */
+
+  app.post('/api/admin/login', (req, res) => {
+    const { login, senha } = req.body ?? {};
+    if (typeof login !== 'string' || typeof senha !== 'string') {
+      return res.status(400).json({ erro: 'Informe login e senha.' });
     }
+    const loginOk = login.trim().toLowerCase() === store.auth.login.toLowerCase();
+    const senhaOk = senha === store.auth.senha;
+
+    if (!loginOk || !senhaOk) {
+      store.logs.unshift({
+        id: crypto.randomUUID(),
+        criadoEm: new Date().toISOString(),
+        ip: req.ip ?? '',
+        ua: `tentativa de login: ${login}`,
+      });
+      store.logs = store.logs.slice(0, 300);
+      saveStore(store);
+      return res.status(401).json({ erro: 'Login ou senha incorretos.' });
+    }
+
+    const token = criarSessao(store, store.auth.login);
+    res.json({ token, login: store.auth.login, expiraEmMs: SESSION_TTL });
   });
 
-  // Save/Update list of operators
-  app.post("/api/operators", (req, res) => {
-    try {
-      const { operators } = req.body;
-      if (Array.isArray(operators)) {
-        operatorsList = operators;
-        saveOperators(operatorsList);
-        res.json({ success: true, operators: operatorsList });
-      } else {
-        res.status(400).json({ error: "Parâmetro 'operators' deve ser uma lista" });
+  app.post('/api/admin/logout', (req, res) => {
+    const token = tokenDaRequisicao(req);
+    if (token && store.sessions[token]) {
+      delete store.sessions[token];
+      saveStore(store);
+    }
+    res.json({ ok: true });
+  });
+
+  const exigirAdmin: express.RequestHandler = (req, res, next) => {
+    if (!validarSessao(store, tokenDaRequisicao(req))) {
+      return res.status(401).json({ erro: 'Sessão expirada. Entre novamente.' });
+    }
+    next();
+  };
+
+  /* --------------------------- Dados do painel ----------------------- */
+
+  app.get('/api/admin/data', exigirAdmin, (_req, res) => {
+    res.json({
+      login: store.auth.login,
+      discord: {
+        webhookConfigurado: Boolean(store.discord.webhook),
+        webhookMascarado: store.discord.webhook
+          ? store.discord.webhook.replace(/\/[\w-]{20,}$/, '/••••••••')
+          : '',
+        convite: store.discord.convite,
+        canal: store.discord.canal,
+        autoEnviar: store.discord.autoEnviar,
+        mencionarHere: store.discord.mencionarHere,
+        vinculado: Boolean(store.discord.webhook && webhookValido(store.discord.webhook)),
+      },
+      interessados: store.interessados,
+      envios: store.envios.slice(0, 40),
+      overrides: store.overrides,
+    });
+  });
+
+  /* ----------------------- Login e senha do comando ------------------ */
+
+  app.patch('/api/admin/credenciais', exigirAdmin, (req, res) => {
+    const { login, senha, senhaAtual } = req.body ?? {};
+
+    if (typeof senhaAtual !== 'string' || senhaAtual !== store.auth.senha) {
+      return res.status(400).json({ erro: 'A senha atual informada não confere.' });
+    }
+    if (login !== undefined) {
+      if (typeof login !== 'string' || login.trim().length < 4) {
+        return res.status(400).json({ erro: 'O login deve ter ao menos 4 caracteres.' });
       }
-    } catch (err) {
-      console.error("Erro ao salvar operadores:", err);
-      res.status(500).json({ error: "Erro ao salvar operadores" });
     }
-  });
-
-  // Register access log
-  app.post("/api/access-log", (req, res) => {
-    try {
-      const { userAgent, platform, language, screenWidth, screenHeight, isMobile, operatorId, operatorName } = req.body;
-      
-      // Get client IP address safely
-      let ip = (req.headers["x-forwarded-for"] as string) || req.ip || req.socket.remoteAddress || "Desconhecido";
-      if (ip.includes(",")) {
-        ip = ip.split(",")[0].trim();
+    if (senha !== undefined) {
+      if (typeof senha !== 'string' || senha.length < 6) {
+        return res.status(400).json({ erro: 'A nova senha deve ter ao menos 6 caracteres.' });
       }
-      // Remove IPv6 prefix if present
-      if (ip.startsWith("::ffff:")) {
-        ip = ip.slice(7);
+    }
+    if (login === undefined && senha === undefined) {
+      return res.status(400).json({ erro: 'Nada para alterar.' });
+    }
+
+    if (login !== undefined) store.auth.login = login.trim();
+    if (senha !== undefined) store.auth.senha = senha;
+
+    // Derruba todas as sessões antigas por segurança
+    store.sessions = {};
+    const token = criarSessao(store, store.auth.login);
+    saveStore(store);
+
+    res.json({ ok: true, login: store.auth.login, token, mensagem: 'Credenciais atualizadas.' });
+  });
+
+  /* ------------------------------ Discord ---------------------------- */
+
+  app.patch('/api/admin/discord', exigirAdmin, (req, res) => {
+    const { webhook, convite, canal, autoEnviar, mencionarHere } = req.body ?? {};
+
+    if (webhook !== undefined) {
+      const limpo = String(webhook).trim();
+      if (limpo && !webhookValido(limpo)) {
+        return res
+          .status(400)
+          .json({ erro: 'Informe uma URL de webhook válida do Discord (https://discord.com/api/webhooks/...).' });
       }
-
-      const newLog: AccessLog = {
-        id: Math.random().toString(36).substring(2, 15) + Date.now().toString(36),
-        timestamp: new Date().toISOString(),
-        userAgent: userAgent || "Desconhecido",
-        platform: platform || "Desconhecido",
-        language: language || "Desconhecido",
-        screenWidth: Number(screenWidth) || 0,
-        screenHeight: Number(screenHeight) || 0,
-        isMobile: !!isMobile,
-        ip,
-        operatorId,
-        operatorName
-      };
-
-      accessLogs.unshift(newLog);
-      
-      // Keep only last 1000 logs
-      if (accessLogs.length > 1000) {
-        accessLogs = accessLogs.slice(0, 1000);
-      }
-
-      saveLogs(accessLogs);
-
-      res.status(201).json({ success: true, log: newLog });
-    } catch (err) {
-      console.error("Erro ao registrar acesso:", err);
-      res.status(500).json({ error: "Erro interno ao processar acesso" });
+      store.discord.webhook = limpo;
     }
+    if (convite !== undefined) store.discord.convite = String(convite).trim();
+    if (canal !== undefined) store.discord.canal = String(canal).trim();
+    if (typeof autoEnviar === 'boolean') store.discord.autoEnviar = autoEnviar;
+    if (typeof mencionarHere === 'boolean') store.discord.mencionarHere = mencionarHere;
+
+    saveStore(store);
+    res.json({
+      ok: true,
+      vinculado: Boolean(store.discord.webhook && webhookValido(store.discord.webhook)),
+      mensagem: 'Configuração do Discord salva.',
+    });
   });
 
-  // Retrieve access logs
-  app.get("/api/access-logs", (req, res) => {
-    try {
-      res.json({ success: true, logs: accessLogs });
-    } catch (err) {
-      console.error("Erro ao listar acessos:", err);
-      res.status(500).json({ error: "Erro interno ao listar acessos" });
-    }
+  app.post('/api/admin/discord/teste', exigirAdmin, async (_req, res) => {
+    const resultado = await enviarDiscord(store.discord, {
+      titulo: 'Teste de integração ✅',
+      descricao:
+        'O Portal de Editais da Polícia Militar do Paraná está conectado a este canal. A partir de agora, os editais podem ser enviados automaticamente para a tropa.',
+      cor: 0x0b6b3a,
+      fields: [
+        { name: 'Canal', value: store.discord.canal || 'não informado', inline: true },
+        { name: 'Envio automático', value: store.discord.autoEnviar ? 'Ativado' : 'Desativado', inline: true },
+      ],
+    });
+    res.status(resultado.ok ? 200 : 400).json(resultado);
   });
 
-  // Clear access logs
-  app.post("/api/clear-access-logs", (req, res) => {
-    try {
-      accessLogs = [];
-      saveLogs([]);
-      res.json({ success: true });
-    } catch (err) {
-      console.error("Erro ao limpar acessos:", err);
-      res.status(500).json({ error: "Erro interno ao limpar acessos" });
+  /* ---------------------- Envio de edital ao Discord ----------------- */
+
+  app.post('/api/admin/envios', exigirAdmin, async (req, res) => {
+    const { editalId, titulo, descricao, campos, url } = req.body ?? {};
+    if (!editalId || typeof titulo !== 'string' || typeof descricao !== 'string') {
+      return res.status(400).json({ erro: 'Dados do envio incompletos.' });
     }
+
+    const resultado = await enviarDiscord(store.discord, {
+      titulo,
+      descricao,
+      url: typeof url === 'string' ? url : undefined,
+      fields: Array.isArray(campos) ? campos.slice(0, 10) : [],
+    });
+
+    const envio: EnvioDiscord = {
+      id: crypto.randomUUID(),
+      editalId,
+      titulo,
+      destino: store.discord.canal || 'Discord',
+      status: resultado.ok ? 'sucesso' : 'erro',
+      detalhe: resultado.detalhe,
+      criadoEm: new Date().toISOString(),
+    };
+    store.envios.unshift(envio);
+    store.envios = store.envios.slice(0, 100);
+    saveStore(store);
+
+    res.status(resultado.ok ? 200 : 400).json({ ...resultado, envio });
   });
 
-  // Vite middleware for development
-  if (process.env.NODE_ENV !== "production") {
+  app.delete('/api/admin/envios', exigirAdmin, (_req, res) => {
+    store.envios = [];
+    saveStore(store);
+    res.json({ ok: true });
+  });
+
+  /* ------------------------ Status dos editais ----------------------- */
+
+  app.patch('/api/admin/editais/:id', exigirAdmin, async (req, res) => {
+    const { id } = req.params;
+    const { status, aviso, notificar } = req.body ?? {};
+
+    const permitido = ['aberto', 'em-breve', 'encerrado'];
+    if (status !== undefined && !permitido.includes(status)) {
+      return res.status(400).json({ erro: 'Status inválido.' });
+    }
+
+    store.overrides[id] = {
+      ...(store.overrides[id] ?? {}),
+      ...(status !== undefined ? { status } : {}),
+      ...(aviso !== undefined ? { aviso: String(aviso) } : {}),
+    };
+    saveStore(store);
+
+    let envio = null;
+    if (notificar && store.discord.autoEnviar) {
+      const resultado = await enviarDiscord(store.discord, {
+        titulo: 'Atualização de edital',
+        descricao: aviso || `O edital ${id.toUpperCase()} foi atualizado.`,
+        fields: [{ name: 'Novo status', value: String(status ?? 'mantido'), inline: true }],
+      });
+      envio = {
+        id: crypto.randomUUID(),
+        editalId: id,
+        titulo: 'Atualização de edital',
+        destino: store.discord.canal,
+        status: resultado.ok ? 'sucesso' : 'erro',
+        detalhe: resultado.detalhe,
+        criadoEm: new Date().toISOString(),
+      } as EnvioDiscord;
+      store.envios.unshift(envio);
+      store.envios = store.envios.slice(0, 100);
+      saveStore(store);
+    }
+
+    res.json({ ok: true, overrides: store.overrides, envio });
+  });
+
+  /* ------------------------ Lista de interessados -------------------- */
+
+  app.patch('/api/admin/interessados/:id', exigirAdmin, (req, res) => {
+    const { id } = req.params;
+    const { vinculado } = req.body ?? {};
+    const alvo = store.interessados.find((i) => i.id === id);
+    if (!alvo) return res.status(404).json({ erro: 'Interessado não encontrado.' });
+    if (typeof vinculado === 'boolean') alvo.vinculado = vinculado;
+    saveStore(store);
+    res.json({ ok: true, interessado: alvo });
+  });
+
+  app.delete('/api/admin/interessados/:id', exigirAdmin, (req, res) => {
+    const { id } = req.params;
+    store.interessados = store.interessados.filter((i) => i.id !== id);
+    saveStore(store);
+    res.json({ ok: true });
+  });
+
+  /* ---------------------- Inscrição pública no Discord --------------- */
+
+  app.post('/api/public/interesse', async (req, res) => {
+    const { nome, discord, editais } = req.body ?? {};
+
+    if (typeof nome !== 'string' || nome.trim().length < 3) {
+      return res.status(400).json({ erro: 'Informe seu nome completo.' });
+    }
+    if (typeof discord !== 'string' || discord.trim().length < 3) {
+      return res.status(400).json({ erro: 'Informe seu usuário do Discord.' });
+    }
+    if (!Array.isArray(editais) || editais.length === 0) {
+      return res.status(400).json({ erro: 'Selecione ao menos um edital.' });
+    }
+
+    const interessado: Interessado = {
+      id: crypto.randomUUID(),
+      nome: nome.trim().slice(0, 80),
+      discord: discord.trim().slice(0, 60),
+      editais: editais.filter((e: unknown) => typeof e === 'string').slice(0, 3),
+      criadoEm: new Date().toISOString(),
+      vinculado: false,
+    };
+
+    store.interessados.unshift(interessado);
+    store.interessados = store.interessados.slice(0, 500);
+
+    let aviso = 'Cadastro registrado no portal.';
+    if (store.discord.webhook && webhookValido(store.discord.webhook)) {
+      const resultado = await enviarDiscord(store.discord, {
+        titulo: '📣 Novo interessado nos editais',
+        descricao: `**${interessado.nome}** vinculou o Discord \`${interessado.discord}\` ao portal.`,
+        cor: 0x1f7a4d,
+        fields: [
+          { name: 'Editais', value: interessado.editais.map((e) => e.toUpperCase()).join(' · '), inline: false },
+          { name: 'Próximo passo', value: 'Envie `!confirmar` no canal para validar a vinculação.', inline: false },
+        ],
+      });
+      aviso = resultado.ok
+        ? 'Cadastro registrado e enviado ao Discord.'
+        : 'Cadastro registrado no portal, mas o aviso ao Discord falhou.';
+    }
+
+    saveStore(store);
+    res.status(201).json({ ok: true, aviso, interessado, convite: store.discord.convite });
+  });
+
+  /* ------------------------------- Vite ------------------------------ */
+
+  if (process.env.NODE_ENV !== 'production') {
     const vite = await createViteServer({
       server: { middlewareMode: true },
-      appType: "spa",
+      appType: 'spa',
     });
     app.use(vite.middlewares);
   } else {
-    const distPath = path.join(process.cwd(), "dist");
+    const distPath = path.join(process.cwd(), 'dist');
     app.use(express.static(distPath));
-    app.get("*", (req, res) => {
-      res.sendFile(path.join(distPath, "index.html"));
+    app.get('*', (_req, res) => {
+      res.sendFile(path.join(distPath, 'index.html'));
     });
   }
 
-  app.listen(PORT, "0.0.0.0", () => {
-    console.log(`Server running on http://0.0.0.0:${PORT}`);
+  app.listen(PORT, '0.0.0.0', () => {
+    console.log(`Portal de Editais PMPR em http://0.0.0.0:${PORT}`);
   });
 }
 
