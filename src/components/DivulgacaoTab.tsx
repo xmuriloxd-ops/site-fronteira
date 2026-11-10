@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import { enviarPeloNavegador } from '../lib/discord';
 import { TEMAS_CARTAZ, gerarCartaz, temaDoCartaz, urlPreviaCartaz } from '../lib/cartaz';
+import { BATALHOES, acharBatalhao, localDoBatalhao } from '../data/batalhoes';
 import { WebhookDiscord } from './WebhookDiscord';
 import type { ConfigDiscordPainel } from './WebhookDiscord';
 import { DocumentoDivulgacao } from './DocumentoDivulgacao';
@@ -245,6 +246,17 @@ export function DivulgacaoTab({
     }
   };
 
+  /** Batalhão do local da prova: sigla do selecionado, ou vazio. */
+  const batalhaoSelecionado = acharBatalhao(doc.provaLocal)?.sigla ?? '';
+
+  /** Escolher o batalhão preenche o local da prova sozinho. */
+  const escolherBatalhao = (sigla: string) => {
+    if (!sigla || sigla === '__outro') return;
+    const batalhao = BATALHOES.find((b) => b.sigla === sigla);
+    if (!batalhao) return;
+    alterar('provaLocal', localDoBatalhao(batalhao));
+  };
+
   const copiar = async () => {
     try {
       await navigator.clipboard.writeText(textoCompleto);
@@ -434,18 +446,48 @@ export function DivulgacaoTab({
               </div>
 
               <div className="mt-2">
-                <label className="label" htmlFor="prova-local">
+                <label className="label" htmlFor="prova-batalhao">
                   <MapPin size={11} className="mr-1 inline" />
-                  Local da prova
+                  Local da prova — batalhão
                 </label>
-                <input
-                  id="prova-local"
+                <select
+                  id="prova-batalhao"
                   className="field text-[0.82rem]"
-                  value={doc.provaLocal ?? ''}
-                  maxLength={160}
-                  onChange={(e) => alterar('provaLocal', e.target.value)}
-                  placeholder="Ex.: Batalhão de Rondas Ostensivas — Curitiba/PR"
-                />
+                  value={batalhaoSelecionado}
+                  onChange={(e) => escolherBatalhao(e.target.value)}
+                >
+                  <option value="">Selecione o batalhão...</option>
+                  {!batalhaoSelecionado && doc.provaLocal?.trim() && (
+                    <option value="__outro">{doc.provaLocal.trim()}</option>
+                  )}
+                  <optgroup label="Batalhões de área">
+                    {BATALHOES.filter((b) => !b.especializada).map((b) => (
+                      <option key={b.sigla} value={b.sigla}>
+                        {b.sigla} — {b.cidade}
+                      </option>
+                    ))}
+                  </optgroup>
+                  <optgroup label="Unidades especializadas">
+                    {BATALHOES.filter((b) => b.especializada).map((b) => (
+                      <option key={b.sigla} value={b.sigla}>
+                        {b.sigla} — {b.cidade}
+                      </option>
+                    ))}
+                  </optgroup>
+                </select>
+
+                <p className="mt-1 flex items-start gap-1 text-[0.64rem] leading-relaxed text-emerald-100/40">
+                  <MapPin size={10} className="mt-0.5 shrink-0 text-pmpr-gold/70" />
+                  <span>
+                    {doc.provaLocal?.trim() ? (
+                      <>
+                        Local no cartaz: <strong className="font-semibold text-white/70">{doc.provaLocal}</strong>
+                      </>
+                    ) : (
+                      'Escolha o batalhão e o local entra no cartaz automaticamente.'
+                    )}
+                  </span>
+                </p>
               </div>
             </div>
           )}
