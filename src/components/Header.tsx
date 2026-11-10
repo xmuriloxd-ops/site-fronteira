@@ -2,21 +2,31 @@ import { useEffect, useState } from 'react';
 import { Menu, X, ShieldCheck, LockKeyhole, LogOut } from 'lucide-react';
 import { Brasao } from './ui';
 
-const LINKS = [
-  { label: 'Inscrições', href: '#fichas-unidade' },
-  { label: '13º BPM', href: '#recrutamento' },
-  { label: 'Unidades', href: '#unidades' },
-  { label: 'Discord', href: '#discord' },
+export interface AbaPortal {
+  /** id do formulário, ou 'unidades' para a seção de unidades. */
+  id: string;
+  label: string;
+}
+
+/** Abas do topo: cada inscrição abre o formulário direto, sem rolar a página. */
+export const ABAS_PORTAL: AbaPortal[] = [
+  { id: 'fronteira-sul', label: '13º BPM' },
+  { id: 'rotam-operacional-2026', label: 'ROTAM' },
+  { id: 'rone-operacional-2026', label: 'RONE' },
+  { id: 'unidades', label: 'Unidades' },
 ];
 
 export function Header({
   adminLogado,
   onAdminClick,
   onSair,
+  onAbrirAba,
 }: {
   adminLogado: boolean;
   onAdminClick: () => void;
   onSair: () => void;
+  /** Abre o formulário da aba escolhida (ou rola até as unidades). */
+  onAbrirAba: (id: string) => void;
 }) {
   const [aberto, setAberto] = useState(false);
   const [rolou, setRolou] = useState(false);
@@ -28,12 +38,13 @@ export function Header({
     return () => window.removeEventListener('scroll', aoRolar);
   }, []);
 
-  const irPara = (href: string) => {
+  const abrirAba = (id: string) => {
     setAberto(false);
-    const alvo = document.querySelector(href);
-    if (alvo) {
-      alvo.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    if (id === 'unidades') {
+      document.getElementById('unidades')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      return;
     }
+    onAbrirAba(id);
   };
 
   return (
@@ -60,13 +71,13 @@ export function Header({
         </button>
 
         <nav className="hidden items-center gap-1 lg:flex">
-          {LINKS.map((l) => (
+          {ABAS_PORTAL.map((aba) => (
             <button
-              key={l.href}
-              onClick={() => irPara(l.href)}
+              key={aba.id}
+              onClick={() => abrirAba(aba.id)}
               className="rounded-md px-3 py-2 text-[0.8rem] font-semibold text-emerald-50/70 transition hover:bg-pmpr-gold/8 hover:text-pmpr-gold"
             >
-              {l.label}
+              {aba.label}
             </button>
           ))}
           <div className="mx-2 h-5 w-px bg-pmpr-gold/20" />
@@ -109,13 +120,13 @@ export function Header({
 
       {aberto && (
         <div className="border-t border-pmpr-gold/15 bg-ink-900/98 px-5 pb-4 pt-2 lg:hidden">
-          {LINKS.map((l) => (
+          {ABAS_PORTAL.map((aba) => (
             <button
-              key={l.href}
-              onClick={() => irPara(l.href)}
+              key={aba.id}
+              onClick={() => abrirAba(aba.id)}
               className="block w-full rounded-md px-2 py-2.5 text-left text-sm font-semibold text-emerald-50/75 hover:bg-white/5"
             >
-              {l.label}
+              {aba.label}
             </button>
           ))}
           <button

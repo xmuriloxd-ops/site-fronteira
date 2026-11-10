@@ -36,10 +36,7 @@ export function Footer({ onAdminClick }: { onAdminClick: () => void }) {
             <p className="eyebrow text-pmpr-gold/70">Navegar</p>
             <ul className="mt-3 space-y-2">
               {[
-                ['Formulários ROTAM e RONE', '#fichas-unidade'],
-                ['Recrutamento 13º BPM', '#recrutamento'],
                 ['Unidades', '#unidades'],
-                ['Discord', '#discord'],
               ].map(([label, href]) => (
                 <li key={href}>
                   <a href={href} className="text-[0.8rem] text-emerald-50/55 transition hover:text-pmpr-gold">

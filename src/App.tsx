@@ -2,13 +2,10 @@ import { useCallback, useEffect, useState } from 'react';
 import type { AppConfigPublica } from './types';
 import { Header } from './components/Header';
 import { Hero } from './components/Hero';
-import { RecrutamentoCard } from './components/RecrutamentoCard';
-import { FichasUnidadeSection } from './components/FichasUnidadeSection';
 import { FORMULARIOS_UNIDADE } from './data/fichas-unidade';
 import { FORMULARIO_RECRUTAMENTO } from './data/recrutamento';
 import { FormularioModal } from './components/FormularioModal';
 import { UnidadesSection } from './components/UnidadesSection';
-import { DiscordSection } from './components/DiscordSection';
 import { Footer } from './components/Footer';
 import { AdminPanel } from './components/AdminPanel';
 
@@ -100,28 +97,13 @@ export default function App() {
         adminLogado={Boolean(token)}
         onAdminClick={() => setPainelAberto(true)}
         onSair={sair}
+        onAbrirAba={(id) => setFormularioAberto(id)}
       />
 
       <main>
-        <Hero
-          onAbrirFormulario13={() => setFormularioAberto('fronteira-sul')}
-          onAbrirFicha={(id) => setFormularioAberto(id)}
-        />
+        <Hero />
 
-        <RecrutamentoCard
-          onAbrirFormulario={() => setFormularioAberto('fronteira-sul')}
-          totalInscricoes={config?.inscricoes ?? 0}
-        />
-
-        <FichasUnidadeSection
-          onAbrirFicha={(id) => setFormularioAberto(id)}
-          totalInscricoes={config?.inscricoes ?? 0}
-          divulgacao={config?.divulgacao}
-        />
-
-        <UnidadesSection />
-
-        <DiscordSection config={config} onAtualizarConfig={carregarConfig} />
+        <UnidadesSection divulgacao={config?.divulgacao} />
       </main>
 
       <Footer onAdminClick={() => setPainelAberto(true)} />

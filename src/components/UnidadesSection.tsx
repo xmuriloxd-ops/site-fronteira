@@ -1,5 +1,7 @@
 import { Shield, Radar, Crosshair, CalendarClock, Target, MapPinned } from 'lucide-react';
 import { Section, SectionHeading, TOM_COLORS } from './ui';
+import { DocumentoDivulgacao } from './DocumentoDivulgacao';
+import type { DivulgacaoInscricoes } from '../types';
 
 const UNIDADES = [
   {
@@ -46,7 +48,7 @@ const UNIDADES = [
   },
 ];
 
-export function UnidadesSection() {
+export function UnidadesSection({ divulgacao }: { divulgacao?: DivulgacaoInscricoes } = {}) {
   return (
     <Section id="unidades" className="py-16 sm:py-24">
       <SectionHeading
@@ -59,6 +61,21 @@ export function UnidadesSection() {
         description="Antes de preencher o formulário, entenda a missão de cada tropa. A rotina, o preparo físico e as exigências mudam bastante de uma unidade para outra."
         align="center"
       />
+
+      {divulgacao && (
+        <div className="mt-8 grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.7fr)]">
+          <DocumentoDivulgacao divulgacao={divulgacao} />
+          <div className="flex flex-col justify-center rounded-xl border border-emerald-500/25 bg-emerald-900/20 p-5">
+            <p className="text-[0.68rem] font-bold uppercase tracking-[0.18em] text-pmpr-gold/80">
+              Divulgação oficial
+            </p>
+            <p className="mt-2 text-[0.82rem] leading-relaxed text-emerald-50/60">
+              Este é o documento das inscrições abertas publicado pelo comando. Confira a data, o horário e quem
+              está divulgando, e use as abas do topo para preencher o formulário da sua unidade.
+            </p>
+          </div>
+        </div>
+      )}
 
       <div className="mt-10 grid gap-4 lg:grid-cols-3">
         {UNIDADES.map(({ tom, Icon, sigla, nome, fundacao, resumo, fatos }) => {
