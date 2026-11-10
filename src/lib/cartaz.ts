@@ -37,6 +37,8 @@ export interface TemaCartaz {
   apoio: string;
   /** Três blocos com ícone no rodapé da arte. */
   blocos: { titulo: string; titulo2: string; icone: 'documento' | 'escudo' | 'pessoas' }[];
+  /** Mostra a data, o horário e o local da prova de ingresso no cartaz. */
+  mostraProva: boolean;
 }
 
 /**
@@ -57,11 +59,12 @@ export const TEMAS_CARTAZ: Record<TemaCartaz['id'], TemaCartaz> = {
       { titulo: 'VAGAS PARA', titulo2: 'SOLDADO', icone: 'escudo' },
       { titulo: 'NÍVEL MÉDIO', titulo2: 'COMPLETO', icone: 'pessoas' },
     ],
+    mostraProva: false,
   },
   rotam: {
     id: 'rotam',
     nome: 'ROTAM',
-    fundo: '/divulgacao/pano-rotam.jpg',
+    fundo: '/divulgacao/rotam-real.jpg',
     selo: 'INSCRIÇÕES ABERTAS',
     chamada: 'SELEÇÃO INTERNA',
     destaque: 'ROTAM',
@@ -71,11 +74,12 @@ export const TEMAS_CARTAZ: Record<TemaCartaz['id'], TemaCartaz> = {
       { titulo: 'SELEÇÃO', titulo2: 'INTERNA', icone: 'documento' },
       { titulo: 'EFETIVO DA', titulo2: 'ATIVA', icone: 'pessoas' },
     ],
+    mostraProva: true,
   },
   rone: {
     id: 'rone',
     nome: 'RONE',
-    fundo: '/divulgacao/pano-rone.jpg',
+    fundo: '/divulgacao/rone-real.jpg',
     selo: 'INSCRIÇÕES ABERTAS',
     chamada: 'SELEÇÃO INTERNA',
     destaque: 'RONE',
@@ -85,6 +89,7 @@ export const TEMAS_CARTAZ: Record<TemaCartaz['id'], TemaCartaz> = {
       { titulo: 'SELEÇÃO', titulo2: 'INTERNA', icone: 'documento' },
       { titulo: 'EFETIVO DA', titulo2: 'ATIVA', icone: 'pessoas' },
     ],
+    mostraProva: true,
   },
 };
 
@@ -187,6 +192,35 @@ function imagemSemFundo(img: HTMLImageElement): HTMLCanvasElement {
   if (!ctxRecorte) throw new Error('Este navegador não suporta geração de imagem.');
   ctxRecorte.drawImage(tela, -minX, -minY);
   return recorte;
+}
+
+/** Data e hora em texto brasileiro, tolerando campos vazios. */
+function formatarQuando(data: string, horario: string): string {
+  const partes: string[] = [];
+  if (data) {
+    const [ano, mes, dia] = data.split('-');
+    if (ano && mes && dia) partes.push(`${dia}/${mes}/${ano}`);
+  }
+  if (horario) partes.push(`às ${horario}`);
+  return partes.join(' ');
+}
+
+/** Quebra o texto em linhas que caibam na largura dada. */
+function quebrarLinhas(ctx: CanvasRenderingContext2D, texto: string, largura: number): string[] {
+  const palavras = texto.split(/\s+/);
+  const linhas: string[] = [];
+  let atual = '';
+  for (const palavra of palavras) {
+    const tentativa = atual ? `${atual} ${palavra}` : palavra;
+    if (ctx.measureText(tentativa).width > largura && atual) {
+      linhas.push(atual);
+      atual = palavra;
+    } else {
+      atual = tentativa;
+    }
+  }
+  if (atual) linhas.push(atual);
+  return linhas;
 }
 
 /** Texto com espaçamento entre letras (o canvas não tem letterSpacing). */
@@ -489,8 +523,44 @@ export async function desenharCartaz(
   }
   ctx.fillText(tema.apoio, margem, apoioY);
 
-  /* ------------------------ Blocos com ícones ------------------------ */
+  /* ------------------- Data e local da prova (ROTAM/RONE) ------------------- */
   const blocoY = apoioY + 56;
+
+  if (tema.mostraProva) {
+    const quando = formatarQuando(divulgacao.provaData ?? '', divulgacao.provaHorario ?? '');
+    const local = (divulgacao.provaLocal ?? '').trim();
+
+    // Painel com borda amarela à esquerda
+    ctx.fillStyle = 'rgba(0,0,0,0.55)';
+    ctx.beginPath();
+    ctx.roundRect(margem - 16, blocoY - 18, LARGURA * 0.6, local ? 148 : 116, 10);
+    ctx.fill();
+    ctx.fillStyle = AMARELO;
+    ctx.fillRect(margem - 16, blocoY - 18, 6, local ? 148 : 116);
+
+    ctx.fillStyle = AMARELO;
+    ctx.font = `700 19px ${FONTE_TEXTO}`;
+    textoEspacado(ctx, 'PROVA DE INGRESSO', margem, blocoY + 8, 2.4);
+
+    // Data e horário
+    ctx.fillStyle = BRANCO;
+    let tamQuando = 42;
+    const textoQuando = quando || 'DATA A DEFINIR';
+    ctx.font = `400 ${tamQuando}px ${FONTE_TITULO}`;
+    while (ctx.measureText(textoQuando).width > LARGURA * 0.56 && tamQuando > 24) {
+      tamQuando -= 2;
+      ctx.font = `400 ${tamQuando}px ${FONTE_TITULO}`;
+    }
+    ctx.fillText(textoQuando, margem, blocoY + 56);
+
+    // Local
+    if (local) {
+      ctx.fillStyle = 'rgba(255,255,255,0.80)';
+      ctx.font = `600 23px ${FONTE_TEXTO}`;
+      const linhas = quebrarLinhas(ctx, local, LARGURA * 0.55).slice(0, 2);
+      linhas.forEach((linha, i) => ctx.fillText(linha, margem, blocoY + 88 + i * 26));
+    }
+  } else {
   const coluna = 320;
   tema.blocos.forEach((bloco, i) => {
     const bx = margem + i * coluna;
@@ -527,6 +597,7 @@ export async function desenharCartaz(
       ctx.restore();
     }
   });
+  }
 
   /* --------------------------- Faixa do rodapé --------------------------- */
   const rodapeY = ALTURA - 78;

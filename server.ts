@@ -108,6 +108,9 @@ interface DivulgacaoInscricoes {
   responsavel: string;
   link: string;
   observacoes: string;
+  provaData?: string;
+  provaHorario?: string;
+  provaLocal?: string;
   atualizadoEm?: string;
 }
 
@@ -175,6 +178,9 @@ const DEFAULT_STORE: Store = {
     responsavel: 'Comando do 13º BPM',
     link: '',
     observacoes: 'Inscrições gratuitas. Leia os requisitos antes de enviar a ficha.',
+    provaData: '',
+    provaHorario: '08:00',
+    provaLocal: '',
   },
 };
 
@@ -638,7 +644,7 @@ async function startServer() {
 
   /* -------------------- Documento de divulgação ---------------------- */
 
-  const LIMITES_DIVULGACAO = { texto: 1200, responsavel: 120, link: 300, observacoes: 600 };
+  const LIMITES_DIVULGACAO = { texto: 1200, responsavel: 120, link: 300, observacoes: 600, local: 160 };
 
   /** Normaliza o que o comando enviou, sem deixar campos quebrarem o documento. */
   const limparDivulgacao = (corpo: Record<string, unknown>): DivulgacaoInscricoes => {
@@ -666,6 +672,16 @@ async function startServer() {
       responsavel: texto('responsavel', atual.responsavel),
       link: texto('link', atual.link),
       observacoes: texto('observacoes', atual.observacoes),
+      provaData:
+        typeof corpo.provaData === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(corpo.provaData)
+          ? corpo.provaData
+          : '',
+      provaHorario:
+        typeof corpo.provaHorario === 'string' && /^\d{2}:\d{2}$/.test(corpo.provaHorario)
+          ? corpo.provaHorario
+          : '',
+      provaLocal:
+        typeof corpo.provaLocal === 'string' ? corpo.provaLocal.slice(0, LIMITES_DIVULGACAO.local) : '',
       atualizadoEm: new Date().toISOString(),
     };
   };

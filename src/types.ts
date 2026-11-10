@@ -70,6 +70,12 @@ export interface DivulgacaoInscricoes {
   link: string;
   /** Observações finais (opcional). */
   observacoes: string;
+  /** Data da prova de ingresso (aaaa-mm-dd). Só aparece no cartaz da ROTAM e da RONE. */
+  provaData?: string;
+  /** Horário da prova de ingresso (HH:mm). */
+  provaHorario?: string;
+  /** Local da prova de ingresso. */
+  provaLocal?: string;
 }
 
 /** Destino de Discord devolvido pelo servidor para o envio automático. */

@@ -12,6 +12,7 @@ import {
   Download,
   Image as ImageIcon,
   Loader2,
+  MapPin,
   Megaphone,
   Printer,
   Save,
@@ -390,6 +391,64 @@ export function DivulgacaoTab({
               placeholder="Avisos que aparecem em itálico no fim do documento"
             />
           </div>
+
+          {/* Prova de ingresso: só a arte da ROTAM e da RONE mostra estes dados */}
+          {temaDoCartaz(unidadeCartaz).mostraProva && (
+            <div className="rounded-lg border border-pmpr-gold/25 bg-pmpr-gold/[0.05] p-3">
+              <p className="flex items-center gap-1.5 text-[0.7rem] font-bold uppercase tracking-[0.14em] text-pmpr-gold">
+                <MapPin size={12} />
+                Prova de ingresso
+              </p>
+              <p className="mt-1 text-[0.64rem] leading-relaxed text-emerald-100/40">
+                Data, horário e local do dia da prova. Aparecem no cartaz da{' '}
+                {temaDoCartaz(unidadeCartaz).nome.toUpperCase()}.
+              </p>
+
+              <div className="mt-2 grid gap-2 sm:grid-cols-2">
+                <div>
+                  <label className="label" htmlFor="prova-data">
+                    <CalendarDays size={11} className="mr-1 inline" />
+                    Data da prova
+                  </label>
+                  <input
+                    id="prova-data"
+                    type="date"
+                    className="field"
+                    value={doc.provaData ?? ''}
+                    onChange={(e) => alterar('provaData', e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label className="label" htmlFor="prova-hora">
+                    <Clock4 size={11} className="mr-1 inline" />
+                    Horário da prova
+                  </label>
+                  <input
+                    id="prova-hora"
+                    type="time"
+                    className="field"
+                    value={doc.provaHorario ?? ''}
+                    onChange={(e) => alterar('provaHorario', e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div className="mt-2">
+                <label className="label" htmlFor="prova-local">
+                  <MapPin size={11} className="mr-1 inline" />
+                  Local da prova
+                </label>
+                <input
+                  id="prova-local"
+                  className="field text-[0.82rem]"
+                  value={doc.provaLocal ?? ''}
+                  maxLength={160}
+                  onChange={(e) => alterar('provaLocal', e.target.value)}
+                  placeholder="Ex.: Batalhão de Rondas Ostensivas — Curitiba/PR"
+                />
+              </div>
+            </div>
+          )}
         </div>
 
         {/* ------------------------------- Prévia ------------------------------- */}
