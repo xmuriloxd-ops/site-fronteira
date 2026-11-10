@@ -17,3 +17,9 @@ image-search/
 
 # Exemplos gerados localmente (não fazem parte do app)
 .exemplos/
+
+# Pacotes prontos para publicação
+entregas/
+
+# Dados locais do preview de produção
+.dados-preview/
