@@ -155,7 +155,8 @@ const DEFAULT_STORE: Store = {
     webhook: '',
     convite: '',
     canal: 'inscricoes-pmpr',
-    autoEnviar: false,
+    // Toda ficha preenchida vai para o canal assim que o webhook é cadastrado.
+    autoEnviar: true,
     mencionarHere: true,
   },
   interessados: [],

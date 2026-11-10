@@ -8,16 +8,11 @@ import {
   Loader2,
   CheckCircle2,
   AlertCircle,
-  MessageSquare,
-  Send,
   Users,
-  Settings2,
   LogOut,
-  Link2,
   Trash2,
-  Radio,
   Save,
-  BellRing,
+  Link2,
   ClipboardList,
   ChevronDown,
   UserCheck,
@@ -26,12 +21,11 @@ import {
   Megaphone,
 } from 'lucide-react';
 import { FORMULARIOS_UNIDADE } from '../data/fichas-unidade';
-import { enviarPeloNavegador } from '../lib/discord';
 import { DivulgacaoTab } from './DivulgacaoTab';
 import type { DivulgacaoInscricoes, Interessado, EnvioDiscord, InscricaoRecrutamento } from '../types';
 import { FORMULARIO_RECRUTAMENTO } from '../data/recrutamento';
 
-type Aba = 'discord' | 'divulgacao' | 'credenciais' | 'recrutamento' | 'tropa';
+type Aba = 'divulgacao' | 'credenciais' | 'recrutamento' | 'tropa';
 
 interface AdminData {
   login: string;
@@ -131,7 +125,7 @@ export function AdminPanel({
   const [verSenha, setVerSenha] = useState(false);
   const [erroLogin, setErroLogin] = useState<string | null>(null);
   const [entrando, setEntrando] = useState(false);
-  const [aba, setAba] = useState<Aba>('discord');
+  const [aba, setAba] = useState<Aba>('divulgacao');
   const [dados, setDados] = useState<AdminData | null>(null);
   const [carregando, setCarregando] = useState(false);
   // mantido para a lógica de sessão; a mensagem não é mais exibida
@@ -377,7 +371,6 @@ export function AdminPanel({
               <div className="flex gap-1 overflow-x-auto">
                 {(
                   [
-                    { id: 'discord', label: 'Discord', Icon: MessageSquare },
                     { id: 'divulgacao', label: 'Divulgação', Icon: Megaphone },
                     { id: 'recrutamento', label: 'Recrutamento', Icon: ClipboardList },
                     { id: 'tropa', label: 'Tropa', Icon: Users },
@@ -419,17 +412,6 @@ export function AdminPanel({
                 </div>
               )}
 
-              {dados && aba === 'discord' && (
-                <DiscordTab
-                  dados={dados}
-                  cabecalho={cabecalho}
-                  onAtualizar={() => {
-                    void carregarDados();
-                    onConfigChange();
-                  }}
-                />
-              )}
-
               {dados && aba === 'divulgacao' && (
                 <DivulgacaoTab
                   cabecalho={cabecalho}
@@ -439,6 +421,15 @@ export function AdminPanel({
                   }}
                   obterWebhook={obterWebhookGlobal}
                   inicial={dados.divulgacao}
+                  discord={{
+                    webhookMascarado: dados.discord.webhookMascarado,
+                    convite: dados.discord.convite,
+                    canal: dados.discord.canal,
+                    autoEnviar: dados.discord.autoEnviar,
+                    mencionarHere: dados.discord.mencionarHere,
+                    vinculado: dados.discord.vinculado,
+                  }}
+                  envios={dados.envios}
                 />
               )}
 
@@ -462,353 +453,6 @@ export function AdminPanel({
               )}
             </div>
           </>
-        )}
-      </div>
-    </div>
-  );
-}
-
-/* ------------------------------------------------------------------ */
-/* Aba: Discord                                                        */
-/* ------------------------------------------------------------------ */
-
-function DiscordTab({
-  dados,
-  cabecalho,
-  onAtualizar,
-}: {
-  dados: AdminData;
-  cabecalho: () => Record<string, string>;
-  onAtualizar: () => void;
-}) {
-  const [webhook, setWebhook] = useState('');
-  const [convite, setConvite] = useState(dados.discord.convite);
-  const [canal, setCanal] = useState(dados.discord.canal);
-  const [autoEnviar, setAutoEnviar] = useState(dados.discord.autoEnviar);
-  const [mencionarHere, setMencionarHere] = useState(dados.discord.mencionarHere);
-  const [msg, setMsg] = useState<{ tipo: 'ok' | 'erro'; texto: string } | null>(null);
-  const [salvando, setSalvando] = useState(false);
-  const [testando, setTestando] = useState(false);
-  // Inscrições que podem ser divulgadas no canal da tropa
-  const INSCRICOES = [
-    { id: FORMULARIO_RECRUTAMENTO.id, sigla: '13º BPM', nome: FORMULARIO_RECRUTAMENTO.titulo },
-    ...Object.entries(FORMULARIOS_UNIDADE).map(([id, ficha]) => ({
-      id,
-      sigla: ficha.referencia,
-      nome: ficha.titulo,
-    })),
-  ];
-  const [envioInscricao, setEnvioInscricao] = useState(INSCRICOES[0].id);
-  const [enviando, setEnviando] = useState(false);
-
-  const salvar = async () => {
-    setSalvando(true);
-    setMsg(null);
-    try {
-      const corpo: Record<string, unknown> = { convite, canal, autoEnviar, mencionarHere };
-      if (webhook.trim()) corpo.webhook = webhook.trim();
-      const r = await apiFetch('/discord', { method: 'PATCH', body: JSON.stringify(corpo) });
-      const d = await r.json().catch(() => ({}));
-      if (r.status === 401) {
-        setMsg({ tipo: 'erro', texto: 'A sessão não foi reconhecida. Saia e entre novamente para salvar.' });
-        return;
-      }
-      setMsg({
-        tipo: r.ok ? 'ok' : 'erro',
-        texto: r.ok
-          ? (d.mensagem ?? 'Configuração salva.')
-          : (d.erro ?? `O servidor respondeu ${r.status}. Tente novamente.`),
-      });
-      if (r.ok) {
-        setWebhook('');
-        onAtualizar();
-      }
-    } catch {
-      setMsg({ tipo: 'erro', texto: 'Falha de conexão.' });
-    } finally {
-      setSalvando(false);
-    }
-  };
-
-  const [diagnostico, setDiagnostico] = useState<{ webhookValido: boolean } | null>(null);
-
-  useEffect(() => {
-    let ativo = true;
-    void (async () => {
-      try {
-        const r = await apiFetch('/discord/diagnostico');
-        if (!ativo || !r.ok) return;
-        setDiagnostico(await r.json());
-      } catch {
-        /* diagnóstico é opcional */
-      }
-    })();
-    return () => {
-      ativo = false;
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  /** Busca a URL do webhook no servidor (rota autenticada). */
-  const obterWebhook = async (): Promise<string | null> => {
-    try {
-      // o token precisa ir explícito: apiFetch não conhece o estado do pai
-      const r = await apiFetch('/discord/webhook');
-      if (!r.ok) return null;
-      const d = (await r.json()) as { webhook?: string };
-      return d.webhook ?? null;
-    } catch {
-      return null;
-    }
-  };
-
-  /**
-   * O teste sai do navegador, não do servidor: aqui a rede alcança o Discord.
-   * Antes o envio partia do servidor, que está bloqueado, e sempre falhava.
-   */
-  const testar = async () => {
-    setTestando(true);
-    setMsg(null);
-    try {
-      const url = await obterWebhook();
-      if (!url) {
-        setMsg({
-          tipo: 'erro',
-          texto:
-            'Nenhum webhook salvo ainda. Cole a URL do canal no campo acima e clique em "Salvar configuração".',
-        });
-        return;
-      }
-      const resultado = await enviarPeloNavegador(url, {
-        titulo: 'Teste de integração ✅',
-        descricao:
-          'O Portal de Inscrições da Polícia Militar do Paraná está conectado a este canal. A partir de agora, os formulários podem ser divulgados para a tropa.',
-        campos: [
-          { name: 'Canal', value: dados.discord.canal || 'não informado', inline: true },
-          { name: 'Envio', value: 'pelo navegador do comando', inline: true },
-        ],
-      });
-      setMsg({ tipo: resultado.ok ? 'ok' : 'erro', texto: resultado.detalhe });
-      if (resultado.ok) onAtualizar();
-    } catch {
-      setMsg({ tipo: 'erro', texto: 'Falha inesperada ao enviar o teste.' });
-    } finally {
-      setTestando(false);
-    }
-  };
-
-  /**
-   * Divulga o formulário de inscrição pelo navegador do comando
-   * (o servidor não alcança o Discord) e registra no histórico do painel.
-   */
-  const enviarInscricao = async () => {
-    const inscricao = INSCRICOES.find((e) => e.id === envioInscricao);
-    if (!inscricao) return;
-    setEnviando(true);
-    setMsg(null);
-    try {
-      const url = await obterWebhook();
-      if (!url) {
-        setMsg({ tipo: 'erro', texto: 'Configure e salve o webhook do canal antes de enviar.' });
-        return;
-      }
-      const resultado = await enviarPeloNavegador(url, {
-        titulo: `Inscrições abertas — ${inscricao.sigla}`,
-        descricao: inscricao.nome,
-        campos: [
-          { name: 'Unidade', value: inscricao.sigla, inline: true },
-          { name: 'Como se inscrever', value: 'Formulário no portal, na seção de inscrições', inline: false },
-          {
-            name: 'Campos',
-            value: 'QRA · Patente · Unidade · Carga horária · Tempo de serviço · Quem autorizou',
-            inline: false,
-          },
-        ],
-      });
-      setMsg({ tipo: resultado.ok ? 'ok' : 'erro', texto: resultado.detalhe });
-      // registra no histórico do painel, com ou sem sucesso
-      void apiFetch('/envios/registrar', {
-        method: 'POST',
-        body: JSON.stringify({
-          editalId: inscricao.id,
-          titulo: `${inscricao.sigla} — ${inscricao.nome}`,
-          ok: resultado.ok,
-          detalhe: resultado.detalhe,
-        }),
-      }).catch(() => {
-        /* o envio já aconteceu; o histórico é secundário */
-      });
-      if (resultado.ok) onAtualizar();
-    } catch {
-      setMsg({ tipo: 'erro', texto: 'Falha inesperada ao divulgar a inscrição.' });
-    } finally {
-      setEnviando(false);
-    }
-  };
-
-  return (
-    <div className="space-y-5">
-      <div
-        className={`flex items-center gap-3 rounded-lg border p-3 ${
-          dados.discord.vinculado
-            ? 'border-emerald-500/35 bg-emerald-500/8'
-            : 'border-amber-400/30 bg-amber-500/8'
-        }`}
-      >
-        <div
-          className={`flex h-9 w-9 items-center justify-center rounded-lg ${
-            dados.discord.vinculado ? 'bg-emerald-500/15 text-emerald-300' : 'bg-amber-500/15 text-amber-300'
-          }`}
-        >
-          <Radio size={16} />
-        </div>
-        <div className="min-w-0">
-          <p className="text-[0.82rem] font-semibold text-white">
-            {dados.discord.vinculado ? 'Webhook conectado' : 'Webhook não configurado'}
-          </p>
-          <p className="truncate text-[0.72rem] text-emerald-50/45">
-            {dados.discord.webhookMascarado || 'Cole abaixo a URL do webhook do canal da tropa.'}
-          </p>
-        </div>
-      </div>
-
-      <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/8 p-3 text-[0.74rem] leading-relaxed text-emerald-200">
-        <p className="font-semibold">Fichas preenchidas caem direto no canal</p>
-        <p className="mt-1 opacity-80">
-          Com o webhook salvo e o envio automático ligado, cada formulário preenchido — 13º BPM, ROTAM e
-          RONE — é entregue no canal assim que o candidato clica em enviar.
-        </p>
-        {diagnostico?.webhookValido === false && (
-          <p className="mt-1.5 font-semibold text-amber-200">
-            Nenhum webhook salvo ainda: cole a URL do canal abaixo e clique em salvar.
-          </p>
-        )}
-      </div>
-
-      <Bloco titulo="Webhook do canal" Icon={Link2} descricao="No Discord: Configurações do canal → Integrações → Webhooks → Copiar URL.">
-        <input
-          className="field"
-          value={webhook}
-          onChange={(e) => setWebhook(e.target.value)}
-          placeholder="https://discord.com/api/webhooks/..."
-          type="url"
-        />
-        <p className="mt-1 text-[0.68rem] text-emerald-100/30">
-          A URL fica salva apenas no servidor e não é exibida novamente no painel.
-        </p>
-      </Bloco>
-
-      <div className="grid gap-3 sm:grid-cols-2">
-        <div>
-          <label className="label">Nome do canal</label>
-          <input className="field" value={canal} onChange={(e) => setCanal(e.target.value)} placeholder="editais-pmpr" />
-        </div>
-        <div>
-          <label className="label">Convite do servidor</label>
-          <input
-            className="field"
-            value={convite}
-            onChange={(e) => setConvite(e.target.value)}
-            placeholder="https://discord.gg/..."
-          />
-        </div>
-      </div>
-
-      <div className="grid gap-2 sm:grid-cols-2">
-        <Toggle
-          ativo={autoEnviar}
-          onChange={setAutoEnviar}
-          titulo="Envio automático das fichas"
-          descricao="Toda ficha preenchida vai para o canal assim que o candidato envia."
-        />
-        <Toggle
-          ativo={mencionarHere}
-          onChange={setMencionarHere}
-          titulo="Mencionar @here"
-          descricao="Avisa todos os membros online."
-        />
-      </div>
-
-      <div className="flex flex-wrap gap-2">
-        <button onClick={salvar} disabled={salvando} className="btn-gold px-4 py-2 text-[0.8rem] disabled:opacity-60">
-          {salvando ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
-          Salvar configuração
-        </button>
-        <button onClick={testar} disabled={testando} className="btn-ghost px-4 py-2 text-[0.8rem] disabled:opacity-60">
-          {testando ? <Loader2 size={14} className="animate-spin" /> : <BellRing size={14} />}
-          Enviar teste
-        </button>
-      </div>
-
-      <div className="gold-rule" />
-
-      <Bloco
-        titulo="Divulgar inscrição no Discord"
-        Icon={Send}
-        descricao="Publica no canal um aviso com a unidade e os campos do formulário."
-      >
-        <div className="flex flex-col gap-2 sm:flex-row">
-          <select className="field sm:flex-1" value={envioInscricao} onChange={(e) => setEnvioInscricao(e.target.value)}>
-            {INSCRICOES.map((e) => (
-              <option key={e.id} value={e.id} className="bg-ink-900">
-                {e.sigla} — {e.nome}
-              </option>
-            ))}
-          </select>
-          <button onClick={enviarInscricao} disabled={enviando} className="btn-gold px-4 py-2 text-[0.8rem] disabled:opacity-60">
-            {enviando ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
-            Divulgar agora
-          </button>
-        </div>
-      </Bloco>
-
-      {msg && <Aviso tipo={msg.tipo} texto={msg.texto} />}
-
-      <div>
-        <div className="mb-2 flex items-center justify-between">
-          <p className="eyebrow text-emerald-100/40">Histórico de envios</p>
-          {dados.envios.length > 0 && (
-            <button
-              onClick={async () => {
-                await apiFetch('/envios', { method: 'DELETE' });
-                onAtualizar();
-              }}
-              className="flex items-center gap-1 text-[0.68rem] text-emerald-100/35 hover:text-rose-300"
-            >
-              <Trash2 size={11} />
-              Limpar
-            </button>
-          )}
-        </div>
-        {dados.envios.length === 0 ? (
-          <p className="rounded-lg border border-white/8 bg-white/[0.02] p-4 text-center text-[0.78rem] text-emerald-100/35">
-            Nenhum envio registrado ainda.
-          </p>
-        ) : (
-          <ul className="space-y-1.5">
-            {dados.envios.slice(0, 8).map((envio) => (
-              <li
-                key={envio.id}
-                className="flex items-start justify-between gap-2 rounded-lg border border-white/8 bg-white/[0.02] px-3 py-2"
-              >
-                <div className="min-w-0">
-                  <p className="truncate text-[0.78rem] font-semibold text-white/85">{envio.titulo}</p>
-                  <p className="truncate text-[0.68rem] text-emerald-100/35">
-                    #{envio.destino} · {new Date(envio.criadoEm).toLocaleString('pt-BR')}
-                  </p>
-                </div>
-                <span
-                  className={`shrink-0 rounded px-1.5 py-0.5 text-[0.6rem] font-bold uppercase ${
-                    envio.status === 'sucesso'
-                      ? 'bg-emerald-500/15 text-emerald-300'
-                      : 'bg-rose-500/15 text-rose-300'
-                  }`}
-                >
-                  {envio.status}
-                </span>
-              </li>
-            ))}
-          </ul>
         )}
       </div>
     </div>

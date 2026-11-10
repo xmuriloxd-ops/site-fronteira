@@ -15,9 +15,12 @@ import {
   Printer,
   Save,
   Send,
+  Trash2,
   UserCog,
 } from 'lucide-react';
 import { enviarPeloNavegador } from '../lib/discord';
+import { WebhookDiscord } from './WebhookDiscord';
+import type { ConfigDiscordPainel } from './WebhookDiscord';
 import {
   UNIDADES_DIVULGACAO,
   DocumentoDivulgacao,
@@ -25,7 +28,7 @@ import {
   corpoDivulgacao,
   tituloDivulgacao,
 } from './DocumentoDivulgacao';
-import type { DivulgacaoInscricoes } from '../types';
+import type { DivulgacaoInscricoes, EnvioDiscord } from '../types';
 
 const API = '/api/admin';
 
@@ -34,11 +37,17 @@ export function DivulgacaoTab({
   onAtualizar,
   obterWebhook,
   inicial,
+  discord,
+  envios = [],
 }: {
   cabecalho: () => Record<string, string>;
   onAtualizar: () => void;
   obterWebhook: () => Promise<string | null>;
   inicial?: DivulgacaoInscricoes;
+  /** Configuração do canal salva no servidor. */
+  discord: ConfigDiscordPainel;
+  /** Histórico de publicações. */
+  envios?: EnvioDiscord[];
 }) {
   const hoje = new Date().toISOString().slice(0, 10);
   const [doc, setDoc] = useState<DivulgacaoInscricoes>(
@@ -368,6 +377,67 @@ export function DivulgacaoTab({
           {msg.texto}
         </div>
       )}
+
+      <div className="gold-rule" />
+
+      {/* Cadastro do canal do Discord usado nesta divulgação */}
+      <div>
+        <p className="eyebrow mb-2 text-emerald-100/40">Canal do Discord</p>
+        <WebhookDiscord config={discord} cabecalho={cabecalho} onAtualizar={onAtualizar} />
+      </div>
+
+      {/* Histórico de publicações */}
+      <div>
+        <div className="mb-2 flex items-center justify-between">
+          <p className="eyebrow text-emerald-100/40">Histórico de divulgações</p>
+          {envios.length > 0 && (
+            <button
+              onClick={async () => {
+                await fetch(`${API}/envios`, {
+                  method: 'DELETE',
+                  headers: cabecalho(),
+                  credentials: 'same-origin',
+                });
+                onAtualizar();
+              }}
+              className="flex items-center gap-1 text-[0.68rem] text-emerald-100/35 hover:text-rose-300"
+            >
+              <Trash2 size={11} />
+              Limpar
+            </button>
+          )}
+        </div>
+        {envios.length === 0 ? (
+          <p className="rounded-lg border border-white/8 bg-white/[0.02] p-3 text-center text-[0.76rem] text-emerald-100/35">
+            Nenhuma divulgação publicada ainda.
+          </p>
+        ) : (
+          <ul className="space-y-1.5">
+            {envios.slice(0, 6).map((envio) => (
+              <li
+                key={envio.id}
+                className="flex items-start justify-between gap-2 rounded-lg border border-white/8 bg-white/[0.02] px-3 py-2"
+              >
+                <div className="min-w-0">
+                  <p className="truncate text-[0.76rem] font-semibold text-white/85">{envio.titulo}</p>
+                  <p className="truncate text-[0.66rem] text-emerald-100/35">
+                    #{envio.destino} · {new Date(envio.criadoEm).toLocaleString('pt-BR')}
+                  </p>
+                </div>
+                <span
+                  className={`shrink-0 rounded px-1.5 py-0.5 text-[0.6rem] font-bold uppercase ${
+                    envio.status === 'sucesso'
+                      ? 'bg-emerald-500/15 text-emerald-300'
+                      : 'bg-rose-500/15 text-rose-300'
+                  }`}
+                >
+                  {envio.status}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
     </div>
   );
 }
