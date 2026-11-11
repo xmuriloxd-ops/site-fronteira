@@ -37,10 +37,17 @@ Build de produção:
 
 ```bash
 npm run build
-npm start        # NODE_ENV=production node dist/server.cjs
+npm start        # ja força NODE_ENV=production e serve dist/
 ```
 
-Para publicar (Docker, VPS, Render, Fly.io), veja **[PUBLICAR.md](./PUBLICAR.md)**.
+Em produção o servidor precisa apenas de `express` e `compression`: React,
+Vite e Tailwind ficam em `devDependencies` porque o front já vai compilado em
+`dist/`. Defina **`PC_SENHA`** antes de expor o site (Basic Auth embutido — sem
+ela, `/api/estado` devolve a URL do webhook para qualquer visitante) e monte um
+volume em `PC_DATA_DIR` para não perder os registros.
+
+Para publicar, rode `npm run check:deploy` e veja
+**[PUBLICAR.md](./PUBLICAR.md)** (Docker, VPS, Render, Fly.io e checklist).
 
 ## As quatro abas
 
@@ -151,14 +158,21 @@ na tela de detalhes, ou em lote por **Enviar pendentes**.
 ## Verificações
 
 ```bash
-npm run lint     # tsc --noEmit
-npm run build    # Vite + bundle do servidor
+npm run lint          # tsc --noEmit
+npm run build         # Vite + bundle do servidor
+npm run check:deploy  # lint + build + 16 checagens em producao isolada
 ```
+
+O `check:deploy` sobe `dist/server.cjs` com `NODE_ENV=production`, Basic Auth
+ligada e dados temporários, e valida healthcheck, autenticação, assets com
+hash/cache, persistência via `/api/sync`, proteção do proxy do Discord e
+fallback de rotas. Não altera os dados locais.
 
 ## Estrutura
 
 ```
-server.ts                    Express: API, persistência JSON, estáticos/Vite
+scripts/verificar-deploy.mjs  smoke de produção usado por check:deploy
+server.ts                    Express: API, auth opcional, persistência JSON, estáticos/Vite
 src/App.tsx                  shell, abas, regras de registro e envio
 src/components/              cabeçalho, formulário, ficha, lista, Discord, modal, UI
 src/lib/cartaz.ts            desenho do cartaz PNG da ficha no canvas (modelo + assinatura)

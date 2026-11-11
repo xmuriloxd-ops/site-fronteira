@@ -14,7 +14,7 @@ import express from 'express';
 import compression from 'compression';
 import path from 'path';
 import fs from 'fs';
-import { createServer as createViteServer } from 'vite';
+import { timingSafeEqual } from 'node:crypto';
 import type {
   ConfigDiscord,
   EnvioDiscord,
@@ -33,6 +33,46 @@ try {
   /* sem permissão de escrita: usa a raiz do projeto */
 }
 const DATA_FILE = path.join(DATA_DIR, 'dados-pcpr-rp.json');
+
+/* ------------------------------------------------------------------ */
+/* Proteção opcional para produção                                     */
+/* ------------------------------------------------------------------ */
+
+// Defina PC_SENHA (e opcionalmente PC_USUARIO) antes de publicar. Sem ela o
+// sistema segue aberto, como em desenvolvimento. /api/health fica público
+// para os healthchecks de Docker/plataformas.
+const USUARIO_ACESSO = process.env.PC_USUARIO || 'pcpr';
+const SENHA_ACESSO = process.env.PC_SENHA || '';
+
+/** Basic Auth com comparação em tempo constante. */
+function credenciaisValidas(cabecalho: string | undefined): boolean {
+  if (!cabecalho?.startsWith('Basic ')) return false;
+  let texto: string;
+  try {
+    texto = Buffer.from(cabecalho.slice(6), 'base64').toString('utf8');
+  } catch {
+    return false;
+  }
+  const separador = texto.indexOf(':');
+  if (separador < 0) return false;
+  const recebido = Buffer.from(texto);
+  const esperado = Buffer.from(`${USUARIO_ACESSO}:${SENHA_ACESSO}`);
+  return recebido.length === esperado.length && timingSafeEqual(recebido, esperado);
+}
+
+/** Limite simples de envios ao proxy do Discord (evita abuso do relay). */
+const janelas = new Map<string, { inicio: number; total: number }>();
+function dentroDoLimite(chave: string, limite: number, janelaMs: number): boolean {
+  const agora = Date.now();
+  const atual = janelas.get(chave);
+  if (!atual || agora - atual.inicio > janelaMs) {
+    if (janelas.size > 1000) janelas.clear();
+    janelas.set(chave, { inicio: agora, total: 1 });
+    return true;
+  }
+  atual.total += 1;
+  return atual.total <= limite;
+}
 
 /* ------------------------------------------------------------------ */
 /* Persistência                                                        */
@@ -272,6 +312,28 @@ async function startServer() {
   const app = express();
   app.disable('x-powered-by');
   app.use(compression());
+
+  // Cabeçalhos básicos. Não usamos CSP rígida nem X-Frame-Options porque o
+  // painel pode rodar embutido num iframe de preview e usa <script> inline.
+  app.use((_req, res, next) => {
+    res.set('X-Content-Type-Options', 'nosniff');
+    res.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+    next();
+  });
+
+  // Basic Auth opcional, recomendado em produção: protege os registros e,
+  // principalmente, a URL do webhook que vai para o navegador via /api/estado.
+  if (SENHA_ACESSO) {
+    app.use((req, res, next) => {
+      if (req.path === '/api/health') return next();
+      if (credenciaisValidas(req.headers.authorization)) return next();
+      res.set('WWW-Authenticate', 'Basic realm="PCPR RP", charset="UTF-8"');
+      res.status(401).type('text/plain; charset=utf-8').send(
+        'Acesso restrito. Informe o usuário e a senha do sistema.',
+      );
+    });
+  }
+
   // Fotos vão em base64 no JSON: 15 MB dá folga para várias imagens.
   app.use(express.json({ limit: '15mb' }));
 
@@ -406,6 +468,10 @@ async function startServer() {
 
   /** Fallback de entrega: o servidor posta no Discord quando o navegador não consegue. */
   app.post('/api/discord/proxy', async (req, res) => {
+    if (!dentroDoLimite(req.ip || 'desconhecido', 180, 60_000)) {
+      res.status(429).json({ ok: false, detalhe: 'Muitos envios seguidos. Aguarde um minuto.' });
+      return;
+    }
     const webhook = textoSeguro(req.body?.webhook, 500);
     const payload = req.body?.payload;
     // Formato novo: anexos nomeados (cartaz + fotos). Mantém `fotos` legado.
@@ -496,6 +562,9 @@ async function startServer() {
   /* --------------------- estáticos / Vite --------------------- */
 
   if (process.env.NODE_ENV !== 'production') {
+    // Import dinâmico: em produção o bundle nunca exige o pacote `vite`,
+    // que fica apenas em devDependencies (imagem bem menor no deploy).
+    const { createServer: createViteServer } = await import('vite');
     const vite = await createViteServer({
       // hmr/ws desligados: o Vite nao deve abrir o WebSocket em 24678, senao
       // conflita com o preview e essa porta responde "426 Upgrade Required".
