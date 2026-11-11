@@ -1,0 +1,4 @@
+User-Agent: *
+Allow: /
+Disallow: /api/*
+Sitemap: https://fronteirasul-fmudazpm.manus.space/sitemap.xml

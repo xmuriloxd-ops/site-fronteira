@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#10120f" />
+    <meta name="description" content="Entre na cidade, conheça as regras oficiais da Fronteira do Sul RP e prepare-se para viver histórias únicas no roleplay." />
+    <link rel="canonical" href="https://fronteirasul-fmudazpm.manus.space/" />
+    <meta property="og:title" content="Fronteira do Sul RP — Uma nova história começa aqui" />
+    <meta property="og:description" content="Entre na cidade, conheça as regras oficiais e prepare-se para viver histórias únicas no roleplay." />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://fronteirasul-fmudazpm.manus.space/" />
+    <meta property="og:site_name" content="Fronteira do Sul RP" />
+    <meta property="og:locale" content="pt_BR" />
+    <meta property="og:image" content="https://fronteirasul-fmudazpm.manus.space/fronteira-sul-convite-preview.jpg" />
+    <meta property="og:image:secure_url" content="https://fronteirasul-fmudazpm.manus.space/fronteira-sul-convite-preview.jpg" />
+    <meta property="og:image:type" content="image/jpeg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="675" />
+    <meta property="og:image:alt" content="Convite da Fronteira do Sul RP — uma nova história começa aqui." />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Fronteira do Sul RP — Uma nova história começa aqui" />
+    <meta name="twitter:description" content="Entre na cidade, conheça as regras oficiais e prepare-se para viver histórias únicas no roleplay." />
+    <meta name="twitter:image" content="https://fronteirasul-fmudazpm.manus.space/fronteira-sul-convite-preview.jpg" />
+    <meta name="twitter:image:alt" content="Convite da Fronteira do Sul RP — uma nova história começa aqui." />
+    <title>Fronteira do Sul RP — Uma nova história começa aqui</title>
+    <script type="module" crossorigin src="/assets/index-FbaU4KfD.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-DMP8NyHf.css">
+  <link rel="manifest" href="/__manus/pwa/manifest.webmanifest" crossorigin="use-credentials" /></head>
+  <body>
+    <div id="root"></div>
+    <script src="/api/platform/config.js"></script>
+  <manus-content-root></manus-content-root><script>
+			var __manus_space_editor_info = {
+			spaceId : 'FmUDAzpMr2fDkhG5Nf2vYF',
+			patchList : [],
+			hideBadge : false,
+			sessionId : 'lbRYVQs9QBtzGUebAMv8Qk',
+			isWebDev : true,
+			usageStatus : 'UsageStatus_Unknown',
+			};
+			var __manus__global_env = {
+				apiHost: 'https://api.manus.im',
+				host: 'https://manus.im',
+				amplitudeKey: '46ac3f9abb41dd2d17a5785e052bc6d3',
+			};
+			</script><script src="https://files.manuscdn.com/manus-space-dispatcher/spaceEditor-CDmbg89D.js" async></script><script
+			defer
+			data-domain="manus.space"
+			src="https://plausible.io/js/script.file-downloads.hash.outbound-links.pageview-props.revenue.tagged-events.js"
+		></script>
+		<script>
+			window.plausible =
+				window.plausible ||
+				function () {
+					(window.plausible.q = window.plausible.q || []).push(arguments);
+				};
+			plausible('custom-pageview', {
+			  props: {
+    			domain: window.location.host
+  			}
+			})
+		</script><script defer nonce="231bb9b1-c357-4d89-9c4b-cf36503efe26" src="https://manus-analytics.com/script.js" data-website-id="0dbdd19e-dfff-4a75-974c-22c287f2bb8d"></script></body>
+</html>
