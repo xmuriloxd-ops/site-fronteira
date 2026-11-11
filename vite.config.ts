@@ -14,9 +14,11 @@ export default defineConfig(() => {
     server: {
       // O preview roda num domínio *.e2b.app gerado dinamicamente.
       allowedHosts: true as const,
-      // Com middlewareMode o WS de HMR precisaria de uma porta extra no proxy.
-      // Fica desligado: basta recarregar a página para ver alterações.
+      // Com middlewareMode o WS de HMR abriria um listener extra em 24678
+      // (que responde 426 e nao serve o site). ws:false e o que realmente
+      // desliga esse socket no Vite 6; basta recarregar para ver alteracoes.
       hmr: false,
+      ws: false as const,
     },
   };
 });

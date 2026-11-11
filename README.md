@@ -28,6 +28,11 @@ npm install
 npm run dev      # http://localhost:3000
 ```
 
+O servidor escuta **apenas** em `PORT` (padrão `3000`, em `0.0.0.0`). O HMR do
+Vite fica desligado (`server.ws: false`) para não abrir um segundo listener em
+`24678`, que responderia `426 Upgrade Required` em vez de servir o site. Após
+editar arquivos, basta recarregar a página.
+
 Build de produção:
 
 ```bash

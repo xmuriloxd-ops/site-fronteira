@@ -497,7 +497,9 @@ async function startServer() {
 
   if (process.env.NODE_ENV !== 'production') {
     const vite = await createViteServer({
-      server: { middlewareMode: true },
+      // hmr/ws desligados: o Vite nao deve abrir o WebSocket em 24678, senao
+      // conflita com o preview e essa porta responde "426 Upgrade Required".
+      server: { middlewareMode: true, hmr: false, ws: false as const },
       appType: 'spa',
     });
     app.use(vite.middlewares);
@@ -529,10 +531,10 @@ async function startServer() {
     });
   }
 
-  const PORTAS =
-    process.env.NODE_ENV === 'production'
-      ? [PORT]
-      : Array.from(new Set([PORT, Number(process.env.PREVIEW_PORT) || 24678]));
+  // Uma unica porta HTTP (3000 por padrao). O bind extra em 24678 era legado
+  // e colidia com o servidor de HMR do Vite, gerando EADDRINUSE e expondo uma
+  // porta que nao servia o site.
+  const PORTAS = [PORT];
 
   for (const porta of PORTAS) {
     const servidor = app.listen(porta, '0.0.0.0', () => {
