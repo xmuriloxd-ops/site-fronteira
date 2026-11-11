@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex, nofollow" />
+    <meta name="theme-color" content="#10120f" />
+    <title>Admin — Fronteira do Sul RP</title>
+    <link rel="icon" href="/favicon.ico" />
+    <link rel="stylesheet" href="/admin/painel.css" />
+    <script type="module" src="/admin/painel.js"></script>
+  </head>
+  <body>
+    <noscript><p class="sem-js">O painel precisa de JavaScript ligado no navegador.</p></noscript>
+
+    <!-- Entrada -->
+    <main id="tela-entrar" class="entrar" hidden>
+      <form id="form-entrar" class="cartao-entrar" autocomplete="on" novalidate>
+        <img class="entrar-logo" src="/fronteira-sul-logo.webp" alt="" />
+        <h1>Área do administrador</h1>
+        <p class="entrar-sub">Fronteira do Sul RP</p>
+        <p id="entrar-aviso" class="recado" hidden></p>
+        <label for="entrar-usuario">Usuário</label>
+        <input id="entrar-usuario" name="usuario" type="text" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" required />
+        <label for="entrar-senha">Senha</label>
+        <input id="entrar-senha" name="senha" type="password" autocomplete="current-password" required />
+        <p id="entrar-erro" class="erro" role="alert" hidden></p>
+        <button id="entrar-botao" class="botao primario" type="submit">Entrar</button>
+        <a class="voltar-site" href="/">Voltar para o site</a>
+      </form>
+    </main>
+
+    <!-- Painel -->
+    <div id="tela-painel" class="painel" hidden>
+      <header class="topo">
+        <a class="topo-marca" href="/admin/" aria-label="Início do painel">
+          <img src="/fronteira-sul-logo.webp" alt="" />
+          <span>Painel do administrador</span>
+        </a>
+        <nav class="topo-links" aria-label="Ver o site">
+          <a href="/" data-sair-do-painel>Ver regras</a>
+          <a href="/convite/" data-sair-do-painel>Ver convite</a>
+          <span id="topo-usuario" class="topo-usuario"></span>
+          <button id="botao-sair" class="botao pequeno" type="button">Sair</button>
+        </nav>
+      </header>
+
+      <div class="corpo">
+        <nav id="menu" class="menu" aria-label="Seções do painel"></nav>
+        <main id="conteudo" class="conteudo" tabindex="-1"></main>
+      </div>
+
+      <div class="barra" role="region" aria-label="Salvar alterações">
+        <span id="barra-estado" class="barra-estado" aria-live="polite">Nada para salvar</span>
+        <button id="botao-descartar" class="botao" type="button" disabled>Descartar</button>
+        <button id="botao-salvar" class="botao primario" type="button" disabled>Salvar e publicar</button>
+      </div>
+    </div>
+
+    <div id="avisos" class="avisos" aria-live="polite"></div>
+    <p id="carregando" class="carregando">Abrindo o painel…</p>
+  </body>
+</html>

@@ -1,10 +1,14 @@
 #!/usr/bin/env node
 /**
- * Servidor local da cópia do site "Fronteira do Sul RP".
+ * Servidor do site "Fronteira do Sul RP" (cópia), com o painel do administrador.
  *
- * Entrega a pasta ./site exatamente como ela está no disco — nenhum arquivo é
- * reescrito, minificado ou injetado — e responde do mesmo jeito que o servidor
- * original (manus.space):
+ * Os arquivos de ./site são a cópia exata do site original e nunca são
+ * reescritos. O que o administrador muda pelo painel (/admin/) fica guardado em
+ * ./dados e é aplicado na hora de responder; sem alterações, cada arquivo sai
+ * exatamente como está no disco. A única diferença de uma instalação nova para
+ * o original é a aba "Admin" na página de regras (pode ser desligada no painel).
+ *
+ * As respostas seguem o servidor original (manus.space):
  *
  *   /convite  e  /convite/      -> site/convite/index.html (sem redirecionar)
  *   /qualquer-rota (sem ponto)  -> site/index.html         (rota do aplicativo)
@@ -13,22 +17,46 @@
  *   /arquivo-que-nao-existe.png -> 404 sem corpo
  *   /api/qualquer-coisa         -> 500 sem corpo (no original a API não está no ar)
  *
+ * E há os endereços novos:
+ *
+ *   /admin/                     -> painel do administrador (pede usuário e senha)
+ *   /admin/api/...              -> usado pelo painel
+ *
  * Sem dependências: só precisa do Node 18 ou mais novo.
  *
  *   node fronteira-sul/servidor.mjs              # http://localhost:4173
  *   PORT=8080 node fronteira-sul/servidor.mjs    # outra porta
+ *
+ * Variáveis de ambiente (todas opcionais):
+ *
+ *   PORT, HOST      porta (4173) e interface (0.0.0.0)
+ *   SITE_DIR        pasta com a cópia do site (./site)
+ *   DADOS_DIR       pasta onde ficam as alterações, as imagens enviadas e o
+ *                   acesso do painel (./dados). Em hospedagem, aponte para um
+ *                   disco que não seja apagado a cada publicação.
+ *   ADMIN_USUARIO,  usuário e senha iniciais do painel, usados enquanto ninguém
+ *   ADMIN_SENHA     trocou pelo painel (padrão: os de admin/acesso.mjs)
+ *   CONFIAR_NO_PROXY=1  use quando o site fica atrás de um proxy da hospedagem
+ *                   (Render, Railway, nginx...): o limite de tentativas de login
+ *                   passa a contar por visitante, pelo cabeçalho X-Forwarded-For
+ *   SILENCIOSO=1    não registra cada pedido no terminal
  */
 import fs from 'node:fs';
 import http from 'node:http';
 import path from 'node:path';
 import zlib from 'node:zlib';
 import { fileURLToPath } from 'node:url';
+import { criarAcesso } from './admin/acesso.mjs';
+import { criarAdmin } from './admin/api.mjs';
+import { criarConteudo } from './admin/conteudo.mjs';
 
 const AQUI = path.dirname(fileURLToPath(import.meta.url));
 const RAIZ = path.resolve(process.env.SITE_DIR || path.join(AQUI, 'site'));
+const DADOS = path.resolve(process.env.DADOS_DIR || path.join(AQUI, 'dados'));
 const PORTA = Number(process.env.PORT) || 4173;
 const HOST = process.env.HOST || '0.0.0.0';
 const SILENCIOSO = process.env.SILENCIOSO === '1';
+const CONFIAR_NO_PROXY = process.env.CONFIAR_NO_PROXY === '1';
 
 /** Mesmos Content-Type que o servidor original devolve para cada extensão. */
 const TIPOS = {
@@ -67,6 +95,12 @@ const TIPOS = {
 
 const IMAGENS = new Set(['.png', '.jpg', '.jpeg', '.webp', '.avif', '.gif', '.ico', '.bmp']);
 const COMPRIMIVEIS = /^(text\/|application\/(json|manifest\+json|xml)|image\/svg\+xml)/;
+
+const COMUNS = {
+  'X-Content-Type-Options': 'nosniff',
+  // Sempre revalida: o que for alterado aparece ao recarregar a página.
+  'Cache-Control': 'no-cache',
+};
 
 /**
  * Imagens são identificadas pelo conteúdo, não pelo nome. No site original o
@@ -108,6 +142,37 @@ function arquivoComum(caminho) {
   }
 }
 
+function registrar(req, status, extra = '') {
+  if (SILENCIOSO) return;
+  const hora = new Date().toLocaleTimeString('pt-BR', { hour12: false });
+  console.log(`${hora}  ${status}  ${req.method} ${req.url}${extra}`);
+}
+
+const avisar = (mensagem) => console.warn(`[aviso] ${mensagem}`);
+
+/**
+ * De onde veio o pedido, para o limite de tentativas de login. Atrás de um proxy
+ * todos os pedidos chegam com o endereço do proxy; com CONFIAR_NO_PROXY=1 vale o
+ * último endereço de X-Forwarded-For (o que o próprio proxy anotou, e que o
+ * visitante não consegue forjar).
+ */
+function enderecoDe(req) {
+  if (CONFIAR_NO_PROXY) {
+    const anotado = String(req.headers['x-forwarded-for'] || '').split(',').pop().trim();
+    if (anotado) return anotado.slice(0, 64);
+  }
+  return req.socket.remoteAddress || 'desconhecido';
+}
+
+const conteudo = criarConteudo({ raizSite: RAIZ, dirDados: DADOS, aviso: avisar });
+const acesso = await criarAcesso({
+  dirDados: DADOS,
+  ...(process.env.ADMIN_USUARIO ? { usuarioInicial: process.env.ADMIN_USUARIO } : {}),
+  ...(process.env.ADMIN_SENHA ? { senhaInicial: process.env.ADMIN_SENHA } : {}),
+  aviso: avisar,
+});
+const admin = criarAdmin({ acesso, conteudo, dirPainel: path.join(AQUI, 'admin', 'painel'), enviarArquivo, enderecoDe, registrar });
+
 /** Decide qual arquivo do disco responde a um caminho da URL. */
 function localizar(caminhoUrl) {
   let decodificado;
@@ -122,6 +187,13 @@ function localizar(caminhoUrl) {
   const relativo = path.posix.normalize('/' + decodificado.replace(/\\/g, '/'));
   const alvo = path.join(RAIZ, relativo);
   if (alvo !== RAIZ && !alvo.startsWith(RAIZ + path.sep)) return { status: 403 };
+
+  // Imagem que o administrador trocou pelo painel: sai a nova, no mesmo endereço.
+  const troca = conteudo.imagemPara(relativo);
+  if (troca) {
+    const info = arquivoComum(troca.arquivo);
+    if (info) return { status: 200, arquivo: troca.arquivo, info, tipo: troca.tipo || undefined, trocada: true };
+  }
 
   const candidatos = relativo.endsWith('/') ? [path.join(alvo, 'index.html')] : [alvo, path.join(alvo, 'index.html')];
   for (const arquivo of candidatos) {
@@ -158,84 +230,49 @@ function comprimir(arquivo, info) {
   return pronto;
 }
 
-function registrar(req, status, extra = '') {
-  if (SILENCIOSO) return;
-  const hora = new Date().toLocaleTimeString('pt-BR', { hour12: false });
-  console.log(`${hora}  ${status}  ${req.method} ${req.url}${extra}`);
+function semCorpo(req, res, status, extras = {}) {
+  res.writeHead(status, { ...COMUNS, 'Content-Length': 0, ...extras });
+  res.end();
+  registrar(req, status);
 }
 
-const servidor = http.createServer((req, res) => {
-  const comuns = {
-    'X-Content-Type-Options': 'nosniff',
-    // Sempre revalida: o que você editar aparece ao recarregar a página.
-    'Cache-Control': 'no-cache',
-  };
+const aceitaGzip = (req) => /\bgzip\b/.test(String(req.headers['accept-encoding'] || ''));
 
-  if (req.method !== 'GET' && req.method !== 'HEAD') {
-    res.writeHead(405, { ...comuns, Allow: 'GET, HEAD', 'Content-Length': 0 });
-    res.end();
-    registrar(req, 405);
-    return;
-  }
-
-  let caminhoUrl;
-  try {
-    caminhoUrl = new URL(req.url, 'http://localhost').pathname;
-  } catch {
-    res.writeHead(400, { ...comuns, 'Content-Length': 0 });
-    res.end();
-    registrar(req, 400);
-    return;
-  }
-
-  const achado = localizar(caminhoUrl);
-  if (!achado.arquivo) {
-    res.writeHead(achado.status, { ...comuns, 'Content-Length': 0 });
-    res.end();
-    registrar(req, achado.status);
-    return;
-  }
-
-  const { arquivo, info } = achado;
-  const tipo = tipoDe(arquivo);
+/** Envia um arquivo do disco, sem modificar nada nele. */
+function enviarArquivo(req, res, arquivo, extras = {}, { status = 200, tipo, info, nota = '' } = {}) {
+  info ||= arquivoComum(arquivo);
+  if (!info) return semCorpo(req, res, 404);
+  tipo ||= tipoDe(arquivo);
   const etag = `W/"${info.size.toString(16)}-${Math.floor(info.mtimeMs).toString(16)}"`;
-  const cabecalhos = { ...comuns, 'Content-Type': tipo, ETag: etag, 'Last-Modified': info.mtime.toUTCString() };
-  const nota = achado.rotaDoApp ? '  (rota do aplicativo -> index.html)' : '';
+  const cabecalhos = { ...COMUNS, 'Content-Type': tipo, ETag: etag, 'Last-Modified': info.mtime.toUTCString(), ...extras };
 
   // Só o /404 cai aqui: o arquivo inteiro, com o status que o original usa.
-  if (achado.status !== 200) {
+  if (status !== 200) {
     let corpo;
     try {
       corpo = fs.readFileSync(arquivo);
     } catch {
-      res.writeHead(500, { ...comuns, 'Content-Length': 0 });
-      res.end();
-      registrar(req, 500);
-      return;
+      return semCorpo(req, res, 500);
     }
-    res.writeHead(achado.status, { ...comuns, 'Content-Type': tipo, 'Content-Length': corpo.length });
+    res.writeHead(status, { ...COMUNS, 'Content-Type': tipo, 'Content-Length': corpo.length, ...extras });
     res.end(req.method === 'HEAD' ? undefined : corpo);
-    registrar(req, achado.status, nota);
-    return;
+    return registrar(req, status, nota);
   }
 
   if (req.headers['if-none-match'] === etag) {
     res.writeHead(304, cabecalhos);
     res.end();
-    registrar(req, 304, nota);
-    return;
+    return registrar(req, 304, nota);
   }
 
-  const aceitaGzip = /\bgzip\b/.test(String(req.headers['accept-encoding'] || ''));
   const intervalo = /^bytes=(\d*)-(\d*)$/.exec(String(req.headers.range || ''));
 
   // Texto: vai comprimido (fica bem mais leve na pré-visualização).
-  if (!intervalo && aceitaGzip && COMPRIMIVEIS.test(tipo) && info.size > 1024) {
+  if (!intervalo && aceitaGzip(req) && COMPRIMIVEIS.test(tipo) && info.size > 1024) {
     const corpo = comprimir(arquivo, info);
     res.writeHead(200, { ...cabecalhos, 'Content-Encoding': 'gzip', Vary: 'Accept-Encoding', 'Content-Length': corpo.length });
     res.end(req.method === 'HEAD' ? undefined : corpo);
-    registrar(req, 200, nota);
-    return;
+    return registrar(req, 200, nota);
   }
 
   // Pedaço do arquivo (vídeo e áudio pedem assim para poder avançar).
@@ -249,12 +286,7 @@ const servidor = http.createServer((req, res) => {
       inicio = Number(intervalo[1]);
       fim = intervalo[2] === '' ? info.size - 1 : Math.min(Number(intervalo[2]), info.size - 1);
     }
-    if (inicio > fim || inicio >= info.size) {
-      res.writeHead(416, { ...comuns, 'Content-Range': `bytes */${info.size}`, 'Content-Length': 0 });
-      res.end();
-      registrar(req, 416);
-      return;
-    }
+    if (inicio > fim || inicio >= info.size) return semCorpo(req, res, 416, { 'Content-Range': `bytes */${info.size}` });
     res.writeHead(206, {
       ...cabecalhos,
       'Accept-Ranges': 'bytes',
@@ -262,20 +294,79 @@ const servidor = http.createServer((req, res) => {
       'Content-Length': fim - inicio + 1,
     });
     if (req.method === 'HEAD') res.end();
-    else fs.createReadStream(arquivo, { start: inicio, end: fim }).pipe(res);
-    registrar(req, 206, nota);
-    return;
+    else transmitir(arquivo, res, { start: inicio, end: fim });
+    return registrar(req, 206, nota);
   }
 
   res.writeHead(200, { ...cabecalhos, 'Accept-Ranges': 'bytes', 'Content-Length': info.size });
-  if (req.method === 'HEAD') {
-    res.end();
-  } else {
-    const leitura = fs.createReadStream(arquivo);
-    leitura.on('error', () => res.destroy());
-    leitura.pipe(res);
+  if (req.method === 'HEAD') res.end();
+  else transmitir(arquivo, res);
+  return registrar(req, 200, nota);
+}
+
+/** Manda o arquivo aos poucos. Se ele sumir no meio do caminho (imagem trocada no painel, por exemplo), só essa resposta é cortada. */
+function transmitir(arquivo, res, opcoes) {
+  const leitura = fs.createReadStream(arquivo, opcoes);
+  leitura.on('error', () => res.destroy());
+  res.on('close', () => leitura.destroy());
+  leitura.pipe(res);
+}
+
+/** Envia um arquivo do site já montado com as alterações do administrador. */
+function enviarMontado(req, res, montado, { status, tipo, nota }) {
+  const cabecalhos = { ...COMUNS, 'Content-Type': tipo };
+  if (status === 200) {
+    cabecalhos.ETag = montado.etag;
+    if (req.headers['if-none-match'] === montado.etag) {
+      res.writeHead(304, cabecalhos);
+      res.end();
+      return registrar(req, 304, nota);
+    }
   }
-  registrar(req, 200, nota);
+  let corpo = montado.corpo;
+  if (aceitaGzip(req) && corpo.length > 1024) {
+    corpo = montado.comprimido();
+    cabecalhos['Content-Encoding'] = 'gzip';
+    cabecalhos.Vary = 'Accept-Encoding';
+  }
+  res.writeHead(status, { ...cabecalhos, 'Content-Length': corpo.length });
+  res.end(req.method === 'HEAD' ? undefined : corpo);
+  return registrar(req, status, nota);
+}
+
+async function atender(req, res) {
+  let caminhoUrl;
+  try {
+    caminhoUrl = new URL(req.url, 'http://localhost').pathname;
+  } catch {
+    return semCorpo(req, res, 400);
+  }
+
+  // Painel do administrador (aceita /Admin, /ADMIN...: no celular o teclado costuma pôr maiúscula).
+  const minusculo = caminhoUrl.toLowerCase();
+  if (minusculo === '/admin' || minusculo.startsWith('/admin/')) return admin(req, res, minusculo);
+
+  if (req.method !== 'GET' && req.method !== 'HEAD') return semCorpo(req, res, 405, { Allow: 'GET, HEAD' });
+
+  const achado = localizar(caminhoUrl);
+  if (!achado.arquivo) return semCorpo(req, res, achado.status);
+
+  let nota = achado.rotaDoApp ? '  (rota do aplicativo -> index.html)' : '';
+  if (achado.trocada) {
+    nota += '  (imagem enviada pelo painel)';
+  } else {
+    const montado = conteudo.gerar(path.relative(RAIZ, achado.arquivo).split(path.sep).join('/'));
+    if (montado) return enviarMontado(req, res, montado, { status: achado.status, tipo: tipoDe(achado.arquivo), nota });
+  }
+  return enviarArquivo(req, res, achado.arquivo, {}, { status: achado.status, tipo: achado.tipo, info: achado.info, nota });
+}
+
+const servidor = http.createServer((req, res) => {
+  atender(req, res).catch((erro) => {
+    console.error(erro);
+    if (!res.headersSent) res.writeHead(500, { ...COMUNS, 'Content-Length': 0 });
+    res.end();
+  });
 });
 
 servidor.on('error', (erro) => {
@@ -292,11 +383,16 @@ if (!arquivoComum(path.join(RAIZ, 'index.html'))) {
   process.exit(1);
 }
 
+conteudo.carregar();
+
 servidor.listen(PORTA, HOST, () => {
-  console.log('Fronteira do Sul RP — cópia local do site');
-  console.log(`  Pasta servida : ${RAIZ}`);
+  console.log('Fronteira do Sul RP — site e painel do administrador');
   console.log(`  Regras        : http://localhost:${PORTA}/`);
   console.log(`  Convite       : http://localhost:${PORTA}/convite/`);
+  console.log(`  Painel        : http://localhost:${PORTA}/admin/`);
+  console.log(`  Cópia do site : ${RAIZ}`);
+  console.log(`  Alterações    : ${DADOS}`);
+  if (acesso.info().senhaInicial) console.log('  Atenção       : o painel ainda usa a senha inicial. Troque no painel, em "Usuário e senha".');
   console.log('  Para encerrar : Ctrl+C');
 });
 

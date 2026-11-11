@@ -17,3 +17,7 @@ image-search/
 .exemplos/
 entregas/
 .dados-preview/
+
+# Fronteira do Sul: o que o administrador muda pelo painel (textos, imagens
+# enviadas e o acesso). Fica só no servidor onde o site roda.
+fronteira-sul/dados/

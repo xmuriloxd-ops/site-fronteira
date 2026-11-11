@@ -1,14 +1,16 @@
-# Fronteira do Sul RP — cópia do site
+# Fronteira do Sul RP — cópia do site, com área do administrador
 
-Cópia exata do site publicado em <https://fronteirasul-fmudazpm.manus.space>, feita em 11/11/2026.
-Nenhum arquivo foi alterado: cada um está em `site/` com os mesmos bytes e no mesmo caminho que tinha no site original.
+Cópia exata do site publicado em <https://fronteirasul-fmudazpm.manus.space>, feita em 11/11/2026, mais um painel para o administrador mudar o conteúdo sem mexer em código.
 
-O site tem duas páginas:
+O site tem duas páginas e o painel:
 
 | Página | Endereço | Arquivo principal |
 |---|---|---|
-| Convite oficial | `/convite/` | `site/convite/index.html` |
 | Central de regras | `/` | `site/index.html` + `site/assets/` |
+| Convite oficial | `/convite/` | `site/convite/index.html` |
+| Área do administrador | `/admin/` | `admin/painel/` |
+
+Os arquivos de `site/` continuam sendo a cópia sem nenhuma alteração: cada um tem os mesmos bytes e está no mesmo caminho que tinha no site original. O que o administrador muda pelo painel fica guardado à parte, na pasta `dados/`, e é aplicado pelo servidor na hora de entregar a página.
 
 Esta pasta é independente do sistema PCPR que está no restante do repositório. Um não usa nada do outro.
 
@@ -22,17 +24,84 @@ node fronteira-sul/servidor.mjs
 
 Depois abra no navegador:
 
-- Convite: <http://localhost:4173/convite/>
 - Regras: <http://localhost:4173/>
+- Convite: <http://localhost:4173/convite/>
+- Área do administrador: <http://localhost:4173/admin/>
 
 Para usar outra porta: `PORT=8080 node fronteira-sul/servidor.mjs`.
 
-Não abra os `.html` com dois cliques. As páginas pedem os arquivos por caminhos que começam em `/` (`/assets/...`, `/fronteira-sul-convite-preview.jpg`), então só funcionam quando a pasta `site/` é servida como raiz de um endereço. É isso que o `servidor.mjs` faz.
+Não abra os `.html` com dois cliques. As páginas pedem os arquivos por caminhos que começam em `/` (`/assets/...`, `/fronteira-sul-convite-preview.jpg`), então só funcionam quando são entregues pelo `servidor.mjs`.
+
+## Área do administrador
+
+### Como entrar
+
+Na página de regras há uma aba **Admin**, à direita de "Regras da Polícia". Ela leva para `/admin/`, que pede usuário e senha.
+
+| | Valor inicial |
+|---|---|
+| Usuário | `adm` |
+| Senha | `142536` |
+
+Troque os dois em **Usuário e senha**, dentro do painel. Enquanto a senha inicial estiver em uso, o painel mostra um aviso no topo, porque qualquer pessoa que a conheça consegue editar o site.
+
+Se esquecer a senha: apague o arquivo `dados/acesso.json` e reinicie o servidor. O acesso volta a ser o inicial e o conteúdo do site não muda.
+
+### O que dá para mudar
+
+| Seção do painel | O que tem |
+|---|---|
+| Regulamento | As seções da aba "Regulamento geral": criar, excluir, mudar a ordem, o título e o texto. |
+| Página de regras | Os textos fixos da página: topo, abas, abertura, índice, destaque, créditos (Discord, telefone, e-mail), página "não encontrada". Também liga e desliga a aba Admin, o destaque e os créditos. |
+| Regras da Polícia | Textos da aba, grupos de multas (infração, valor, pontos) e as duas listas. |
+| Convite | Textos da página do convite, o botão e para onde ele leva. |
+| Imagens | Imagem do convite, logo e ícone da aba do navegador (PNG, JPG, WebP ou GIF, até 8 MB). |
+| Compartilhamento | Título e descrição que aparecem na aba do navegador e na prévia do link no Discord e no WhatsApp, e o endereço onde o site está publicado. |
+| Avançado | Tirar o selo "Made with Manus" e os scripts de estatística; CSS extra para mudar cores e tamanhos. |
+| Histórico | Voltar para uma das 15 últimas versões salvas, ou restaurar o site original inteiro. |
+| Usuário e senha | Trocar o usuário e a senha do painel. |
+
+Como funciona:
+
+- Textos e regras só entram no ar ao clicar em **Salvar e publicar**. Cada campo alterado fica marcado e tem um link "Voltar ao original".
+- Imagens entram no ar assim que o envio termina.
+- Quem está com o site aberto vê a mudança ao recarregar a página.
+- "Restaurar o site original" desfaz tudo o que foi feito pelo painel, menos o usuário e a senha.
+
+O painel não muda a estrutura das páginas (a ordem dos blocos, por exemplo). Para isso é preciso editar os arquivos; veja "Como editar os arquivos à mão".
+
+### Onde ficam as alterações
+
+Na pasta `fronteira-sul/dados/`, criada na primeira vez que algo é salvo:
+
+| Arquivo | O que guarda |
+|---|---|
+| `dados/conteudo.json` | Os textos, as regras e as opções que foram alterados. |
+| `dados/imagens/` | As imagens enviadas pelo painel. |
+| `dados/historico/` | As 15 versões anteriores do `conteudo.json`. |
+| `dados/acesso.json` | O usuário e a senha do painel. A senha não fica escrita: só o resultado de um cálculo feito com ela (scrypt). |
+
+Essa pasta não vai para o Git (está no `.gitignore`): ela existe só no computador ou servidor onde o site roda. Para levar o conteúdo para outro lugar, copie a pasta. Para guardar em outro local, inicie o servidor com `DADOS_DIR=/caminho/da/pasta`.
+
+### Proteções
+
+- Depois de 5 tentativas erradas de login, é preciso esperar 30 segundos; a espera dobra a cada novo erro, até 15 minutos.
+- A sessão termina depois de 12 horas sem uso (ou 7 dias depois do login), ao clicar em "Sair" ou quando o servidor reinicia.
+- Trocar o usuário ou a senha encerra as sessões abertas em outros aparelhos.
+- Sem login, o painel só mostra a tela de entrada: nada é lido nem alterado. A pasta `dados/` não é alcançada pelo navegador.
+- O que o administrador escreve entra nas páginas como texto. Não vira HTML nem script.
 
 ## O que é cada arquivo
 
 | Arquivo | O que é |
 |---|---|
+| `servidor.mjs` | O servidor. Entrega os arquivos de `site/` aplicando as alterações do painel, e responde como o servidor original. |
+| `admin/painel/` | A tela do painel (`index.html`, `painel.css`, `painel.js`). |
+| `admin/mapa.mjs` | Lista de tudo o que o painel deixa editar e onde cada texto fica nos arquivos de `site/`. |
+| `admin/conteudo.mjs` | Guarda as alterações e monta as páginas com elas. |
+| `admin/acesso.mjs` | Login, sessões e limite de tentativas. O usuário e a senha iniciais estão no começo deste arquivo. |
+| `admin/api.mjs`, `admin/imagem.mjs` | Os endereços que o painel usa e a conferência das imagens enviadas. |
+| `admin/testes/` | Testes automáticos do painel. Rodam com `node fronteira-sul/admin/testes/todos.mjs`. |
 | `site/convite/index.html` | A página do convite inteira: textos, botão e visual (o CSS fica no bloco `<style>`). |
 | `site/fronteira-sul-convite-preview.jpg` | Imagem do convite (1200×675). |
 | `site/index.html` | "Casca" da página de regras: título, descrição e as chamadas para os dois arquivos abaixo. |
@@ -43,51 +112,50 @@ Não abra os `.html` com dois cliques. As páginas pedem os arquivos por caminho
 | `site/favicon.ico` | Ícone da aba. É o mesmo logo; apesar do nome, é um arquivo WebP, como no original. |
 | `site/__manus/pwa/manifest.webmanifest` | Nome e ícone usados quando o site é "instalado" no celular. |
 | `site/robots.txt`, `site/sitemap.xml` | Arquivos para buscadores. |
-| `servidor.mjs` | Servidor local. Entrega os arquivos de `site/` sem modificar nada e responde como o servidor original. |
 
-## Como editar
+## Como editar os arquivos à mão
 
-Edite o arquivo, salve e recarregue a página. O servidor não guarda versão antiga.
+Só é preciso para o que o painel não cobre, como a estrutura das páginas. Edite o arquivo, salve e recarregue a página; o servidor percebe a mudança sozinho.
 
-### Convite
+- Convite: `site/convite/index.html` é HTML comum, com o visual no bloco `<style>` do começo.
+- Regras: o site original só publica a versão compilada desta página, não o código-fonte. O aplicativo está em `site/assets/index-FbaU4KfD.js` (poucas linhas, todas enormes: use a busca do editor) e o visual em `site/assets/index-DMP8NyHf.css`.
 
-Tudo fica em `site/convite/index.html`, que é HTML comum.
+Dois cuidados:
 
-- Textos: procure por `CONVITE OFICIAL`, `Uma nova história começa aqui.` e `Consultar regras oficiais`.
-- Cores e tamanhos: bloco `<style>` no começo do arquivo (fundo `#10120f`, dourado `#eabf4e`).
-- Imagem: troque o arquivo `site/fronteira-sul-convite-preview.jpg` mantendo o mesmo nome.
-- Título, descrição e imagem que aparecem quando o link é colado no Discord ou no WhatsApp: linhas `og:` e `twitter:` no `<head>`.
-
-### Regras
-
-O site original só publica a versão compilada desta página, não o código-fonte. Por isso a edição é feita direto em `site/assets/index-FbaU4KfD.js`. O arquivo tem poucas linhas, todas enormes: use a busca do editor.
-
-- Regulamento geral: é uma lista que começa logo depois de `QA=JSON.parse('`. Cada seção tem `"id"`, `"title"` e `"paragraphs"` (um parágrafo por item entre aspas). Dentro dos textos, quebra de linha se escreve `\\n` e aspas se escrevem `\\"`. Não use apóstrofo (`'`) nos textos.
-- Regras da Polícia (multas e CNH) e os outros textos da tela, como `Roleplay justo.`, `Buscar palavra ou regra...` e o Discord `@sr__black_`: procure o texto e troque só o que está entre as aspas.
-- Visual: `site/assets/index-DMP8NyHf.css`.
-- Título e descrição da aba e do compartilhamento: `site/index.html`.
-
-Uma aspa ou vírgula errada nesse arquivo deixa a página em branco. Se acontecer, este comando devolve o arquivo original:
-
-```bash
-git checkout -- fronteira-sul/site/assets/index-FbaU4KfD.js
-```
+- Uma aspa ou vírgula errada no arquivo `.js` deixa a página em branco. Este comando devolve o original: `git checkout -- fronteira-sul/site/assets/index-FbaU4KfD.js`
+- O painel acha cada texto pelo que está escrito em volta dele no arquivo. Se uma edição à mão apagar esse trecho, o painel avisa que aquele campo não pode mais ser editado; o resto continua funcionando. Um texto alterado pelo painel vale mais que o do arquivo.
 
 ## O que ainda aponta para o site original
 
-Como nada foi alterado, a cópia traz junto o que a hospedagem original (Manus) colocava nas páginas:
+A cópia traz junto o que a hospedagem original (Manus) colocava nas páginas. Os dois primeiros itens se resolvem pelo painel:
 
-- O selo "Made with Manus" no canto da tela e os scripts de estatística (Manus, Plausible e Amplitude). Com internet, as visitas feitas à cópia são enviadas para esses serviços.
-- Os endereços oficiais das páginas (`canonical`, `og:url`, `og:image`, `twitter:image`), o `robots.txt` e o `sitemap.xml` apontam para `fronteirasul-fmudazpm.manus.space`. Ao colar o link da cópia, a imagem de prévia ainda vem do site original.
-- A página de regras pede `/api/platform/config.js`. No site original esse endereço responde com erro 500; a cópia responde com o mesmo erro e a página funciona do mesmo jeito.
-
-Esses são os pontos a trocar ou remover antes de publicar a cópia em outro endereço.
+- O selo "Made with Manus" no canto da tela e os scripts de estatística (Manus, Plausible e Amplitude). Com internet, as visitas feitas à cópia são enviadas para esses serviços. Para tirar: painel > Avançado.
+- Os endereços oficiais das páginas (`canonical`, `og:url`, `og:image`, `twitter:image`), o `robots.txt` e o `sitemap.xml` apontam para `fronteirasul-fmudazpm.manus.space`. Ao colar o link da cópia, a imagem de prévia ainda vem do site original. Para trocar: painel > Compartilhamento > "Endereço onde este site está publicado".
+- A página de regras pede `/api/platform/config.js`. No site original esse endereço responde com erro 500; a cópia responde com o mesmo erro e a página funciona do mesmo jeito. Ao tirar o selo da Manus pelo painel, esse pedido também sai.
 
 ## Como publicar
 
-Qualquer hospedagem de site estático serve. Envie o conteúdo de `site/` como raiz do site e configure para que endereços desconhecidos abram o `index.html`. Outra opção é rodar `node fronteira-sul/servidor.mjs` em um servidor com Node.
+O painel precisa do `servidor.mjs` rodando, então a hospedagem tem que rodar Node.js (18 ou mais novo): `node fronteira-sul/servidor.mjs`. Numa hospedagem só de arquivos estáticos dá para publicar a pasta `site/`, mas sem a aba Admin, sem o painel e sem nada do que foi alterado por ele.
 
-## Como a cópia foi conferida
+Antes de colocar no ar:
+
+1. Troque o usuário e a senha do painel.
+2. Use um endereço com HTTPS. Sem ele, a senha viaja pela rede sem proteção.
+3. Garanta que a pasta de dados não seja apagada a cada nova publicação. Em muitas hospedagens o disco é zerado a cada publicação: nesse caso as alterações se perdem e o acesso volta a ser `adm` / `142536`. Aponte `DADOS_DIR` para um disco permanente.
+
+Opções ao iniciar o servidor (todas opcionais):
+
+| Variável | Para que serve |
+|---|---|
+| `PORT`, `HOST` | Porta (padrão 4173) e interface de rede (padrão `0.0.0.0`). |
+| `DADOS_DIR` | Pasta onde ficam as alterações e o acesso (padrão `fronteira-sul/dados`). |
+| `ADMIN_USUARIO`, `ADMIN_SENHA` | Usuário e senha iniciais, no lugar de `adm` / `142536`. Valem enquanto ninguém trocar pelo painel. |
+| `CONFIAR_NO_PROXY=1` | Use quando a hospedagem coloca um proxy na frente do site (Render, Railway, nginx). O limite de tentativas de login passa a contar por visitante, e não para todos juntos. |
+| `SILENCIOSO=1` | Não escreve cada pedido no terminal. |
+
+## Como foi conferido
+
+### A cópia
 
 Em 11/11/2026 o site original e a cópia foram abertos no Chrome 156, em tela de computador (1440×900) e de celular (390×844), repetindo os mesmos passos nos dois: as duas páginas de cima a baixo, as duas abas das regras, a busca, o menu de seções, o índice, o botão de copiar o Discord, o link do convite para as regras e a página de "não encontrado".
 
@@ -97,3 +165,25 @@ Em 11/11/2026 o site original e a cópia foram abertos no Chrome 156, em tela de
 - A cópia não fez nenhum pedido ao site original.
 
 Duas respostas mudam a cada pedido no site original e por isso ficaram com o valor do momento da cópia: o código `nonce` de um dos scripts de estatística nos dois `.html` e a data `lastmod` do `sitemap.xml`.
+
+Essa comparação foi feita antes de o painel existir. Numa instalação nova, a única diferença para o original é a aba Admin dentro do aplicativo da página de regras; com ela desligada no painel, todos os arquivos saem byte a byte iguais aos de `site/`.
+
+### O painel
+
+Há dois conjuntos de testes.
+
+Os testes automáticos ficam em `admin/testes/` e podem ser repetidos a qualquer momento, sem instalar nada:
+
+```bash
+node fronteira-sul/admin/testes/todos.mjs
+```
+
+Eles usam pastas temporárias e não mexem em `site/` nem em `dados/`. Conferem, entre outras coisas:
+
+- Cada um dos 93 campos de texto, trocado sozinho, muda só o próprio trecho, e o aplicativo continua válido. Textos com aspas, barras, tags e emoji não quebram a página nem viram HTML.
+- Login, sessões, limite de tentativas e troca de usuário e senha; a senha antiga para de valer.
+- Depois de reiniciar o servidor, o conteúdo, as imagens e o novo acesso continuam.
+- Histórico e "restaurar o site original", que devolve os arquivos byte a byte.
+- Sem login, os pedidos para ler ou alterar o conteúdo são recusados, e arquivos fora de `site/` e da tela do painel não são entregues.
+
+Além disso, em 11/11/2026 o painel foi usado de ponta a ponta no Chromium, em tela de computador (1440×900) e de celular (390×844): entrar pela aba Admin, mudar regulamento, textos fixos, multas, convite, imagens, endereço de compartilhamento e opções, conferindo cada mudança no site aberto como visitante; trocar usuário e senha; duas pessoas salvando ao mesmo tempo; sessão que cai no meio de uma edição. Esse roteiro precisa de um navegador e não está no repositório.
