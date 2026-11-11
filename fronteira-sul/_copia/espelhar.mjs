@@ -1,0 +1,1400 @@
+#!/usr/bin/env node
+/**
+ * Cópia exata (byte a byte) do site publicado em ORIGEM para fronteira-sul/site,
+ * seguida de uma conferência da cópia contra o original num Chrome de verdade.
+ *
+ * Roda no GitHub Actions: o ambiente de edição não tem acesso ao site original.
+ * Nada do conteúdo baixado é alterado; cada arquivo vai para o mesmo caminho que
+ * tem na URL (/assets/x.js -> site/assets/x.js).
+ */
+import fs from 'node:fs';
+import fsp from 'node:fs/promises';
+import path from 'node:path';
+import crypto from 'node:crypto';
+import { createRequire } from 'node:module';
+import { spawn } from 'node:child_process';
+import { setTimeout as dormir } from 'node:timers/promises';
+
+// ───────────────────────────── configuração ─────────────────────────────
+const ORIGEM = (process.env.ORIGEM || 'https://fronteirasul-fmudazpm.manus.space').replace(/\/+$/, '');
+const HOST_ORIGEM = new URL(ORIGEM).host;
+const PAGINAS = (process.env.PAGINAS || '/convite/?v=c14b569|/').split('|').filter(Boolean);
+const RAIZ = path.resolve(process.env.PASTA || 'fronteira-sul');
+const DIR_SITE = path.join(RAIZ, 'site');
+const DIR_SAIDA = path.join(RAIZ, '_copia', 'saida');
+const PORTA_LOCAL = Number(process.env.PORTA_LOCAL || 4173);
+const LOCAL = `http://127.0.0.1:${PORTA_LOCAL}`;
+const FERRAMENTAS = path.resolve(process.env.FERRAMENTAS || '.');
+const SEM_NAVEGADOR = process.env.SEM_NAVEGADOR === '1';
+const MAX_EXTERNO = 25 * 1024 * 1024;
+
+const exigir = createRequire(path.join(FERRAMENTAS, 'ferramentas.cjs'));
+
+const UA = {
+  desktop: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36',
+  movel: 'Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Mobile Safari/537.36',
+};
+
+// ───────────────────────────── utilidades ─────────────────────────────
+const inicio = Date.now();
+const log = (...a) => console.log(`[${((Date.now() - inicio) / 1000).toFixed(1).padStart(6)}s]`, ...a);
+const avisos = [];
+const avisar = (msg) => {
+  avisos.push(msg);
+  log('AVISO:', msg);
+};
+const sha256 = (b) => crypto.createHash('sha256').update(b).digest('hex');
+const semNonce = (b) => (Buffer.isBuffer(b) ? b.toString('utf8') : String(b)).replace(/\bnonce="[^"]*"/g, 'nonce=""');
+const ehHtml = (ct) => /\btext\/html\b/i.test(ct || '');
+const curto = (u) => (u.length > 160 ? `${u.slice(0, 157)}...` : u);
+const semAssinatura = (u) => {
+  const i = u.indexOf('?');
+  return i > 0 && u.length > 200 ? `${u.slice(0, i)}?…` : u;
+};
+
+function gravar(arquivo, dados) {
+  fs.mkdirSync(path.dirname(arquivo), { recursive: true });
+  fs.writeFileSync(arquivo, dados);
+}
+
+function decodificarEntidades(s) {
+  return String(s)
+    .replace(/&amp;/gi, '&')
+    .replace(/&quot;/gi, '"')
+    .replace(/&#0*39;|&apos;/gi, "'")
+    .replace(/&lt;/gi, '<')
+    .replace(/&gt;/gi, '>')
+    .replace(/&#x([0-9a-f]+);/gi, (_, h) => String.fromCodePoint(parseInt(h, 16)))
+    .replace(/&#(\d+);/g, (_, d) => String.fromCodePoint(Number(d)));
+}
+
+// ───────────────────────────── download ─────────────────────────────
+async function baixar(url, { ua = UA.desktop, seguir = true } = {}) {
+  const cadeia = [];
+  let atual = url;
+  for (let salto = 0; salto < 12; salto++) {
+    const r = await fetch(atual, {
+      redirect: 'manual',
+      signal: AbortSignal.timeout(60000),
+      headers: { 'user-agent': ua, accept: '*/*', 'accept-language': 'pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7' },
+    });
+    const cabecalhos = Object.fromEntries(r.headers);
+    if (seguir && r.status >= 300 && r.status < 400 && cabecalhos.location) {
+      await r.arrayBuffer().catch(() => {});
+      const proximo = new URL(cabecalhos.location, atual).href;
+      cadeia.push({ de: semAssinatura(atual), status: r.status, para: semAssinatura(proximo) });
+      atual = proximo;
+      continue;
+    }
+    const corpo = Buffer.from(await r.arrayBuffer());
+    return { status: r.status, cabecalhos, corpo, cadeia, urlFinal: atual };
+  }
+  throw new Error('redirecionamentos demais');
+}
+
+async function baixarComTentativas(url, opcoes) {
+  let ultimoErro;
+  for (let tentativa = 1; tentativa <= 4; tentativa++) {
+    try {
+      const r = await baixar(url, opcoes);
+      if ((r.status >= 500 || r.status === 429) && tentativa < 4) {
+        await dormir(800 * tentativa);
+        continue;
+      }
+      return r;
+    } catch (erro) {
+      ultimoErro = erro;
+      await dormir(800 * tentativa);
+    }
+  }
+  throw ultimoErro || new Error('falhou');
+}
+
+// ───────────────────────────── registro de recursos ─────────────────────────────
+/** @type {Map<string, any>} */
+const recursos = new Map();
+const fila = [];
+const destinos = new Map(); // caminho relativo em site/ -> { reg, comparavel }
+const linksExternos = new Map();
+const outrosLinks = new Set();
+const urlsEmJs = new Set();
+let indexRaizNorm = null;
+let totalExterno = 0;
+
+function enfileirar(bruto, base, por, { candidato = false, pagina = false } = {}) {
+  if (!bruto) return null;
+  const valor = String(bruto).trim();
+  if (!valor || /^(data|blob|javascript|about|mailto|tel|chrome|chrome-extension|devtools):/i.test(valor) || valor.startsWith('#')) return null;
+  let u;
+  try {
+    u = new URL(valor, base);
+  } catch {
+    return null;
+  }
+  if (!/^https?:$/.test(u.protocol)) return null;
+  u.hash = '';
+  const chave = u.href;
+  let reg = recursos.get(chave);
+  if (!reg) {
+    reg = { url: chave, mesmoSite: u.host === HOST_ORIGEM, por: new Set(), candidato, pagina, estado: 'fila' };
+    recursos.set(chave, reg);
+    fila.push(reg);
+  }
+  if (por) reg.por.add(por);
+  if (!candidato) reg.candidato = false;
+  return reg;
+}
+
+function registrarLink(bruto, base, por) {
+  if (!bruto) return;
+  const valor = String(bruto).trim();
+  if (!valor || valor.startsWith('#')) return;
+  let u;
+  try {
+    u = new URL(valor, base);
+  } catch {
+    return;
+  }
+  if (!/^https?:$/.test(u.protocol)) {
+    outrosLinks.add(valor.slice(0, 200));
+    return;
+  }
+  if (u.host === HOST_ORIGEM) {
+    enfileirar(u.href, base, por, { candidato: true, pagina: true });
+  } else {
+    u.hash = '';
+    if (!linksExternos.has(u.href)) linksExternos.set(u.href, new Set());
+    linksExternos.get(u.href).add(por);
+  }
+}
+
+// ───────────────────────────── extração de referências ─────────────────────────────
+function atributos(texto) {
+  const a = {};
+  const re = /([^\s"'<>/=]+)(?:\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'=<>`]+)))?/g;
+  let m;
+  while ((m = re.exec(texto))) a[m[1].toLowerCase()] = decodificarEntidades(m[2] ?? m[3] ?? m[4] ?? '');
+  return a;
+}
+
+const urlsDeSrcset = (v) =>
+  String(v)
+    .split(',')
+    .map((parte) => parte.trim().split(/\s+/)[0])
+    .filter(Boolean);
+
+function extrairCss(css, base, por) {
+  for (const m of css.matchAll(/url\(\s*(?:"([^"]*)"|'([^']*)'|([^)'"\s][^)]*?))\s*\)/g)) {
+    const v = (m[1] ?? m[2] ?? m[3] ?? '').trim().replace(/\\(.)/g, '$1');
+    if (v) enfileirar(v, base, por);
+  }
+  for (const m of css.matchAll(/@import\s+(?:url\(\s*)?(?:"([^"]+)"|'([^']+)'|([^\s;)'"]+))/g)) {
+    enfileirar(m[1] ?? m[2] ?? m[3], base, por);
+  }
+}
+
+const EXT_ARQUIVO =
+  'js|mjs|cjs|css|png|jpe?g|webp|avif|svg|gif|ico|bmp|tiff?|woff2?|ttf|otf|eot|mp4|webm|mov|m4v|mp3|ogg|oga|wav|m4a|aac|flac|json|webmanifest|txt|xml|pdf|map|wasm|glb|gltf|lottie|riv|csv|md|vtt|srt|zip';
+const RE_ARQUIVO_EM_JS = new RegExp(
+  '(["\'`])([^"\'`\\s\\\\<>{}|^]{1,400}?\\.(?:' + EXT_ARQUIVO + ')(?:\\?[^"\'`\\s\\\\]{0,300})?)\\1',
+  'gi',
+);
+
+function extrairJs(js, base, por) {
+  for (const m of js.matchAll(/https?:\/\/[^\s"'`<>\\)]{4,300}/g)) urlsEmJs.add(m[0]);
+  for (const m of js.matchAll(RE_ARQUIVO_EM_JS)) {
+    const s = m[2];
+    if (s.length < 4) continue;
+    if (/^https?:\/\//i.test(s) || s.startsWith('//')) {
+      enfileirar(s, base, por, { candidato: true });
+    } else if (s.startsWith('/')) {
+      enfileirar(s, `${ORIGEM}/`, por, { candidato: true });
+    } else if (/^[A-Za-z0-9_@.~+%$-][A-Za-z0-9_@.~+%$/-]*(\?.*)?$/.test(s)) {
+      enfileirar(s, base, por, { candidato: true });
+      if (!s.startsWith('.')) enfileirar(s, `${ORIGEM}/`, por, { candidato: true });
+    }
+  }
+}
+
+function extrairJsonTexto(texto, base, por) {
+  let dados;
+  try {
+    dados = JSON.parse(texto);
+  } catch {
+    return;
+  }
+  const re = new RegExp('\\.(?:' + EXT_ARQUIVO + ')(?:\\?.*)?$', 'i');
+  const andar = (v) => {
+    if (typeof v === 'string') {
+      if (v.length < 500 && !/\s/.test(v) && (re.test(v) || /^https?:\/\//i.test(v)) && !v.startsWith('data:')) {
+        if (re.test(v)) enfileirar(v, base, por, { candidato: true });
+      }
+    } else if (Array.isArray(v)) v.forEach(andar);
+    else if (v && typeof v === 'object') Object.values(v).forEach(andar);
+  };
+  andar(dados);
+}
+
+function extrairHtml(html, urlPagina, por) {
+  let base = urlPagina;
+  const mBase = html.match(/<base\b[^>]*\bhref\s*=\s*["']?([^"'\s>]+)/i);
+  if (mBase) {
+    try {
+      base = new URL(decodificarEntidades(mBase[1]), urlPagina).href;
+    } catch {
+      /* base invalida: ignora */
+    }
+  }
+  const limpo = html.replace(/<!--[\s\S]*?-->/g, '');
+
+  for (const m of limpo.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script\s*>/gi)) {
+    const a = atributos(m[1]);
+    if (a.src || !m[2].trim()) continue;
+    if ((a.type || '').toLowerCase().includes('json')) extrairJsonTexto(m[2], base, por);
+    else extrairJs(m[2], base, por);
+  }
+  for (const m of limpo.matchAll(/<style\b[^>]*>([\s\S]*?)<\/style\s*>/gi)) extrairCss(m[1], base, por);
+
+  const soTags = limpo
+    .replace(/(<script\b[^>]*>)[\s\S]*?<\/script\s*>/gi, '$1')
+    .replace(/<style\b[^>]*>[\s\S]*?<\/style\s*>/gi, '');
+
+  for (const m of soTags.matchAll(/<([a-zA-Z][a-zA-Z0-9:-]*)\b((?:"[^"]*"|'[^']*'|[^>"'])*)>/g)) {
+    const tag = m[1].toLowerCase();
+    const a = atributos(m[2]);
+    const ref = (v) => enfileirar(v, base, por);
+    switch (tag) {
+      case 'a':
+      case 'area':
+        registrarLink(a.href, base, por);
+        break;
+      case 'link': {
+        if (!a.href) break;
+        const rel = (a.rel || '').toLowerCase().split(/\s+/);
+        const soLink = ['canonical', 'alternate', 'dns-prefetch', 'preconnect', 'author', 'license', 'next', 'prev', 'me', 'help', 'search'];
+        if (rel.some((r) => soLink.includes(r))) registrarLink(a.href, base, por);
+        else {
+          ref(a.href);
+          if (a.imagesrcset) urlsDeSrcset(a.imagesrcset).forEach(ref);
+        }
+        break;
+      }
+      case 'script':
+        ref(a.src);
+        break;
+      case 'img':
+      case 'source':
+        ref(a.src);
+        ref(a['data-src']);
+        if (a.srcset) urlsDeSrcset(a.srcset).forEach(ref);
+        if (a['data-srcset']) urlsDeSrcset(a['data-srcset']).forEach(ref);
+        break;
+      case 'video':
+        ref(a.src);
+        ref(a.poster);
+        break;
+      case 'audio':
+      case 'track':
+      case 'embed':
+      case 'input':
+        ref(a.src);
+        break;
+      case 'iframe':
+      case 'frame':
+        registrarLink(a.src, base, por);
+        break;
+      case 'object':
+        ref(a.data);
+        break;
+      case 'use':
+      case 'image':
+        ref(a.href || a['xlink:href']);
+        break;
+      case 'meta': {
+        const chave = (a.property || a.name || a.itemprop || '').toLowerCase();
+        if (/(^|:)(image|video|audio)(:secure_url|:url|:src)?$/.test(chave) || (chave.startsWith('msapplication-') && /\.(png|jpe?g|xml|ico|svg)(\?|$)/i.test(a.content || ''))) ref(a.content);
+        else if (chave === 'og:url') registrarLink(a.content, base, por);
+        break;
+      }
+      default:
+        if (a.background) ref(a.background);
+    }
+    if (a.style) extrairCss(a.style, base, por);
+  }
+}
+
+function mapaDeFonte(texto, reg) {
+  const m = texto.slice(-2000).match(/[/*]#\s*sourceMappingURL=([^\s*]+)/);
+  if (m && !m[1].startsWith('data:')) enfileirar(m[1], reg.url, reg.url, { candidato: true });
+  else if (!m) enfileirar(`${reg.url.split('?')[0]}.map`, reg.url, reg.url, { candidato: true });
+}
+
+function extrairFontesDoMapa(reg, corpo) {
+  try {
+    const mapa = JSON.parse(corpo.toString('utf8'));
+    if (!Array.isArray(mapa.sources) || !Array.isArray(mapa.sourcesContent)) return;
+    let n = 0;
+    mapa.sources.forEach((origem, i) => {
+      const conteudo = mapa.sourcesContent[i];
+      if (typeof conteudo !== 'string') return;
+      if (/node_modules/.test(origem)) return;
+      const limpo = String(origem)
+        .replace(/^[a-z]+:\/\/+/i, '')
+        .replace(/\.\.\//g, '')
+        .replace(/^\.?\/+/, '')
+        .replace(/[^A-Za-z0-9._\-/@+]/g, '_');
+      gravar(path.join(DIR_SAIDA, 'fontes', limpo), conteudo);
+      n++;
+    });
+    reg.fontesExtraidas = n;
+    log(`  mapa de fonte ${reg.url}: ${n} arquivo(s) de codigo-fonte extraidos`);
+  } catch (erro) {
+    avisar(`mapa de fonte ilegivel ${reg.url}: ${erro.message}`);
+  }
+}
+
+function analisar(reg, corpo) {
+  const ct = (reg.contentType || '').toLowerCase();
+  let ext = '';
+  try {
+    ext = path.posix.extname(new URL(reg.url).pathname).toLowerCase();
+  } catch {
+    /* sem extensao */
+  }
+  const base = reg.mesmoSite ? reg.url : reg.urlFinal || reg.url;
+  const texto = () => corpo.toString('utf8');
+
+  if (ehHtml(ct)) {
+    if (reg.mesmoSite) extrairHtml(texto(), reg.url, reg.url);
+    return;
+  }
+  if (ct.includes('text/css') || ext === '.css') {
+    extrairCss(texto(), base, reg.url);
+    if (reg.mesmoSite) mapaDeFonte(texto(), reg);
+    return;
+  }
+  if (!reg.mesmoSite) return;
+  if (ext === '.map') {
+    extrairFontesDoMapa(reg, corpo);
+    return;
+  }
+  if (ct.includes('javascript') || ct.includes('ecmascript') || ['.js', '.mjs', '.cjs'].includes(ext)) {
+    extrairJs(texto(), reg.url, reg.url);
+    mapaDeFonte(texto(), reg);
+    return;
+  }
+  if (ct.includes('json') || ['.json', '.webmanifest'].includes(ext)) {
+    extrairJsonTexto(texto(), reg.url, reg.url);
+    return;
+  }
+  if (ct.includes('svg') || ext === '.svg') {
+    extrairCss(texto(), reg.url, reg.url);
+    return;
+  }
+  if (ct.includes('xml') || ext === '.xml') {
+    for (const m of texto().matchAll(/<loc>\s*([^<\s]+)\s*<\/loc>/gi)) registrarLink(decodificarEntidades(m[1]), reg.url, reg.url);
+    return;
+  }
+  if (ext === '.txt') {
+    for (const m of texto().matchAll(/^\s*sitemap:\s*(\S+)/gim)) enfileirar(m[1], reg.url, reg.url, { candidato: true });
+  }
+}
+
+// ───────────────────────────── gravação ─────────────────────────────
+function destinoMesmoSite(reg, corpo) {
+  const u = new URL(reg.url);
+  let p;
+  try {
+    p = decodeURIComponent(u.pathname);
+  } catch {
+    p = u.pathname;
+  }
+  const ext = path.posix.extname(p).toLowerCase();
+  if (ehHtml(reg.contentType)) {
+    if (ext && ext !== '.html' && ext !== '.htm') return { descartar: 'HTML servido no lugar de um arquivo' };
+    const raiz = p === '/' || p === '/index.html';
+    if (!raiz && indexRaizNorm !== null && semNonce(corpo) === indexRaizNorm) {
+      return { descartar: 'rota do aplicativo: o servidor devolve o index.html da raiz', rotaSpa: true };
+    }
+    if (p.endsWith('/')) p += 'index.html';
+    else if (!ext) p += '/index.html';
+  } else if (p.endsWith('/')) {
+    p += 'index';
+  }
+  const rel = path.posix.normalize(p).replace(/^\/+/, '');
+  if (!rel || rel.startsWith('..') || rel.includes('\0')) return { descartar: 'caminho invalido' };
+  return { rel };
+}
+
+function salvarMesmoSite(reg, corpo) {
+  if (reg.status !== 200) {
+    reg.estado = 'descartado';
+    reg.motivo = `HTTP ${reg.status}`;
+    return false;
+  }
+  const d = destinoMesmoSite(reg, corpo);
+  if (d.descartar) {
+    reg.estado = d.rotaSpa ? 'rota-do-app' : 'descartado';
+    reg.motivo = d.descartar;
+    return false;
+  }
+  const comparavel = ehHtml(reg.contentType) ? sha256(semNonce(corpo)) : reg.sha256;
+  const existente = destinos.get(d.rel);
+  if (existente) {
+    reg.destino = `site/${d.rel}`;
+    if (existente.comparavel === comparavel) {
+      reg.estado = 'mesmo-arquivo';
+      reg.igualA = existente.reg.url;
+      return false;
+    }
+    reg.estado = 'conflito';
+    reg.igualA = existente.reg.url;
+    const variante = path.join(DIR_SAIDA, 'variantes', `${sha256(reg.url).slice(0, 8)}-${path.basename(d.rel)}`);
+    gravar(variante, corpo);
+    avisar(`conteudo diferente para o mesmo arquivo site/${d.rel}: ${reg.url} x ${existente.reg.url}`);
+    return false;
+  }
+  destinos.set(d.rel, { reg, comparavel });
+  reg.estado = 'salvo';
+  reg.destino = `site/${d.rel}`;
+  gravar(path.join(DIR_SITE, d.rel), corpo);
+  return true;
+}
+
+function salvarExterno(reg, corpo) {
+  if (reg.status !== 200) {
+    reg.estado = 'descartado';
+    reg.motivo = `HTTP ${reg.status}`;
+    return false;
+  }
+  if (ehHtml(reg.contentType)) {
+    reg.estado = 'descartado';
+    reg.motivo = 'pagina de outro site';
+    return false;
+  }
+  if (corpo.length > MAX_EXTERNO || totalExterno + corpo.length > 120 * 1024 * 1024) {
+    reg.estado = 'descartado';
+    reg.motivo = 'grande demais para guardar como referencia';
+    return false;
+  }
+  const u = new URL(reg.url);
+  let p = u.pathname;
+  try {
+    p = decodeURIComponent(p);
+  } catch {
+    /* mantem */
+  }
+  if (p.endsWith('/')) p += 'index';
+  p = p.replace(/[^A-Za-z0-9._\-/@+~]/g, '_');
+  if (u.search) {
+    const ext = path.posix.extname(p);
+    const h = sha256(u.search).slice(0, 8);
+    p = ext ? `${p.slice(0, -ext.length)}__q${h}${ext}` : `${p}__q${h}`;
+  }
+  const rel = path.posix.join(u.host.replace(/[^A-Za-z0-9.-]/g, '_'), path.posix.normalize(p).replace(/^\/+/, ''));
+  totalExterno += corpo.length;
+  reg.estado = 'referencia';
+  reg.destino = `_copia/saida/externos/${rel}`;
+  gravar(path.join(DIR_SAIDA, 'externos', rel), corpo);
+  return true;
+}
+
+const CABECALHOS_UTEIS = ['content-type', 'cache-control', 'content-disposition', 'etag', 'last-modified', 'x-manus-seo-source', 'access-control-allow-origin'];
+
+async function processar(reg) {
+  if (!reg.mesmoSite && reg.candidato) {
+    // URL de outro site achada por heuristica dentro do JS: so vale a pena se parece arquivo.
+    const ext = path.posix.extname(new URL(reg.url).pathname).toLowerCase();
+    if (!/^\.(png|jpe?g|webp|avif|svg|gif|ico|woff2?|ttf|otf|mp4|webm|mp3|ogg|wav|css|json)$/.test(ext)) {
+      reg.estado = 'ignorado';
+      reg.motivo = 'endereco de outro site citado no codigo (nao e arquivo)';
+      return;
+    }
+  }
+  let r;
+  try {
+    r = await baixarComTentativas(reg.url);
+  } catch (erro) {
+    reg.estado = 'erro';
+    reg.motivo = String(erro?.cause?.code || erro?.message || erro).slice(0, 200);
+    if (!reg.candidato) avisar(`nao consegui baixar ${curto(reg.url)}: ${reg.motivo}`);
+    return;
+  }
+  reg.status = r.status;
+  reg.contentType = r.cabecalhos['content-type'] || '';
+  reg.cabecalhos = Object.fromEntries(CABECALHOS_UTEIS.filter((c) => r.cabecalhos[c]).map((c) => [c, r.cabecalhos[c]]));
+  reg.cadeia = r.cadeia;
+  reg.urlFinal = r.urlFinal;
+  reg.tamanho = r.corpo.length;
+  reg.sha256 = sha256(r.corpo);
+  const guardado = reg.mesmoSite ? salvarMesmoSite(reg, r.corpo) : salvarExterno(reg, r.corpo);
+  if (guardado) analisar(reg, r.corpo);
+  if (!guardado && !reg.candidato && reg.estado === 'descartado') {
+    avisar(`referencia sem arquivo (${reg.motivo}): ${curto(reg.url)}  <- ${[...reg.por].slice(0, 2).map(curto).join(', ')}`);
+  }
+}
+
+async function esvaziarFila() {
+  while (fila.length) {
+    const trabalhadores = Array.from({ length: 6 }, async () => {
+      for (;;) {
+        const reg = fila.shift();
+        if (!reg) return;
+        await processar(reg);
+      }
+    });
+    await Promise.all(trabalhadores);
+  }
+}
+
+// ───────────────────────────── navegador ─────────────────────────────
+let puppeteer = null;
+let PNG = null;
+let pixelmatch = null;
+
+function acharChrome() {
+  const candidatos = [process.env.CHROME_BIN, '/usr/bin/google-chrome', '/usr/bin/google-chrome-stable', '/usr/bin/chromium', '/usr/bin/chromium-browser'];
+  return candidatos.find((c) => c && fs.existsSync(c)) || null;
+}
+
+async function abrirNavegador() {
+  puppeteer = exigir('puppeteer-core');
+  ({ PNG } = exigir('pngjs'));
+  pixelmatch = exigir('pixelmatch');
+  if (pixelmatch.default) pixelmatch = pixelmatch.default;
+  const executablePath = acharChrome();
+  if (!executablePath) throw new Error('Chrome nao encontrado');
+  const args = process.env.CHROME_ARGS
+    ? JSON.parse(process.env.CHROME_ARGS)
+    : ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--hide-scrollbars', '--force-color-profile=srgb', '--font-render-hinting=none', '--mute-audio'];
+  const browser = await puppeteer.launch({ executablePath, args, headless: process.env.CHROME_HEADLESS || true, protocolTimeout: 180000 });
+  const versao = await browser.version();
+  const maior = (versao.match(/\/(\d+)\./) || [])[1];
+  if (maior) {
+    UA.desktop = UA.desktop.replace(/Chrome\/\d+/, `Chrome/${maior}`);
+    UA.movel = UA.movel.replace(/Chrome\/\d+/, `Chrome/${maior}`);
+  }
+  log(`navegador: ${versao} (${executablePath})`);
+  return browser;
+}
+
+const TAMANHOS = {
+  desktop: { width: 1440, height: 900, deviceScaleFactor: 1, isMobile: false, hasTouch: false },
+  movel: { width: 390, height: 844, deviceScaleFactor: 2, isMobile: true, hasTouch: true },
+};
+
+/** Funções que rodam dentro da página (passadas como texto para o evaluate). */
+const NA_PAGINA = `
+  window.__alvoRolagem = function () {
+    const doc = document.scrollingElement || document.documentElement;
+    if (doc.scrollHeight - doc.clientHeight > 40) return doc;
+    let melhor = null, folga = 40;
+    for (const el of document.querySelectorAll('body *')) {
+      const s = getComputedStyle(el);
+      if (!/(auto|scroll)/.test(s.overflowY)) continue;
+      const f = el.scrollHeight - el.clientHeight;
+      if (f > folga) { folga = f; melhor = el; }
+    }
+    return melhor || doc;
+  };
+`;
+
+async function rolarTudo(page) {
+  await page.evaluate(NA_PAGINA);
+  await page.evaluate(async () => {
+    const alvo = window.__alvoRolagem();
+    const espera = (ms) => new Promise((r) => setTimeout(r, ms));
+    const passo = Math.max(240, Math.floor(alvo.clientHeight * 0.75));
+    for (let y = 0, i = 0; i < 500; i++, y += passo) {
+      alvo.scrollTo({ top: y, behavior: 'instant' });
+      await espera(110);
+      if (y >= alvo.scrollHeight - alvo.clientHeight) break;
+    }
+    alvo.scrollTo({ top: alvo.scrollHeight, behavior: 'instant' });
+    await espera(350);
+    alvo.scrollTo({ top: 0, behavior: 'instant' });
+    await espera(350);
+  });
+}
+
+async function tirarFotos(page, altura) {
+  await page.evaluate(NA_PAGINA);
+  const medidas = await page.evaluate(() => {
+    const alvo = window.__alvoRolagem();
+    return { total: alvo.scrollHeight, visivel: alvo.clientHeight };
+  });
+  const maximo = Math.max(0, medidas.total - medidas.visivel);
+  const posicoes = maximo <= 4 ? [0] : maximo <= altura * 1.2 ? [0, maximo] : [0, Math.round(maximo / 2), maximo];
+  const fotos = [];
+  for (const y of posicoes) {
+    await page.evaluate((top) => window.__alvoRolagem().scrollTo({ top, behavior: 'instant' }), y);
+    await dormir(700);
+    const png = Buffer.from(await page.screenshot({ type: 'png' }));
+    const jpg = Buffer.from(await page.screenshot({ type: 'jpeg', quality: 60 }));
+    fotos.push({ y, png, jpg });
+  }
+  await page.evaluate(() => window.__alvoRolagem().scrollTo({ top: 0, behavior: 'instant' }));
+  return { fotos, medidas };
+}
+
+const ESTATISTICAS = /(^|\.)(plausible\.io|manus-analytics\.com|amplitude\.com|google-analytics\.com|googletagmanager\.com|doubleclick\.net|sentry\.io|posthog\.com|mixpanel\.com|segment\.io|segment\.com|hotjar\.com|clarity\.ms|facebook\.com|facebook\.net)$/i;
+const SELETOR_CLICAVEL = 'button, [role="tab"], [role="button"], summary, [aria-expanded], [aria-controls]';
+
+/**
+ * Abre uma URL num contexto limpo, grava tudo que o navegador pediu e fotografa.
+ * `bloquearHost`: usado na conferência da cópia — qualquer pedido ao site
+ * original é barrado e anotado (a cópia tem que funcionar sozinha).
+ */
+async function capturar(browser, cenario) {
+  const tamanho = TAMANHOS[cenario.tela];
+  const origemCenario = new URL(cenario.url).origin;
+  const res = {
+    nome: cenario.nome,
+    url: cenario.url,
+    tela: cenario.tela,
+    rede: [],
+    falhas: [],
+    console: [],
+    erros: [],
+    vazamentos: [],
+    enviosBloqueados: [],
+    enviosATerceiros: [],
+    janelas: [],
+    navegacoesBarradas: [],
+    cliques: [],
+    avisos: [],
+    fotos: [],
+    fotosCliques: [],
+  };
+  const corpos = new Map();
+  const tarefas = [];
+  let contexto = null;
+  let page = null;
+  let aoCriarAlvo = null;
+  try {
+    contexto = await browser.createBrowserContext();
+    page = await contexto.newPage();
+    await page.setViewport(tamanho);
+    await page.setUserAgent(cenario.tela === 'movel' ? UA.movel : UA.desktop);
+    await page.setRequestInterception(true);
+    await page.evaluateOnNewDocument(() => {
+      window.__janelas = [];
+      window.open = function (endereco) {
+        window.__janelas.push(String(endereco));
+        return null;
+      };
+    });
+    page.on('dialog', (d) => d.dismiss().catch(() => {}));
+    aoCriarAlvo = async (alvo) => {
+      if (alvo.type() !== 'page') return;
+      try {
+        const nova = await alvo.page();
+        if (nova && nova !== page && alvo.browserContext() === contexto) {
+          res.janelas.push(curto(alvo.url()));
+          await nova.close();
+        }
+      } catch {
+        /* a janela ja fechou */
+      }
+    };
+    browser.on('targetcreated', aoCriarAlvo);
+
+    page.on('request', (req) => {
+      if (req.isInterceptResolutionHandled()) return;
+      let u;
+      try {
+        u = new URL(req.url());
+      } catch {
+        req.continue().catch(() => {});
+        return;
+      }
+      if (!/^https?:$/.test(u.protocol)) {
+        req.continue().catch(() => {});
+        return;
+      }
+      if (cenario.bloquearHost && u.host === cenario.bloquearHost) {
+        res.vazamentos.push({ url: curto(req.url()), tipo: req.resourceType(), metodo: req.method() });
+        req.abort('blockedbyclient').catch(() => {});
+        return;
+      }
+      if (req.isNavigationRequest() && req.frame() === page.mainFrame() && u.origin !== origemCenario) {
+        res.navegacoesBarradas.push(curto(req.url()));
+        req.abort('aborted').catch(() => {});
+        return;
+      }
+      if (u.origin !== origemCenario && req.method() !== 'GET') {
+        const envio = { url: curto(req.url()), metodo: req.method(), corpo: String(req.postData() || '').slice(0, 300) };
+        // Estatisticas de visita nao sao enviadas durante a captura (nem do
+        // original, nem da copia). Os demais envios seguem e ficam anotados.
+        if (ESTATISTICAS.test(u.host)) {
+          res.enviosBloqueados.push(envio);
+          req.abort('blockedbyclient').catch(() => {});
+          return;
+        }
+        res.enviosATerceiros.push(envio);
+      }
+      req.continue().catch(() => {});
+    });
+
+    page.on('response', (resp) => {
+      const req = resp.request();
+      const cab = resp.headers();
+      const reg = {
+        url: resp.url(),
+        metodo: req.method(),
+        tipo: req.resourceType(),
+        status: resp.status(),
+        contentType: cab['content-type'] || '',
+        para: cab.location ? semAssinatura(cab.location) : undefined,
+      };
+      if (req.method() !== 'GET') reg.envio = String(req.postData() || '').slice(0, 300);
+      res.rede.push(reg);
+      if (resp.status() >= 300 && resp.status() < 400) return;
+      tarefas.push(
+        resp
+          .buffer()
+          .then((buf) => {
+            reg.tamanho = buf.length;
+            reg.sha256 = sha256(buf);
+            if (!corpos.has(`${req.method()} ${resp.url()}`)) corpos.set(`${req.method()} ${resp.url()}`, buf);
+          })
+          .catch((erro) => {
+            reg.semCorpo = String(erro?.message || erro).slice(0, 80);
+          }),
+      );
+    });
+    page.on('requestfailed', (req) => {
+      res.falhas.push({ url: curto(req.url()), tipo: req.resourceType(), metodo: req.method(), erro: req.failure()?.errorText || '' });
+    });
+    page.on('console', (msg) => {
+      if (res.console.length < 60) res.console.push({ tipo: msg.type(), texto: msg.text().slice(0, 400) });
+    });
+    page.on('pageerror', (erro) => {
+      if (res.erros.length < 40) res.erros.push(String(erro?.message || erro).slice(0, 400));
+    });
+
+    const resposta = await page.goto(cenario.url, { waitUntil: 'load', timeout: 90000 });
+    res.statusPagina = resposta ? resposta.status() : null;
+    await page.waitForNetworkIdle({ idleTime: 900, timeout: 30000 }).catch(() => res.avisos.push('a rede nao ficou parada depois de carregar'));
+    await page.evaluate(() => (document.fonts ? document.fonts.ready.then(() => true) : true)).catch(() => {});
+    await dormir(1500);
+    await rolarTudo(page);
+    await page.waitForNetworkIdle({ idleTime: 900, timeout: 30000 }).catch(() => res.avisos.push('a rede nao ficou parada depois de rolar'));
+    await dormir(900);
+
+    res.info = await page.evaluate(() => {
+      const fundos = new Set();
+      for (const el of document.querySelectorAll('*')) {
+        const bg = getComputedStyle(el).backgroundImage;
+        if (bg && bg !== 'none') for (const m of bg.matchAll(/url\(["']?([^"')]+)["']?\)/g)) fundos.add(m[1]);
+      }
+      return {
+        urlFinal: location.href,
+        titulo: document.title,
+        altura: document.documentElement.scrollHeight,
+        largura: document.documentElement.scrollWidth,
+        elementos: document.querySelectorAll('*').length,
+        texto: document.body ? document.body.innerText : '',
+        links: [...document.querySelectorAll('a[href]')].map((a) => a.href),
+        imagens: [...document.images].map((i) => ({ src: i.currentSrc || i.src, ok: i.complete && i.naturalWidth > 0, w: i.naturalWidth, h: i.naturalHeight })),
+        fundos: [...fundos],
+        recursos: performance.getEntriesByType('resource').map((e) => e.name),
+        fontes: [...document.fonts].map((f) => `${f.family} ${f.weight} ${f.style} ${f.status}`),
+        emblema: (() => {
+          const raiz = document.querySelector('manus-content-root');
+          if (!raiz) return null;
+          const r = raiz.getBoundingClientRect();
+          return { filhos: raiz.childElementCount, sombra: !!raiz.shadowRoot, caixa: [Math.round(r.x), Math.round(r.y), Math.round(r.width), Math.round(r.height)] };
+        })(),
+      };
+    });
+    res.dom = await page.content();
+
+    const { fotos, medidas } = await tirarFotos(page, tamanho.height);
+    res.fotos = fotos;
+    res.medidas = medidas;
+
+    if (cenario.interagir) {
+      // Clica em tudo que parece botao/aba: descobre arquivos carregados sob demanda
+      // e permite comparar o comportamento do original com o da copia.
+      const alvos = await page.$$(SELETOR_CLICAVEL);
+      const maximo = Math.min(alvos.length, 45);
+      for (let i = 0; i < maximo; i++) {
+        const alvo = alvos[i];
+        let rotulo = null;
+        try {
+          rotulo = await alvo.evaluate((el) => {
+            if (!el.isConnected || el.closest('manus-content-root')) return null;
+            const r = el.getBoundingClientRect();
+            const s = getComputedStyle(el);
+            if (r.width < 4 || r.height < 4 || s.visibility === 'hidden' || s.display === 'none') return null;
+            el.scrollIntoView({ block: 'center', behavior: 'instant' });
+            return (el.innerText || el.getAttribute('aria-label') || el.tagName).trim().replace(/\s+/g, ' ').slice(0, 60);
+          });
+          if (rotulo === null) continue;
+          await dormir(120);
+          await alvo.click({ delay: 20 });
+          await dormir(450);
+          const clique = { indice: i, rotulo, url: page.url() };
+          if (res.fotosCliques.length < 10) {
+            clique.foto = res.fotosCliques.length;
+            res.fotosCliques.push({
+              indice: i,
+              rotulo,
+              png: Buffer.from(await page.screenshot({ type: 'png' })),
+              jpg: Buffer.from(await page.screenshot({ type: 'jpeg', quality: 60 })),
+            });
+          }
+          res.cliques.push(clique);
+        } catch (erro) {
+          res.cliques.push({ indice: i, rotulo, erro: String(erro?.message || erro).slice(0, 100) });
+        }
+      }
+      // Campo de busca, se houver.
+      try {
+        const campo = await page.$('input[type="search"], input[type="text"], input:not([type])');
+        if (campo) {
+          await campo.evaluate((el) => el.scrollIntoView({ block: 'center', behavior: 'instant' }));
+          await campo.click({ delay: 20 });
+          await page.keyboard.type('arma', { delay: 40 });
+          await dormir(900);
+          res.busca = {
+            texto: await page.evaluate(() => (document.body ? document.body.innerText.length : 0)),
+            png: Buffer.from(await page.screenshot({ type: 'png' })),
+            jpg: Buffer.from(await page.screenshot({ type: 'jpeg', quality: 60 })),
+          };
+        }
+      } catch (erro) {
+        res.avisos.push(`busca: ${String(erro?.message || erro).slice(0, 100)}`);
+      }
+      await page.waitForNetworkIdle({ idleTime: 900, timeout: 20000 }).catch(() => {});
+      res.urlDepoisDosCliques = page.url();
+    }
+
+    await Promise.allSettled(tarefas);
+  } catch (erro) {
+    res.falhou = String(erro?.stack || erro).slice(0, 600);
+    avisar(`captura "${cenario.nome}" falhou: ${String(erro?.message || erro).slice(0, 200)}`);
+  } finally {
+    await Promise.allSettled(tarefas);
+    try {
+      if (page) res.janelas.push(...(await page.evaluate(() => window.__janelas || [])));
+    } catch {
+      /* pagina indisponivel */
+    }
+    if (aoCriarAlvo) browser.off('targetcreated', aoCriarAlvo);
+    if (contexto) await contexto.close().catch(() => {});
+  }
+  res.corpos = corpos;
+  return res;
+}
+
+function compararPng(a, b) {
+  if (!a || !b) return { comparavel: false, motivo: 'falta uma das imagens' };
+  if (a.equals(b)) return { comparavel: true, identicas: true, pixelsDiferentes: 0, fracao: 0 };
+  const A = PNG.sync.read(a);
+  const B = PNG.sync.read(b);
+  if (A.width !== B.width || A.height !== B.height) {
+    return { comparavel: false, motivo: `tamanhos diferentes: ${A.width}x${A.height} e ${B.width}x${B.height}` };
+  }
+  const diff = new PNG({ width: A.width, height: A.height });
+  const n = pixelmatch(A.data, B.data, diff.data, A.width, A.height, { threshold: 0.1 });
+  return {
+    comparavel: true,
+    identicas: n === 0,
+    pixelsDiferentes: n,
+    fracao: n / (A.width * A.height),
+    diff: n ? PNG.sync.write(diff) : null,
+  };
+}
+
+// ───────────────────────────── servidor local ─────────────────────────────
+async function subirServidorLocal() {
+  const filho = spawn(process.execPath, [path.join(RAIZ, 'servidor.mjs')], {
+    env: { ...process.env, PORT: String(PORTA_LOCAL), HOST: '127.0.0.1', SILENCIOSO: '1' },
+    stdio: ['ignore', 'pipe', 'pipe'],
+  });
+  let saida = '';
+  filho.stdout.on('data', (d) => (saida += d));
+  filho.stderr.on('data', (d) => (saida += d));
+  for (let i = 0; i < 50; i++) {
+    try {
+      const r = await fetch(`${LOCAL}/`, { signal: AbortSignal.timeout(2000) });
+      if (r.status === 200) return filho;
+    } catch {
+      /* ainda subindo */
+    }
+    if (filho.exitCode !== null) break;
+    await dormir(200);
+  }
+  filho.kill();
+  throw new Error(`servidor local nao respondeu: ${saida.slice(0, 300)}`);
+}
+
+// ───────────────────────────── roteiro ─────────────────────────────
+const SONDAS = [
+  '/',
+  '/index.html',
+  '/convite',
+  '/convite/',
+  '/convite/index.html',
+  '/convite/?v=c14b569',
+  '/favicon.ico',
+  '/robots.txt',
+  '/sitemap.xml',
+  '/nao-existe-xyz',
+  '/nao-existe-xyz/',
+  '/nao-existe-xyz/outra',
+  '/nao-existe-xyz.png',
+  '/nao-existe-xyz.html',
+  '/nao.existe/rota',
+  '/assets',
+  '/assets/',
+  '/assets/nao-existe-xyz.js',
+  '/convite/nao-existe-xyz',
+  '/convite/nao-existe-xyz.png',
+  '/api/nao-existe-xyz',
+  '/__manus/nao-existe-xyz',
+  '/manus-storage/nao-existe-xyz.webp',
+];
+
+async function sondar(base, caminho) {
+  try {
+    const r = await baixarComTentativas(base + caminho);
+    const html = ehHtml(r.cabecalhos['content-type']);
+    return {
+      status: r.status,
+      primeiroStatus: r.cadeia.length ? r.cadeia[0].status : r.status,
+      contentType: r.cabecalhos['content-type'] || '',
+      cacheControl: r.cabecalhos['cache-control'] || '',
+      tamanho: r.corpo.length,
+      sha: sha256(html ? semNonce(r.corpo) : r.corpo).slice(0, 16),
+    };
+  } catch (erro) {
+    return { erro: String(erro?.message || erro).slice(0, 120) };
+  }
+}
+
+async function principal() {
+  log(`origem: ${ORIGEM}`);
+  log(`paginas pedidas: ${PAGINAS.join('  ')}`);
+  fs.rmSync(DIR_SITE, { recursive: true, force: true });
+  fs.rmSync(DIR_SAIDA, { recursive: true, force: true });
+  fs.mkdirSync(DIR_SITE, { recursive: true });
+  fs.mkdirSync(DIR_SAIDA, { recursive: true });
+
+  let browser = null;
+  if (!SEM_NAVEGADOR) {
+    try {
+      browser = await abrirNavegador();
+    } catch (erro) {
+      avisar(`navegador indisponivel: ${erro.message}`);
+    }
+  }
+
+  // 1) Download direto: primeiro as paginas principais (em ordem), depois o resto.
+  log('1) baixando as paginas e tudo que elas referenciam');
+  const raiz = await baixarComTentativas(`${ORIGEM}/`);
+  if (raiz.status !== 200 || !ehHtml(raiz.cabecalhos['content-type'])) throw new Error(`a pagina inicial respondeu ${raiz.status}`);
+  indexRaizNorm = semNonce(raiz.corpo);
+
+  const sementes = ['/', ...PAGINAS.map((p) => p.split('?')[0]), ...PAGINAS];
+  for (const caminho of [...new Set(sementes)]) {
+    const reg = enfileirar(ORIGEM + caminho, `${ORIGEM}/`, 'pagina pedida');
+    if (reg && reg.estado === 'fila') {
+      fila.splice(fila.indexOf(reg), 1);
+      await processar(reg);
+    }
+  }
+  const conhecidos = [
+    '/favicon.ico', '/robots.txt', '/sitemap.xml', '/favicon.png', '/favicon.svg', '/apple-touch-icon.png',
+    '/apple-touch-icon-precomposed.png', '/manifest.json', '/manifest.webmanifest', '/site.webmanifest', '/sw.js',
+    '/service-worker.js', '/browserconfig.xml', '/humans.txt', '/404.html', '/.well-known/security.txt',
+  ];
+  for (const c of conhecidos) enfileirar(ORIGEM + c, `${ORIGEM}/`, 'caminho padrao', { candidato: true });
+  await esvaziarFila();
+  log(`   ${destinos.size} arquivo(s) do site ate aqui`);
+
+  // 2) Navegador no original: descobre o que so aparece em tempo de execucao.
+  const cenarios = [];
+  for (const caminho of PAGINAS) {
+    const nome = caminho === '/' ? 'regras' : caminho.split('?')[0].replace(/^\/|\/$/g, '').replace(/[^a-z0-9]+/gi, '-') || 'pagina';
+    cenarios.push({ nome: `${nome}-desktop`, caminho, tela: 'desktop', interagir: true });
+    cenarios.push({ nome: `${nome}-movel`, caminho, tela: 'movel', interagir: false });
+  }
+  const originais = new Map();
+  const corposNavegador = new Map();
+  if (browser) {
+    log('2) abrindo o site original no navegador');
+    const rotasExtras = new Set();
+    for (const c of cenarios) {
+      const r = await capturar(browser, { ...c, url: ORIGEM + c.caminho });
+      originais.set(c.nome, r);
+      log(`   ${c.nome}: ${r.rede.length} pedidos, titulo "${r.info?.titulo}", altura ${r.info?.altura}px, ${r.cliques.length} cliques`);
+      for (const link of r.info?.links || []) {
+        try {
+          const u = new URL(link);
+          if (u.host === HOST_ORIGEM) rotasExtras.add(u.pathname + u.search);
+        } catch {
+          /* link invalido */
+        }
+      }
+    }
+    const jaVistas = new Set(cenarios.map((c) => c.caminho.split('?')[0].replace(/\/+$/, '') || '/'));
+    let extras = 0;
+    for (const rota of rotasExtras) {
+      const chave = rota.split('?')[0].replace(/\/+$/, '') || '/';
+      if (jaVistas.has(chave) || extras >= 6) continue;
+      jaVistas.add(chave);
+      extras++;
+      const c = { nome: `rota-${chave.replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '') || 'x'}-desktop`, caminho: rota, tela: 'desktop', interagir: true };
+      cenarios.push(c);
+      const r = await capturar(browser, { ...c, url: ORIGEM + c.caminho });
+      originais.set(c.nome, r);
+      log(`   ${c.nome}: ${r.rede.length} pedidos, titulo "${r.info?.titulo}"`);
+    }
+
+    for (const r of originais.values()) {
+      for (const item of r.rede) {
+        let u;
+        try {
+          u = new URL(item.url);
+        } catch {
+          continue;
+        }
+        if (!/^https?:$/.test(u.protocol)) continue;
+        if (item.metodo === 'GET') {
+          if (u.host === HOST_ORIGEM || (item.status === 200 && !ehHtml(item.contentType))) enfileirar(item.url, r.url, `navegador (${r.nome})`);
+        }
+      }
+      for (const [chave, corpo] of r.corpos) if (!corposNavegador.has(chave)) corposNavegador.set(chave, corpo);
+      for (const lista of [r.info?.recursos || [], r.info?.fundos || [], (r.info?.imagens || []).map((i) => i.src)]) {
+        for (const u of lista) {
+          try {
+            if (new URL(u, r.url).host === HOST_ORIGEM) enfileirar(u, r.url, `navegador (${r.nome})`);
+          } catch {
+            /* ignora */
+          }
+        }
+      }
+    }
+    await esvaziarFila();
+    log(`   ${destinos.size} arquivo(s) do site depois do navegador`);
+  }
+
+  // 3) O que o navegador recebeu e o que foi gravado tem que ser a mesma coisa.
+  const divergencias = [];
+  for (const [chave, corpo] of corposNavegador) {
+    if (!chave.startsWith('GET ')) continue;
+    const url = chave.slice(4);
+    let u;
+    try {
+      u = new URL(url);
+    } catch {
+      continue;
+    }
+    if (u.host !== HOST_ORIGEM) continue;
+    u.hash = '';
+    const reg = recursos.get(u.href);
+    if (!reg || !reg.sha256) {
+      divergencias.push({ url, problema: 'o navegador recebeu, mas nao ha registro do download' });
+      continue;
+    }
+    let iguais;
+    if (!ehHtml(reg.contentType)) {
+      iguais = sha256(corpo) === reg.sha256;
+    } else if (reg.estado === 'rota-do-app') {
+      iguais = semNonce(corpo) === indexRaizNorm;
+    } else if (reg.destino && fs.existsSync(path.join(RAIZ, reg.destino))) {
+      iguais = semNonce(corpo) === semNonce(fs.readFileSync(path.join(RAIZ, reg.destino)));
+    } else {
+      iguais = false;
+    }
+    reg.confereComNavegador = iguais;
+    if (!iguais) {
+      divergencias.push({ url, problema: 'conteudo recebido pelo navegador difere do arquivo baixado', navegador: sha256(corpo).slice(0, 16), baixado: reg.sha256.slice(0, 16) });
+      gravar(path.join(DIR_SAIDA, 'variantes', `navegador-${sha256(url).slice(0, 8)}-${path.basename(u.pathname) || 'index'}`), corpo);
+    }
+  }
+  for (const d of divergencias) avisar(`${d.problema}: ${curto(d.url)}`);
+
+  // 4) Comportamento do servidor original (para o servidor local imitar).
+  log('3) sondando o comportamento do servidor original');
+  const sondas = {};
+  for (const caminho of SONDAS) sondas[caminho] = { original: await sondar(ORIGEM, caminho) };
+
+  // 5) Conferência: a cópia, servida localmente, com o site original bloqueado.
+  const comparacoes = [];
+  let servidor = null;
+  try {
+    servidor = await subirServidorLocal();
+    log(`4) conferindo a copia em ${LOCAL} (site original bloqueado)`);
+    for (const caminho of SONDAS) sondas[caminho].copia = await sondar(LOCAL, caminho);
+
+    if (browser) {
+      for (const c of cenarios) {
+        const original = originais.get(c.nome);
+        const copia = await capturar(browser, { ...c, url: LOCAL + c.caminho, bloquearHost: HOST_ORIGEM });
+        const comp = { nome: c.nome, caminho: c.caminho, tela: c.tela, fotos: [], cliques: [], problemas: [] };
+
+        const pasta = path.join(DIR_SAIDA, 'telas');
+        const n = Math.max(original.fotos.length, copia.fotos.length);
+        for (let i = 0; i < n; i++) {
+          const o = original.fotos[i];
+          const k = copia.fotos[i];
+          const r = compararPng(o?.png, k?.png);
+          if (o) gravar(path.join(pasta, `${c.nome}-${i + 1}-original.jpg`), o.jpg);
+          if (k && !r.identicas) gravar(path.join(pasta, `${c.nome}-${i + 1}-copia.jpg`), k.jpg);
+          if (r.diff) gravar(path.join(pasta, `${c.nome}-${i + 1}-diferenca.png`), r.diff);
+          comp.fotos.push({ posicao: i + 1, y: o?.y, comparavel: r.comparavel, identicas: !!r.identicas, pixelsDiferentes: r.pixelsDiferentes, fracao: r.fracao, motivo: r.motivo });
+        }
+        const nc = Math.max(original.fotosCliques.length, copia.fotosCliques.length);
+        for (let i = 0; i < nc; i++) {
+          const o = original.fotosCliques[i];
+          const k = copia.fotosCliques[i];
+          const r = compararPng(o?.png, k?.png);
+          const diferente = !r.comparavel || r.fracao > 0.002;
+          if (i < 3 || diferente) {
+            if (o) gravar(path.join(pasta, `${c.nome}-clique${i + 1}-original.jpg`), o.jpg);
+            if (k && diferente) gravar(path.join(pasta, `${c.nome}-clique${i + 1}-copia.jpg`), k.jpg);
+            if (r.diff && diferente) gravar(path.join(pasta, `${c.nome}-clique${i + 1}-diferenca.png`), r.diff);
+          }
+          comp.cliques.push({ n: i + 1, rotuloOriginal: o?.rotulo, rotuloCopia: k?.rotulo, comparavel: r.comparavel, pixelsDiferentes: r.pixelsDiferentes, fracao: r.fracao, motivo: r.motivo });
+        }
+        if (original.busca || copia.busca) {
+          const r = compararPng(original.busca?.png, copia.busca?.png);
+          if (original.busca) gravar(path.join(pasta, `${c.nome}-busca-original.jpg`), original.busca.jpg);
+          if (copia.busca && !r.identicas) gravar(path.join(pasta, `${c.nome}-busca-copia.jpg`), copia.busca.jpg);
+          if (r.diff) gravar(path.join(pasta, `${c.nome}-busca-diferenca.png`), r.diff);
+          comp.busca = { comparavel: r.comparavel, pixelsDiferentes: r.pixelsDiferentes, fracao: r.fracao, textoOriginal: original.busca?.texto, textoCopia: copia.busca?.texto };
+        }
+
+        // Pedidos ao proprio site: a copia tem que pedir as mesmas coisas e receber
+        // as mesmas respostas. (No original algumas imagens redirecionam para um
+        // CDN; na copia o arquivo ja esta no lugar e responde 200 direto.)
+        const pedidosDe = (r, base) => {
+          const mapa = new Map();
+          for (const x of r.rede) {
+            if (!x.url.startsWith(base)) continue;
+            const chave = `${x.metodo} ${x.url.slice(base.length)}`;
+            if (!mapa.has(chave)) mapa.set(chave, new Set());
+            mapa.get(chave).add(x.status);
+          }
+          return mapa;
+        };
+        const redeOriginal = pedidosDe(original, ORIGEM);
+        const redeCopia = pedidosDe(copia, LOCAL);
+        const texto = (st) => [...st].sort().join('/');
+        comp.pedidosOriginal = [...redeOriginal].map(([k, st]) => `${k} -> ${texto(st)}`).sort();
+        comp.pedidosCopia = [...redeCopia].map(([k, st]) => `${k} -> ${texto(st)}`).sort();
+        comp.soNoOriginal = [...redeOriginal.keys()].filter((k) => !redeCopia.has(k)).sort();
+        comp.soNaCopia = [...redeCopia.keys()].filter((k) => !redeOriginal.has(k)).sort();
+        comp.redirecionavaNoOriginal = [];
+        comp.statusDiferente = [];
+        for (const [k, st] of redeOriginal) {
+          const outro = redeCopia.get(k);
+          if (!outro || texto(st) === texto(outro)) continue;
+          const eraRedirecionamento = [...st].every((n) => n >= 300 && n < 400) && texto(outro) === '200';
+          if (eraRedirecionamento) comp.redirecionavaNoOriginal.push(k);
+          else comp.statusDiferente.push(`${k}: original ${texto(st)}, copia ${texto(outro)}`);
+        }
+
+        // Mesmo caminho, mesmo conteudo?
+        comp.conteudoDiferente = [];
+        for (const item of copia.rede) {
+          if (!item.url.startsWith(LOCAL) || item.metodo !== 'GET' || !item.sha256) continue;
+          const par = original.rede.find((x) => x.metodo === 'GET' && x.url === ORIGEM + item.url.slice(LOCAL.length) && x.sha256);
+          if (!par) continue;
+          const iguais = ehHtml(item.contentType)
+            ? semNonce(copia.corpos.get(`GET ${item.url}`) || '') === semNonce(original.corpos.get(`GET ${par.url}`) || '')
+            : item.sha256 === par.sha256;
+          if (!iguais) comp.conteudoDiferente.push(item.url.slice(LOCAL.length));
+        }
+
+        comp.igual = {
+          titulo: original.info?.titulo === copia.info?.titulo,
+          texto: original.info?.texto === copia.info?.texto,
+          altura: original.info?.altura === copia.info?.altura,
+          elementos: original.info?.elementos === copia.info?.elementos,
+        };
+        comp.original = resumoCaptura(original);
+        comp.copia = resumoCaptura(copia);
+        comp.vazamentos = copia.vazamentos;
+
+        if (copia.falhou) comp.problemas.push(`a captura da copia falhou: ${copia.falhou.slice(0, 160)}`);
+        if (copia.vazamentos.length) comp.problemas.push(`${copia.vazamentos.length} pedido(s) da copia ao site original`);
+        if (comp.conteudoDiferente.length) comp.problemas.push(`conteudo diferente em: ${comp.conteudoDiferente.join(', ')}`);
+        if (comp.soNoOriginal.length) comp.problemas.push(`pedidos que so o original fez: ${comp.soNoOriginal.join(', ')}`);
+        if (comp.soNaCopia.length) comp.problemas.push(`pedidos que so a copia fez: ${comp.soNaCopia.join(', ')}`);
+        if (comp.statusDiferente.length) comp.problemas.push(`respostas diferentes: ${comp.statusDiferente.join(', ')}`);
+        if (!comp.igual.titulo) comp.problemas.push('titulo diferente');
+        if (!comp.igual.texto) comp.problemas.push('texto visivel diferente');
+        const quebradas = (copia.info?.imagens || []).filter((i) => !i.ok).map((i) => i.src);
+        const quebradasOriginal = (original.info?.imagens || []).filter((i) => !i.ok).map((i) => i.src);
+        if (quebradas.length > quebradasOriginal.length) comp.problemas.push(`imagens quebradas na copia: ${quebradas.join(', ')}`);
+        for (const f of comp.fotos) {
+          if (!f.comparavel) comp.problemas.push(`foto ${f.posicao}: ${f.motivo}`);
+          else if (f.fracao > 0.002) comp.problemas.push(`foto ${f.posicao}: ${(f.fracao * 100).toFixed(2)}% dos pixels diferentes`);
+        }
+        comparacoes.push(comp);
+        const pior = Math.max(0, ...comp.fotos.map((f) => f.fracao || 0));
+        log(`   ${c.nome}: ${comp.problemas.length ? `PROBLEMAS: ${comp.problemas.join(' | ')}` : 'igual'} (maior diferenca de imagem ${(pior * 100).toFixed(3)}%)`);
+
+        if (c.tela === 'desktop') {
+          gravar(path.join(DIR_SAIDA, 'texto', `${c.nome}.txt`), original.info?.texto || '');
+          gravar(path.join(DIR_SAIDA, 'dom', `${c.nome}.html`), original.dom || '');
+        }
+      }
+    }
+  } catch (erro) {
+    avisar(`conferencia interrompida: ${String(erro?.stack || erro).slice(0, 400)}`);
+  } finally {
+    if (servidor) servidor.kill();
+  }
+
+  if (browser) await browser.close().catch(() => {});
+
+  // 6) Relatórios.
+  log('5) escrevendo relatorios');
+  const lista = [...recursos.values()].map((r) => ({
+    url: semAssinatura(r.url),
+    mesmoSite: r.mesmoSite,
+    estado: r.estado,
+    destino: r.destino,
+    motivo: r.motivo,
+    status: r.status,
+    contentType: r.contentType,
+    tamanho: r.tamanho,
+    sha256: r.sha256,
+    cabecalhos: r.cabecalhos,
+    redirecionamentos: r.cadeia && r.cadeia.length ? r.cadeia : undefined,
+    igualA: r.igualA,
+    candidato: r.candidato || undefined,
+    confereComNavegador: r.confereComNavegador,
+    fontesExtraidas: r.fontesExtraidas,
+    por: [...r.por].slice(0, 4).map(curto),
+  }));
+  const salvos = lista.filter((r) => r.estado === 'salvo').sort((a, b) => a.destino.localeCompare(b.destino));
+
+  const relatorio = {
+    geradoEm: new Date().toISOString(),
+    origem: ORIGEM,
+    paginasPedidas: PAGINAS,
+    navegador: browser ? UA.desktop : null,
+    avisos,
+    arquivosDoSite: salvos,
+    sondas,
+    comparacoes,
+    divergenciasNavegador: divergencias,
+    linksExternos: [...linksExternos.entries()].map(([url, por]) => ({ url, por: [...por].slice(0, 3) })),
+    outrosLinks: [...outrosLinks],
+    urlsNoCodigo: [...urlsEmJs].sort(),
+    capturasOriginais: [...originais.values()].map((r) => ({ ...resumoCaptura(r), rede: r.rede, cliques: r.cliques })),
+    todosOsRecursos: lista,
+  };
+  gravar(path.join(DIR_SAIDA, 'relatorio.json'), JSON.stringify(relatorio, null, 2));
+  gravar(path.join(DIR_SAIDA, 'RESUMO.md'), resumoEmTexto(relatorio));
+  log(`pronto: ${salvos.length} arquivo(s) em site/, ${avisos.length} aviso(s)`);
+}
+
+function resumoCaptura(r) {
+  return {
+    nome: r.nome,
+    url: r.url,
+    status: r.statusPagina,
+    falhou: r.falhou,
+    titulo: r.info?.titulo,
+    urlFinal: r.info?.urlFinal,
+    altura: r.info?.altura,
+    largura: r.info?.largura,
+    elementos: r.info?.elementos,
+    caracteresDeTexto: r.info?.texto?.length,
+    imagens: r.info?.imagens,
+    fontes: r.info?.fontes,
+    emblema: r.info?.emblema,
+    medidas: r.medidas,
+    pedidos: r.rede.length,
+    falhas: r.falhas,
+    console: r.console,
+    erros: r.erros,
+    enviosBloqueados: r.enviosBloqueados,
+    enviosATerceiros: r.enviosATerceiros,
+    janelas: r.janelas,
+    navegacoesBarradas: r.navegacoesBarradas,
+    avisos: r.avisos,
+    urlDepoisDosCliques: r.urlDepoisDosCliques,
+    totalCliques: r.cliques.length,
+  };
+}
+
+function resumoEmTexto(rel) {
+  const L = [];
+  const kb = (n) => (n >= 1024 * 1024 ? `${(n / 1024 / 1024).toFixed(2)} MB` : `${(n / 1024).toFixed(1)} kB`);
+  L.push(`# Copia de ${rel.origem}`, '', `Gerado em ${rel.geradoEm}`, '');
+  L.push(`## Arquivos do site (${rel.arquivosDoSite.length})`, '');
+  L.push('| arquivo | tamanho | tipo | sha256 | navegador confere | redirecionava |', '|---|---|---|---|---|---|');
+  for (const a of rel.arquivosDoSite) {
+    L.push(`| ${a.destino} | ${kb(a.tamanho)} | ${a.contentType} | ${a.sha256.slice(0, 16)} | ${a.confereComNavegador === undefined ? '-' : a.confereComNavegador ? 'sim' : 'NAO'} | ${a.redirecionamentos ? a.redirecionamentos.map((x) => `${x.status} -> ${new URL(x.para.replace('?…', '')).host}`).join(' ; ') : ''} |`);
+  }
+  L.push('', `## Avisos (${rel.avisos.length})`, '');
+  for (const a of rel.avisos) L.push(`- ${a}`);
+  L.push('', '## Conferencia (copia x original)', '');
+  for (const c of rel.comparacoes) {
+    L.push(`### ${c.nome} — ${c.caminho}`, '');
+    L.push(`- resultado: ${c.problemas.length ? `**PROBLEMAS** — ${c.problemas.join(' | ')}` : 'igual ao original'}`);
+    L.push(`- titulo igual: ${c.igual.titulo} · texto igual: ${c.igual.texto} · altura igual: ${c.igual.altura} (${c.original.altura} x ${c.copia.altura}) · elementos iguais: ${c.igual.elementos} (${c.original.elementos} x ${c.copia.elementos})`);
+    L.push(`- fotos: ${c.fotos.map((f) => (f.comparavel ? `${f.posicao}: ${f.pixelsDiferentes} px (${(f.fracao * 100).toFixed(3)}%)` : `${f.posicao}: ${f.motivo}`)).join(' · ')}`);
+    if (c.cliques.length) L.push(`- cliques: ${c.cliques.map((f) => (f.comparavel ? `${f.n} "${f.rotuloOriginal}": ${(f.fracao * 100).toFixed(3)}%` : `${f.n}: ${f.motivo}`)).join(' · ')}`);
+    if (c.busca) L.push(`- busca: ${c.busca.comparavel ? `${(c.busca.fracao * 100).toFixed(3)}%` : 'nao comparavel'} (texto ${c.busca.textoOriginal} x ${c.busca.textoCopia})`);
+    L.push(`- pedidos ao proprio site: ${c.pedidosOriginal.length} no original, ${c.pedidosCopia.length} na copia`);
+    L.push(`- pedidos so no original: ${c.soNoOriginal.join(' ; ') || '-'}`);
+    L.push(`- pedidos so na copia: ${c.soNaCopia.join(' ; ') || '-'}`);
+    L.push(`- respostas diferentes: ${c.statusDiferente.join(' ; ') || '-'}`);
+    L.push(`- redirecionava no original, arquivo local na copia: ${c.redirecionavaNoOriginal.join(' ; ') || '-'}`);
+    L.push(`- envios a terceiros (original): ${c.original.enviosATerceiros.map((e) => `${e.metodo} ${e.url}`).join(' ; ') || '-'}`);
+    L.push(`- envios a terceiros (copia): ${c.copia.enviosATerceiros.map((e) => `${e.metodo} ${e.url}`).join(' ; ') || '-'}`);
+    L.push(`- estatisticas barradas: original ${c.original.enviosBloqueados.length}, copia ${c.copia.enviosBloqueados.length}`);
+    L.push(`- pedidos da copia ao site original: ${c.vazamentos.map((v) => v.url).join(' ; ') || 'nenhum'}`);
+    L.push(`- erros no original: ${[...c.original.erros, ...c.original.console.filter((x) => x.tipo === 'error').map((x) => x.texto)].join(' ¦ ') || '-'}`);
+    L.push(`- erros na copia: ${[...c.copia.erros, ...c.copia.console.filter((x) => x.tipo === 'error').map((x) => x.texto)].join(' ¦ ') || '-'}`);
+    L.push(`- falhas de rede no original: ${c.original.falhas.map((f) => `${f.url} (${f.erro})`).join(' ; ') || '-'}`);
+    L.push(`- falhas de rede na copia: ${c.copia.falhas.map((f) => `${f.url} (${f.erro})`).join(' ; ') || '-'}`);
+    L.push(`- emblema Manus: original ${JSON.stringify(c.original.emblema)} · copia ${JSON.stringify(c.copia.emblema)}`);
+    L.push('');
+  }
+  L.push('## Comportamento do servidor (original x copia)', '', '| caminho | original | copia | igual |', '|---|---|---|---|');
+  for (const [caminho, s] of Object.entries(rel.sondas)) {
+    const f = (x) => (x ? (x.erro ? `erro ${x.erro}` : `${x.primeiroStatus !== x.status ? `${x.primeiroStatus}→` : ''}${x.status} ${x.contentType} ${x.tamanho}b ${x.sha}`) : '-');
+    const igual = s.original && s.copia && s.original.status === s.copia.status && s.original.sha === s.copia.sha;
+    L.push(`| ${caminho} | ${f(s.original)} | ${f(s.copia)} | ${igual ? 'sim' : 'NAO'} |`);
+  }
+  L.push('', '## Pedidos do navegador no original', '');
+  for (const c of rel.capturasOriginais) {
+    L.push(`### ${c.nome}`, '');
+    for (const r of c.rede) L.push(`- ${r.metodo} ${r.status} ${r.tipo} ${curto(semAssinatura(r.url))} ${r.contentType || ''} ${r.tamanho ?? ''}${r.para ? ` -> ${curto(r.para)}` : ''}`);
+    if (c.enviosBloqueados.length) L.push('', 'Estatisticas barradas durante a captura:', ...c.enviosBloqueados.map((e) => `- ${e.metodo} ${e.url} ${e.corpo}`));
+    if (c.enviosATerceiros.length) L.push('', 'Outros envios a terceiros:', ...c.enviosATerceiros.map((e) => `- ${e.metodo} ${e.url} ${e.corpo}`));
+    if (c.janelas.length) L.push('', `Janelas que a pagina tentou abrir: ${c.janelas.join(' ; ')}`);
+    if (c.navegacoesBarradas.length) L.push('', `Saidas do site barradas: ${c.navegacoesBarradas.join(' ; ')}`);
+    if (c.cliques.length) L.push('', `Cliques: ${c.cliques.map((k) => `[${k.indice}] ${k.rotulo}${k.erro ? ` (erro: ${k.erro})` : ''}`).join(' · ')}`);
+    L.push('');
+  }
+  L.push('## Links para fora do site', '');
+  for (const l of rel.linksExternos) L.push(`- ${l.url}`);
+  for (const l of rel.outrosLinks) L.push(`- ${l}`);
+  L.push('', '## Enderecos citados no codigo', '');
+  for (const u of rel.urlsNoCodigo) L.push(`- ${u}`);
+  L.push('', '## Recursos nao salvos', '');
+  for (const r of rel.todosOsRecursos.filter((x) => x.estado !== 'salvo')) {
+    L.push(`- [${r.estado}] ${curto(r.url)} ${r.status ?? ''} ${r.motivo || ''}${r.destino ? ` (${r.destino})` : ''}`);
+  }
+  return `${L.join('\n')}\n`;
+}
+
+principal()
+  .then(() => process.exit(0))
+  .catch((erro) => {
+    console.error(erro);
+    console.log(`::error::A copia falhou: ${String(erro?.message || erro).slice(0, 200)}`);
+    process.exit(1);
+  });

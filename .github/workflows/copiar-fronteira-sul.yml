@@ -38,9 +38,11 @@ jobs:
       - name: Copiar o site
         run: |
           set -u
+          bash fronteira-sul/_copia/executar.sh 2>&1 | tee "$RUNNER_TEMP/log.txt"
+          codigo="${PIPESTATUS[0]}"
           mkdir -p fronteira-sul/_copia/saida
-          bash fronteira-sul/_copia/executar.sh 2>&1 | tee fronteira-sul/_copia/saida/log.txt
-          exit "${PIPESTATUS[0]}"
+          cp "$RUNNER_TEMP/log.txt" fronteira-sul/_copia/saida/log.txt
+          exit "$codigo"
 
       - name: Salvar o resultado no branch
         if: always()
