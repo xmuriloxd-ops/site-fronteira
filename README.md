@@ -1,134 +1,189 @@
-# Portal de Inscrições · Polícia Militar do Paraná
+# PCPR RP · Sistema de Registro de Prisões e Mandados
 
-Portal de inscrições da **PMPR**, da **ROTAM** e da **RONE**: cada unidade tem
-seu formulário próprio, aberto pelas abas do topo, e toda ficha preenchida cai
-no canal do Discord do comando. O comando ainda publica **cartazes de
-divulgação em imagem** direto no Discord.
+Site **preto e branco** da **Polícia Civil RP do Paraná** para lavrar prisões e
+expedir **mandados de prisão em cartaz**:
+foto do custodiado, nome, ID, artigos, tempo de prisão, itens apreendidos,
+agente que prendeu, unidade da ocorrência, escrivão, **assinatura do escrivão** e
+**dia, data e horário gerados automaticamente**. A ficha vira um **cartaz em imagem**
+(no modelo do documento impresso) e é enviada ao **canal do Discord**.
 
-Não há editais, banco de questões nem simulado: o portal é de inscrições.
+> Projeto de **roleplay**, sem vínculo com órgãos oficiais. O brasão da PCPR é
+> usado apenas como identidade visual do servidor de RP. O logo oficial enviado
+> pelo usuário fica em `public/logo-pcpr.png` (fundo transparente, cores
+> originais); `public/logo-pcpr-escuro.png` é a mesma arte usada no cabeçalho
+> e no rodapé escuros. `public/favicon-pcpr.png` e `public/icon-pcpr-512.png`
+> são as versões quadradas para a aba do navegador / PWA. O mesmo arquivo é
+> desenhado dentro dos cartazes de prisão e de mandado, preservando a
+> proporção vertical do distintivo.
+>
+> Os nomes antigos (`brasao-pcpr*.png`, `favicon.png`, `icon-512.png`) ficam
+> como cópias idênticas apenas para não quebrar páginas ainda em cache.
+> Os assets de logo são servidos com `Cache-Control: no-store` e o
+> `index.html` remove service workers/cache de versões anteriores.
 
 ## Como rodar
 
 ```bash
 npm install
-npm run dev      # http://localhost:3000 (Vite + servidor)
+npm run dev      # http://localhost:3000
 ```
+
+O servidor escuta **apenas** em `PORT` (padrão `3000`, em `0.0.0.0`). O HMR do
+Vite fica desligado (`server.ws: false`) para não abrir um segundo listener em
+`24678`, que responderia `426 Upgrade Required` em vez de servir o site. Após
+editar arquivos, basta recarregar a página.
 
 Build de produção:
 
 ```bash
 npm run build
-npm start        # NODE_ENV=production node dist/server.cjs
+npm start        # ja força NODE_ENV=production e serve dist/
 ```
 
-Para colocar no ar (Docker, VPS, Fly.io, Render), siga **[PUBLICAR.md](./PUBLICAR.md)**.
+Em produção o servidor precisa apenas de `express` e `compression`: React,
+Vite e Tailwind ficam em `devDependencies` porque o front já vai compilado em
+`dist/`. Defina **`PC_SENHA`** antes de expor o site (Basic Auth embutido — sem
+ela, `/api/estado` devolve a URL do webhook para qualquer visitante) e monte um
+volume em `PC_DATA_DIR` para não perder os registros.
 
-## Abas do topo
+Para publicar, rode `npm run check:deploy` e veja
+**[PUBLICAR.md](./PUBLICAR.md)** (Docker, VPS, Render, Fly.io e checklist).
+
+## As quatro abas
 
 | Aba | O que faz |
 | --- | --- |
-| **13º BPM** | abre a ficha de recrutamento do batalhão |
-| **ROTAM** | abre a ficha da ROTAM |
-| **RONE** | abre a ficha da RONE |
-| **Unidades** | apresenta as três tropas e o documento de divulgação |
+| **Registrar prisão** | Formulário completo com upload de até 4 fotos, sugestões de artigos/itens/tempo de prisão, unidades da PCPR, **assinatura do escrivão desenhada na tela**, campo de data automática e prévia em tempo real da **ficha e do cartaz**. |
+| **Prisões registradas** | Acervo com estatísticas, busca, filtro por unidade, ordenação, detalhes, edição, exclusão, impressão, **visualização/baixar do cartaz PNG**, envio avulso ao Discord e backup em JSON. |
+| **Mandados de prisão** | Aba própria para **expedir mandados** e consultar os já expedidos. Formulário com foto do procurado, artigos, fundamento, processo, autoridade, juízo de origem, unidade/agente responsável, validade, situação (pendente / cumprido / revogado), **assinatura da autoridade**, dia/data automáticos, numeração `MDP-AAAA-0001`, prévia do **cartaz em tempo real**, download/ impressão do PNG, edição, exclusão e reenvio. Todo mandado é publicado no Discord **em formato de cartaz**. |
+| **Canal do Discord** | Cadastro do webhook das prisões, **formato de envio (cartaz / texto / ambos)**, **canal próprio e opcional dos mandados**, nome do remetente, envio automático, `@here`, menção a cargo, **testes com cartaz de exemplo da ficha e do mandado**, reenvio de pendentes, prévias dos dois cartazes e histórico de entregas. |
 
-Os formulários **só** são acessados por essas abas. A seção *Unidades* mostra o
-documento de divulgação publicado pelo comando.
+### Campos da ficha
 
-## Aba do Comando
-
-Acesso pelo botão **Aba do Comando** no cabeçalho.
-
-| Campo | Valor inicial |
+| Campo | Observação |
 | --- | --- |
-| Login | `comando` |
-| Senha | `1234` |
+| Foto do custodiado | Até 4 imagens; comprimidas no navegador e exibidas em preto e branco |
+| Nome / ID RP | Identificação do personagem |
+| Artigos | Um por linha, com atalhos dos artigos mais usados |
+| Tempo de prisão | Texto livre + atalhos (15 min, 1 h, preventiva...) |
+| Itens apreendidos | Lista com atalhos (arma, drogas, dinheiro, veículo...) |
+| Agente que prendeu | Nome do agente |
+| Unidade na ocorrência | Lista de unidades da PCPR + opção “Outra unidade” |
+| Nome do escrivão | Responsável pela lavratura |
+| Local / observações | Opcionais |
+| Assinatura do escrivão | O escrivão desenha com mouse/toque/caneta; sem desenho, o nome é escrito em caligrafia |
+| **Dia da semana, data, horário e nº do registro** | **Gerados automaticamente** no ato do registro (horário de Brasília). Não podem ser digitados. |
 
-> **Troque a senha antes de publicar** (aba *Login e senha*).
+Cada registro recebe um número sequencial por ano, por exemplo `PCPR-2026-0007`.
+Os mandados usam a sequência independente `MDP-2026-0001`.
 
-Dentro do painel:
+## Cartaz (o que vai para o Discord)
 
-- **Divulgação** — documento das inscrições abertas (unidades, texto, data,
-  horário, responsável) e o **cartaz em imagem**, com prévia ao vivo. Clicar na
-  unidade troca a arte: foto, faixa, palavra em destaque e blocos.
-  - **PMPR** — *Edital Aberto / Soldado*
-  - **ROTAM** — foto real da viatura; inclui **data, horário e local da prova**
-  - **RONE** — foto real da tropa; inclui **data, horário e local da prova**
-  - O local da prova é escolhido numa lista de **batalhões da PMPR** e entra
-    no cartaz automaticamente.
-  - **Enviar só o cartaz ao Discord** publica a imagem, sem texto junto.
-- **Canais do Discord** — dois cadastros independentes:
-  | Canal | Recebe |
-  | --- | --- |
-  | **Canal das fichas** | toda ficha preenchida |
-  | **Canal das divulgações** | os cartazes publicados |
+A ficha é transformada numa **imagem PNG 1200 px de largura** desenhada em `<canvas>`,
+no mesmo modelo do documento impresso: brasão da PCPR, faixa preta com o número
+do registro, foto em preto e branco, identificação, bloco de dia/data automáticos,
+tabela com todos os campos e, no rodapé, a **assinatura do escrivão** sobre a linha
+de assinatura. Nenhuma biblioteca externa é usada, então a arte sai igual em
+qualquer navegador.
 
-  Cada um tem URL de webhook, nome do canal e opção de `@here`. Se o canal das
-  divulgações ficar vazio, os cartazes usam o das fichas.
-- **Recrutamento** — fichas recebidas, com respostas e status do envio.
-- **Tropa** — quem vinculou o Discord e o histórico de envios.
-- **Login e senha** — troca as credenciais e encerra as sessões.
+O cartaz pode ser visto/baixado na prévia do formulário, na tela de detalhes da
+prisão e na aba do Discord (exemplo com marca d'água `EXEMPLO`). O **Enviar teste**
+manda esse cartaz de exemplo para o canal.
 
-### Como pegar o webhook do Discord
+Na aba **Canal do Discord** o campo *Formato da ficha no canal* escolhe:
 
-No Discord: **Configurações do canal → Integrações → Webhooks → Novo webhook →
-Copiar URL do webhook**. Cole na aba *Divulgação* e use **Enviar teste**.
+| Formato | O que chega |
+| --- | --- |
+| **Cartaz em imagem** (padrão) | o PNG da ficha + um embed curto de identificação |
+| **Ficha em texto** | embed com todos os campos e a foto do custodiado |
+| **Cartaz + texto** | o cartaz, o embed completo e as fotos em anexo |
 
-O envio sai do **navegador** de quem publica (o servidor do portal não acessa o
-Discord): a URL do webhook nunca é usada pelo servidor para postar.
+## Cartaz do mandado de prisão
 
-## Cartaz de divulgação
+A aba **Mandados de prisão** gera um segundo cartaz PNG (1200 px de largura) no
+mesmo padrão institucional da ficha, adaptado para o mandado: brasão, faixa preta
+com `Nº MDP-AAAA-0001`, faixa de **situação do mandado**, foto do procurado em
+preto e branco, identificação, bloco de **dia/data/hora gerados automaticamente**,
+tabela com artigos, fundamento, processo, autoridade, juízo de origem, unidade
+responsável, agente designado, validade e observações, e a **assinatura da
+autoridade** no rodapé.
 
-Gerado no navegador em `<canvas>`, 1600×900, na arte do modelo oficial:
+A imagem é enviada como anexo nomeado `cartaz-MDP-....png` e referenciada pelo
+embed via `attachment://`. O formato é **sempre cartaz** para mandados — a opção
+*Formato da ficha no canal* só afeta as prisões. Na aba Discord há um campo de
+webhook exclusivo para mandados; deixando-o vazio, os cartazes usam o mesmo canal
+das prisões. Também há **Enviar cartaz de teste** com marca d'água `EXEMPLO` e
+reenvio em lote dos cartazes pendentes.
 
-- cabeçalho com brasão, lema e *“Junte-se a nós”*
-- faixa amarela inclinada com o selo da unidade
-- **CONCURSO PARA SOLDADO** (PMPR) ou **SELEÇÃO INTERNA ROTAM/RONE**
-- frase de apoio e três blocos com ícones
-- rodapé do Governo do Paraná
-- **prova de ingresso** (data, horário e local) nos cartazes da ROTAM e da RONE
+## Discord
 
-Fontes: **Anton** e **Barlow Condensed**, self-hosted em `public/fontes`
-(SIL Open Font License — veja os arquivos `OFL-*.txt`).
+1. No Discord: **Configurações do canal → Integrações → Webhooks → Novo webhook → Copiar URL do webhook**.
+2. Cole a URL na aba **Canal do Discord**, ajuste as opções e clique em **Salvar configuração**.
+3. Clique em **Enviar teste**. Com *Envio automático* ligado, toda prisão
+   registrada já cai no canal como **cartaz PNG** (ou no formato escolhido), e
+   todo mandado expedido cai no canal dos mandados como **cartaz PNG**.
+4. Opcional: preencha o *webhook dos mandados* e use **Enviar cartaz de teste**
+   para separar os dois tipos de publicação.
 
-## Estrutura
+O cartaz é gerado e enviado primeiro do **navegador** de quem registra (o webhook
+do Discord aceita POST `multipart/form-data` com `payload_json` + `files[0]`). Se a
+rede ou uma extensão bloquear, o sistema reenvia pelo **servidor**
+(`/api/discord/proxy`), que monta os mesmos anexos. Não é preciso criar bot nem
+token; só a URL do webhook. **Quem tem essa URL pode postar no canal — trate-a
+como segredo.**
 
-```
-server.ts                  servidor Express: API, sessão, estáticos, SPA
-src/App.tsx                portal (abas, formulários, seção de unidades)
-src/components/            Header, Hero, UnidadesSection, formulários, painel
-src/data/                  fichas das unidades, batalhões da PMPR
-src/lib/cartaz.ts          desenho do cartaz no canvas
-src/lib/discord.ts         envio ao Discord pelo navegador
-src/lib/documentoTexto.ts  texto do documento de divulgação
-public/                    brasão, fotos do cartaz, fontes, manifest
-```
+A ficha também pode ser reenviada manualmente pelo botão **Enviar ao Discord**
+na tela de detalhes, ou em lote por **Enviar pendentes**.
 
-### Dados persistidos
+## Dados
 
-Criados na primeira execução, fora do Git (ou em `PORTAL_DATA_DIR`):
+- Com o servidor rodando, tudo fica em `dados-pcpr-rp.json` (fora do Git) e é
+  **compartilhado** entre os agentes que acessam o site. Em Docker, use a
+  variável `PC_DATA_DIR` e monte um volume para não perder os registros.
+- Se a API não responder (hospedando só o build estático), o navegador passa a
+  usar `localStorage` automaticamente — o site continua funcionando, com dados
+  apenas naquele navegador. O cabeçalho mostra o modo ativo.
+- **Backup JSON** na aba *Prisões registradas* exporta registros, configuração
+  e histórico.
 
-- `portal-data.json` — fichas, divulgação, canais, login e senha
-- `.portal-secret` — assinatura das sessões
-- `.portal-sessao.json` — sessões encerradas
-
-## API (resumo)
+## API
 
 | Rota | O que faz |
 | --- | --- |
-| `GET /api/health` | status do portal |
-| `GET /api/public/config` | dados públicos do site |
-| `POST /api/public/recrutamento` | recebe a ficha e devolve o destino no Discord |
-| `POST /api/admin/login` | login do comando (token) |
-| `GET /api/admin/data` | dados do painel |
-| `GET/PATCH /api/admin/divulgacao` | documento de divulgação |
-| `GET /api/admin/discord/webhook?finalidade=divulgacao` | webhook do canal das divulgações |
-| `PATCH /api/admin/discord` | cadastro dos dois canais |
-| `PATCH /api/admin/credenciais` | troca login e senha |
+| `GET /api/health` | status do serviço |
+| `GET /api/estado` | prisões, mandados, configs do Discord e histórico |
+| `POST /api/sync` | operação atômica: `criar`, `atualizar`, `excluir`, `criar-mandado`, `atualizar-mandado`, `excluir-mandado`, `discord`, `discord-mandados`, `envio` |
+| `POST /api/discord/proxy` | fallback de envio pelo servidor (`anexos`: cartaz PNG + fotos) |
 
 ## Verificações
 
 ```bash
-npm run lint     # tsc --noEmit
-npm run build    # build de produção
+npm run lint          # tsc --noEmit
+npm run build         # Vite + bundle do servidor
+npm run check:deploy  # lint + build + 16 checagens em producao isolada
 ```
+
+O `check:deploy` sobe `dist/server.cjs` com `NODE_ENV=production`, Basic Auth
+ligada e dados temporários, e valida healthcheck, autenticação, assets com
+hash/cache, persistência via `/api/sync`, proteção do proxy do Discord e
+fallback de rotas. Não altera os dados locais.
+
+## Estrutura
+
+```
+scripts/verificar-deploy.mjs  smoke de produção usado por check:deploy
+server.ts                    Express: API, auth opcional, persistência JSON, estáticos/Vite
+src/App.tsx                  shell, abas, regras de registro e envio
+src/components/              cabeçalho, formulário, ficha, lista, Discord, modal, UI
+src/lib/cartaz.ts            desenho do cartaz PNG da ficha no canvas (modelo + assinatura)
+src/lib/cartazMandado.ts     cartaz PNG do mandado de prisão
+src/lib/format.ts            datas pt-BR, compressão de imagem, anexos
+src/lib/discord.ts           montagem do cartaz/embed e entrega ao webhook
+src/lib/useEstado.ts         servidor com fallback para localStorage
+src/data/opcoes.ts           unidades, artigos, itens e tempos sugeridos
+src/index.css                tema preto e branco + ficha para impressão
+public/                      logo oficial (transparente), favicon, ícone PWA, fontes, manifest
+```
+
+Fontes **Anton** e **Barlow Condensed** self-hosted em `public/fontes`
+(SIL Open Font License — arquivos `OFL-*.txt`).

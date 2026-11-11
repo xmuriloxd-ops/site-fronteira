@@ -1,7 +1,7 @@
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
-import {defineConfig} from 'vite';
+import { defineConfig } from 'vite';
 
 export default defineConfig(() => {
   return {
@@ -12,17 +12,13 @@ export default defineConfig(() => {
       },
     },
     server: {
-      // O preview roda em dominio *.e2b.app, entao liberamos a origem.
-      allowedHosts: ['3000-ignkkkufdxg4kvlshz3k4.e2b.app', '.e2b.app'],
-      // HMR is disabled in AI Studio via DISABLE_HMR env var.
-      // Do not modifyâfile watching is disabled to prevent flickering during agent edits.
-      // O HMR usa uma porta interna para nao conflitar com a porta do preview.
-      hmr:
-        process.env.DISABLE_HMR === 'true'
-          ? false
-          : { port: 24679, clientPort: 24679 },
-      // Disable file watching when DISABLE_HMR is true to save CPU during agent edits.
-      watch: process.env.DISABLE_HMR === 'true' ? null : {},
+      // O preview roda num domínio *.e2b.app gerado dinamicamente.
+      allowedHosts: true as const,
+      // Com middlewareMode o WS de HMR abriria um listener extra em 24678
+      // (que responde 426 e nao serve o site). ws:false e o que realmente
+      // desliga esse socket no Vite 6; basta recarregar para ver alteracoes.
+      hmr: false,
+      ws: false as const,
     },
   };
 });

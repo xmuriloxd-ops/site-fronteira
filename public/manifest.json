@@ -1,22 +1,28 @@
 {
-  "name": "Portal de Inscrições - Polícia Militar do Paraná",
-  "short_name": "Inscrições PMPR",
-  "description": "Portal de inscrições da Polícia Militar do Paraná: fichas da PMPR, ROTAM e RONE com envio direto ao comando.",
+  "name": "PCPR RP · Prisões e Mandados",
+  "short_name": "PCPR RP",
+  "description": "Registro de prisões e mandados da Polícia Civil RP do Paraná, com cartazes enviados ao Discord.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#04110c",
-  "theme_color": "#04110c",
+  "background_color": "#000000",
+  "theme_color": "#000000",
   "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "/pmpr-brasao.png",
-      "sizes": "1200x1200",
+      "src": "/favicon-pcpr.png",
+      "sizes": "128x128",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/pmpr-brasao.png",
-      "sizes": "1200x1200",
+      "src": "/logo-pcpr.png",
+      "sizes": "642x848",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-pcpr-512.png",
+      "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
     }
