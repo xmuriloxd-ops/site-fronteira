@@ -7,9 +7,9 @@ coverage/
 .env*
 !.env.example
 
-# Dados locais do sistema (prisões, fotos, webhook do Discord)
-dados-pcpr-rp.json
-dados-pcpr-rp.json.tmp
+# Dados locais do sistema (denúncias, evidências, webhook do Discord)
+dados-corregedoria-pmpr.json
+dados-corregedoria-pmpr.json.tmp
 .dados/
 image-search/
 

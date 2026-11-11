@@ -1,25 +1,23 @@
 /**
  * Estado da aplicação.
  *
- * Fonte principal: o servidor (todos os agentes veem os mesmos registros).
+ * Fonte principal: o servidor (todos os agentes veem as mesmas denúncias).
  * Se a API não responder — por exemplo, hospedando só o build estático — o
  * navegador passa a usar localStorage e o site continua 100% funcional.
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { EstadoApp, OperacaoSync } from '../types';
-import { CONFIG_DISCORD_PADRAO, CONFIG_MANDADOS_PADRAO, ESTADO_VAZIO } from '../types';
+import { CONFIG_DISCORD_PADRAO, ESTADO_VAZIO } from '../types';
 
-const CHAVE = 'pcpr-rp-estado-v1';
+const CHAVE = 'corregedoria-pmpr-estado-v1';
 
 export type Modo = 'carregando' | 'servidor' | 'local';
 
 /** Garante que todas as coleções existam, mesmo vindo de versões antigas. */
 function normalizar(parcial: Partial<EstadoApp> | null | undefined): EstadoApp {
   return {
-    prisoes: Array.isArray(parcial?.prisoes) ? parcial!.prisoes : [],
-    mandados: Array.isArray(parcial?.mandados) ? parcial!.mandados : [],
+    denuncias: Array.isArray(parcial?.denuncias) ? parcial!.denuncias : [],
     discord: { ...CONFIG_DISCORD_PADRAO, ...(parcial?.discord ?? {}) },
-    discordMandados: { ...CONFIG_MANDADOS_PADRAO, ...(parcial?.discordMandados ?? {}) },
     envios: Array.isArray(parcial?.envios) ? parcial!.envios : [],
   };
 }
@@ -38,12 +36,11 @@ function escreverLocal(estado: EstadoApp) {
   try {
     localStorage.setItem(CHAVE, JSON.stringify(estado));
   } catch {
-    // Sem espaço: guarda os textos, removendo fotos e assinaturas do espelho.
+    // Sem espaço: guarda os textos, removendo fotos do espelho.
     try {
       const enxuto: EstadoApp = {
         ...estado,
-        prisoes: estado.prisoes.map((p) => ({ ...p, fotos: [], assinatura: undefined })),
-        mandados: estado.mandados.map((m) => ({ ...m, fotos: [], assinatura: undefined })),
+        denuncias: estado.denuncias.map((d) => ({ ...d, fotos: [] })),
       };
       localStorage.setItem(CHAVE, JSON.stringify(enxuto));
     } catch {

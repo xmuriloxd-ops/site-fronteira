@@ -74,14 +74,9 @@ function numeroSequencial(registros: { numero?: string }[], prefixoBase: string,
   return `${prefixo}${String(maior + 1).padStart(4, '0')}`;
 }
 
-/** Número sequencial das prisões: PCPR-2026-0001. */
-export function proximoNumero(prisoes: { numero?: string }[], iso = agoraISO()): string {
-  return numeroSequencial(prisoes, 'PCPR', iso);
-}
-
-/** Número sequencial dos mandados: MDP-2026-0001. */
-export function proximoNumeroMandado(mandados: { numero?: string }[], iso = agoraISO()): string {
-  return numeroSequencial(mandados, 'MDP', iso);
+/** Número sequencial das denúncias (protocolo): DEN-2026-0001. */
+export function proximoNumero(denuncias: { numero?: string }[], iso = agoraISO()): string {
+  return numeroSequencial(denuncias, 'DEN', iso);
 }
 
 export function iniciais(nome: string): string {

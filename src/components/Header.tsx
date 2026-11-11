@@ -22,7 +22,7 @@ export function Header({ modo, total }: { modo: 'carregando' | 'servidor' | 'loc
       <div className="topo__interno">
         <div className="topo__identidade">
           <div className="topo__logo">
-            <img src="/logo-pcpr-escuro.png" alt="Logo da Polícia Civil do Paraná" />
+            <img src="/brasao-pmpr.png" alt="Brasão da Polícia Militar do Paraná" />
           </div>
           <div className="topo__textos">
             <div className="topo__linha">
@@ -30,8 +30,8 @@ export function Header({ modo, total }: { modo: 'carregando' | 'servidor' | 'loc
               <span className="topo__sep" />
               <span className="topo__rp">AMBIENTE ROLEPLAY</span>
             </div>
-            <h1>POLÍCIA CIVIL <span>DO PARANÁ</span></h1>
-            <p>SISTEMA DE REGISTRO DE PRISÕES E APREENSÕES · PCPR RP</p>
+            <h1>CORREGEDORIA <span>PM PR</span></h1>
+            <p>POLÍCIA MILITAR DO PARANÁ · CANAL DE DENÚNCIAS E OUVIDORIA · RP</p>
           </div>
         </div>
 
@@ -46,7 +46,7 @@ export function Header({ modo, total }: { modo: 'carregando' | 'servidor' | 'loc
               <Radio size={13} /> {rotuloModo}
             </span>
             <span className="topo__status-item">
-              <ShieldCheck size={13} /> {total} {total === 1 ? 'REGISTRO' : 'REGISTROS'}
+              <ShieldCheck size={13} /> {total} {total === 1 ? 'DENÚNCIA' : 'DENÚNCIAS'}
             </span>
           </div>
         </div>
@@ -58,10 +58,9 @@ export function Header({ modo, total }: { modo: 'carregando' | 'servidor' | 'loc
 /* ------------------------------ Abas --------------------------------- */
 
 const ABAS: { id: AbaId; rotulo: string; descricao: string; icone: ReactNode }[] = [
-  { id: 'registrar', rotulo: 'Registrar prisão', descricao: 'Nova ficha', icone: <span>01</span> },
-  { id: 'prisoes', rotulo: 'Prisões registradas', descricao: 'Consultar fichas', icone: <span>02</span> },
-  { id: 'mandados', rotulo: 'Mandados de prisão', descricao: 'Expedir e cumprir', icone: <span>03</span> },
-  { id: 'discord', rotulo: 'Canal do Discord', descricao: 'Envio automático', icone: <span>04</span> },
+  { id: 'denunciar', rotulo: 'Fazer denúncia', descricao: 'Protocolar agora', icone: <span>01</span> },
+  { id: 'denuncias', rotulo: 'Denúncias', descricao: 'Consultar protocolos', icone: <span>02</span> },
+  { id: 'discord', rotulo: 'Canal do Discord', descricao: 'Envio automático', icone: <span>03</span> },
 ];
 
 export function Navegacao({
@@ -69,27 +68,18 @@ export function Navegacao({
   onAba,
   total,
   pendentes,
-  mandadosPendentes,
 }: {
   aba: AbaId;
   onAba: (id: AbaId) => void;
   total: number;
   pendentes: number;
-  mandadosPendentes: number;
 }) {
   return (
     <nav className="abas" aria-label="Seções do sistema">
       <div className="abas__interno">
         {ABAS.map((item) => {
           const ativo = aba === item.id;
-          const badge =
-            item.id === 'prisoes'
-              ? total
-              : item.id === 'mandados'
-                ? mandadosPendentes
-                : item.id === 'discord'
-                  ? pendentes
-                  : 0;
+          const badge = item.id === 'denuncias' ? total : item.id === 'discord' ? pendentes : 0;
           return (
             <button
               key={item.id}
@@ -107,7 +97,7 @@ export function Navegacao({
           );
         })}
         <div className="abas__selo">
-          <span>PCPR</span>
+          <span>PM PR</span>
           <b>RP</b>
         </div>
       </div>

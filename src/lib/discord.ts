@@ -1,15 +1,14 @@
 /**
- * Integração com o Discord.
+ * Integração com o Discord — denúncias da Corregedoria-Geral da PMPR.
  *
- * A ficha vai como CARTAZ (imagem PNG gerada no navegador, no mesmo modelo da
- * ficha impressa, com a assinatura do escrivão). O formato é configurável:
- * só cartaz, só texto em embed, ou os dois.
+ * A denúncia vai como EMBED com todos os campos + fotos de evidência como
+ * anexos (formato `ambos`, padrão). Também dá para enviar só em texto ou
+ * só com as fotos.
  *
  * O envio sai primeiro do navegador; se a rede/bloqueador impedir, cai no
  * `/api/discord/proxy` do servidor. Sem bot e sem token: só a URL do webhook.
  */
-import type { ConfigDiscord, Mandado, Prisao } from '../types';
-import { STATUS_MANDADO } from '../types';
+import type { ConfigDiscord, Denuncia } from '../types';
 import {
   dataBR,
   dataUrlParaBlob,
@@ -29,8 +28,6 @@ export interface PacoteDiscord {
   payload: Record<string, unknown>;
   /** Arquivos na ordem em que aparecem em `payload.attachments`. */
   anexos: AnexoDiscord[];
-  /** Nome do arquivo do cartaz, quando houver. */
-  cartaz?: string;
 }
 
 export interface ResultadoEnvio {
@@ -54,8 +51,8 @@ export function webhookValido(url: string): boolean {
   }
 }
 
-export function formatoEnvio(cfg: ConfigDiscord): 'cartaz' | 'texto' | 'ambos' {
-  return cfg.formatoEnvio ?? 'cartaz';
+export function formatoEnvio(cfg: ConfigDiscord): 'ambos' | 'texto' | 'fotos' {
+  return cfg.formatoEnvio ?? 'ambos';
 }
 
 function campo(nome: string, valor: string, inline = true) {
@@ -65,7 +62,7 @@ function campo(nome: string, valor: string, inline = true) {
 function urlLogo(): string | undefined {
   try {
     if (typeof window !== 'undefined' && window.location.protocol === 'https:') {
-      return new URL('/logo-pcpr.png', window.location.origin).href;
+      return new URL('/brasao-pmpr.png', window.location.origin).href;
     }
   } catch {
     /* origem sem URL pública */
@@ -79,7 +76,7 @@ function baseMensagem(cfg: ConfigDiscord) {
   if (cfg.mencionarHere) mencoes.push('@here');
   if (cargo) mencoes.push(`<@&${cargo}>`);
   return {
-    username: cfg.nomeBot?.trim() || 'PCPR · Registro de Prisões',
+    username: cfg.nomeBot?.trim() || 'Corregedoria · Denúncias PMPR',
     ...(mencoes.length ? { content: mencoes.join(' ') } : {}),
     allowed_mentions: {
       parse: cfg.mencionarHere ? ['everyone'] : [],
@@ -91,123 +88,103 @@ function baseMensagem(cfg: ConfigDiscord) {
 function nomeFoto(dataUrl: string, indice: number): string {
   const m = /^data:image\/(jpeg|jpg|png|webp);base64,/.exec(dataUrl);
   const ext = m?.[1] === 'png' ? 'png' : m?.[1] === 'webp' ? 'webp' : 'jpg';
-  return `foto-${indice}.${ext}`;
+  return `evidencia-${indice + 1}.${ext}`;
 }
 
-function rodape(prisao: Prisao, logo?: string) {
+function rodape(denuncia: Denuncia, logo?: string) {
   return {
-    text: `Polícia Civil do Paraná · RP | ${prisao.numero || 'Registro de Prisões'}`,
+    text: `Corregedoria-Geral · Polícia Militar do Paraná · RP | ${denuncia.numero || 'Denúncia'}`,
     ...(logo ? { icon_url: logo } : {}),
   };
 }
 
-/** Campos completos da ficha (usado nos formatos "texto" e "ambos"). */
-function embedTexto(prisao: Prisao, logo?: string, comImagem = false, imagem?: string) {
-  return {
-    title: 'REGISTRO DE PRISÃO · PCPR RP',
-    description: `**${limitar(textoOuTraco(prisao.nome), 200)}** — ficha ${prisao.numero || 'sem número'}`,
-    color: 0x101010,
-    fields: [
-      campo('👤 Nome do custodiado', prisao.nome),
-      campo('🪪 ID', prisao.idRp),
-      campo('⚖️ Tempo de prisão', prisao.tempoPrisao),
-      campo('📜 Artigos', prisao.artigos, false),
-      campo('📦 Itens apreendidos', prisao.itensApreendidos, false),
-      campo('👮 Agente que prendeu', prisao.agente),
-      campo('🏛️ Unidade na ocorrência', prisao.unidade),
-      campo('✍️ Escrivão', prisao.escrivao),
-      ...(prisao.local?.trim() ? [campo('📍 Local', prisao.local, false)] : []),
-      ...(prisao.observacoes?.trim() ? [campo('📝 Observações', prisao.observacoes, false)] : []),
-      campo(
-        '🗓️ Dia e data (gerado automaticamente)',
-        `${diaPorExtenso(prisao.criadoEm)} · ${dataBR(prisao.criadoEm)} às ${horaBR(prisao.criadoEm)}`,
-        false,
-      ),
-    ],
-    ...(comImagem && imagem ? { image: { url: `attachment://${imagem}` } } : {}),
-    ...(logo ? { thumbnail: { url: logo } } : {}),
-    footer: rodape(prisao, logo),
-    timestamp: prisao.criadoEm,
-  };
+function identificacaoDenunciado(d: Denuncia): string {
+  const partes = [d.denunciadoNome, d.denunciadoPosto, d.denunciadoUnidade].map((p) => p?.trim()).filter(Boolean);
+  return partes.length ? partes.join(' · ') : 'Não identificado';
 }
 
-/** Embed enxuto que acompanha o cartaz. */
-function embedCartaz(prisao: Prisao, logo?: string, imagem?: string) {
+/** Embed completo com todos os campos da denúncia. */
+function embedCompleto(d: Denuncia, logo?: string, imagem?: string) {
   return {
-    title: 'REGISTRO DE PRISÃO · PCPR RP',
-    description: `**${limitar(textoOuTraco(prisao.nome), 200)}** · ID ${textoOuTraco(prisao.idRp)} · ficha ${prisao.numero || 'sem número'}`,
-    color: 0x000000,
+    title: '⛔ DENÚNCIA · CORREGEDORIA-GERAL PMPR',
+    description: `**Protocolo ${d.numero || 'sem número'}** — ${limitar(textoOuTraco(d.categoria), 200)}`,
+    color: 0x0b2d57,
     fields: [
-      campo('⚖️ Tempo de prisão', prisao.tempoPrisao),
-      campo('👮 Agente', prisao.agente),
-      campo('✍️ Escrivão', prisao.escrivao),
+      campo('🎯 Natureza', d.categoria),
+      campo('🛡️ Denunciado', identificacaoDenunciado(d), false),
+      campo('📜 Relato', d.relato, false),
+      campo('📍 Local', d.local),
+      campo('🗓️ Data dos fatos', d.dataFatos),
       campo(
-        '🗓️ Dia e data',
-        `${diaPorExtenso(prisao.criadoEm)} · ${dataBR(prisao.criadoEm)} às ${horaBR(prisao.criadoEm)}`,
+        '👤 Denunciante',
+        d.anonima ? 'ANÔNIMO (identidade preservada)' : textoOuTraco(d.denuncianteNome),
+      ),
+      ...(!d.anonima && d.denuncianteContato?.trim()
+        ? [campo('📞 Contato', d.denuncianteContato)]
+        : []),
+      campo(
+        '🗓️ Protocolo gerado em',
+        `${diaPorExtenso(d.criadoEm)} · ${dataBR(d.criadoEm)} às ${horaBR(d.criadoEm)}`,
         false,
       ),
     ],
     ...(imagem ? { image: { url: `attachment://${imagem}` } } : {}),
     ...(logo ? { thumbnail: { url: logo } } : {}),
-    footer: rodape(prisao, logo),
-    timestamp: prisao.criadoEm,
+    footer: rodape(d, logo),
+    timestamp: d.criadoEm,
   };
 }
 
-/**
- * Monta a mensagem de uma prisão. `cartaz` é a data URL do PNG gerado pelo
- * `gerarCartaz()`. Sem cartaz, cai automaticamente no formato em texto.
- */
-export function montarPacote(prisao: Prisao, cfg: ConfigDiscord, cartaz?: string): PacoteDiscord {
-  const formato = cartaz ? formatoEnvio(cfg) : 'texto';
+/** Embed enxuto, para quando as fotos são o foco da mensagem. */
+function embedResumo(d: Denuncia, logo?: string, imagem?: string) {
+  return {
+    title: '⛔ DENÚNCIA RECEBIDA · CORREGEDORIA-GERAL PMPR',
+    description: `**Protocolo ${d.numero || 'sem número'}** · ${limitar(textoOuTraco(d.categoria), 200)}`,
+    color: 0x0b2d57,
+    fields: [
+      campo('🛡️ Denunciado', identificacaoDenunciado(d), false),
+      campo('📍 Local', d.local),
+      campo('🗓️ Data dos fatos', d.dataFatos),
+    ],
+    ...(imagem ? { image: { url: `attachment://${imagem}` } } : {}),
+    ...(logo ? { thumbnail: { url: logo } } : {}),
+    footer: rodape(d, logo),
+    timestamp: d.criadoEm,
+  };
+}
+
+/** Monta a mensagem de uma denúncia com as fotos de evidência. */
+export function montarPacote(denuncia: Denuncia, cfg: ConfigDiscord): PacoteDiscord {
+  const formato = formatoEnvio(cfg);
   const logo = urlLogo();
   const anexos: AnexoDiscord[] = [];
 
-  const nomeCartaz = cartaz
-    ? `cartaz-${(prisao.numero || 'ficha').replace(/[^a-zA-Z0-9-]/g, '-')}.png`
-    : undefined;
+  const fotos = (denuncia.fotos ?? []).slice(0, 4);
+  const comFotos = formato !== 'texto' && fotos.length > 0;
 
-  // O cartaz entra primeiro: é a imagem principal da mensagem.
-  if (cartaz && nomeCartaz && formato !== 'texto') {
-    anexos.push({ nome: nomeCartaz, dataUrl: cartaz, descricao: `Cartaz da ficha ${prisao.numero}` });
-  }
-
-  const fotos = (prisao.fotos ?? []).slice(0, 4);
-  if (formato !== 'cartaz') {
+  if (comFotos) {
     fotos.forEach((foto, i) => {
       anexos.push({
         nome: nomeFoto(foto, i),
         dataUrl: foto,
-        descricao: `Foto ${i + 1} do custodiado`,
+        descricao: `Evidência ${i + 1} da denúncia ${denuncia.numero}`,
       });
     });
   }
 
-  const primeiraFoto = fotos.length ? nomeFoto(fotos[0], 0) : undefined;
-  const imagemCartaz = formato === 'texto' ? undefined : nomeCartaz;
-
-  let embeds: Record<string, unknown>[];
-  if (formato === 'cartaz') {
-    embeds = [embedCartaz(prisao, logo, imagemCartaz)];
-  } else if (formato === 'texto') {
-    embeds = [embedTexto(prisao, logo, true, primeiraFoto)];
+  const primeiraFoto = anexos[0]?.nome;
+  let embed: Record<string, unknown>;
+  if (formato === 'fotos' && comFotos) {
+    embed = embedResumo(denuncia, logo, primeiraFoto);
   } else {
-    embeds = [
-      embedTexto(prisao, logo, false),
-      // Segundo embed só com a arte do cartaz.
-      {
-        color: 0x000000,
-        ...(imagemCartaz ? { image: { url: `attachment://${imagemCartaz}` } } : {}),
-      },
-    ];
+    embed = embedCompleto(denuncia, logo, comFotos ? primeiraFoto : undefined);
   }
 
   return {
     anexos,
-    cartaz: nomeCartaz,
     payload: {
       ...baseMensagem(cfg),
-      embeds,
+      embeds: [embed],
       ...(anexos.length
         ? {
             attachments: anexos.map((a, i) => ({
@@ -221,200 +198,36 @@ export function montarPacote(prisao: Prisao, cfg: ConfigDiscord, cartaz?: string
   };
 }
 
-/** Mensagem de teste: leva um cartaz de exemplo quando o formato é imagem. */
-export function montarPacoteTeste(cfg: ConfigDiscord, cartaz?: string): PacoteDiscord {
-  const formato = cartaz ? formatoEnvio(cfg) : 'texto';
+/** Mensagem de teste: confirma que o canal está vinculado. */
+export function montarPacoteTeste(cfg: ConfigDiscord): PacoteDiscord {
+  const formato = formatoEnvio(cfg);
   const logo = urlLogo();
-  const nomeCartaz = 'cartaz-exemplo.png';
-  const anexos: AnexoDiscord[] =
-    cartaz && formato !== 'texto'
-      ? [{ nome: nomeCartaz, dataUrl: cartaz, descricao: 'Cartaz de exemplo da ficha de registro' }]
-      : [];
 
   const embed: Record<string, unknown> = {
-    title: '✅ INTEGRAÇÃO ATIVA · PCPR RP',
+    title: '✅ INTEGRAÇÃO ATIVA · CORREGEDORIA PMPR',
     description:
-      'Canal vinculado ao **Sistema de Registro de Prisões** da Polícia Civil do Paraná RP. ' +
-      (cartaz
-        ? 'Abaixo, um **cartaz de exemplo** no mesmo modelo enviado a cada prisão, já com a assinatura do escrivão.'
-        : 'Toda prisão registrada pode ser publicada aqui automaticamente.'),
-    color: 0xffffff,
+      'Canal vinculado ao **Canal de Denúncias da Corregedoria-Geral da Polícia Militar do Paraná** (RP). ' +
+      'Toda denúncia protocolada pode ser publicada aqui automaticamente, com relato, identificação do denunciado e evidências.',
+    color: 0xf0b323,
     fields: [
       { name: 'Canal', value: limitar(textoOuTraco(cfg.canal), 100), inline: true },
       { name: 'Envio automático', value: cfg.autoEnviar ? 'Ativado' : 'Desativado', inline: true },
       {
         name: 'Formato',
-        value: formato === 'cartaz' ? 'Cartaz (imagem)' : formato === 'ambos' ? 'Cartaz + texto' : 'Ficha em texto',
+        value: formato === 'ambos' ? 'Embed + fotos' : formato === 'fotos' ? 'Resumo + fotos' : 'Só texto',
         inline: true,
       },
     ],
-    ...(cartaz && formato !== 'texto' ? { image: { url: `attachment://${nomeCartaz}` } } : {}),
     ...(logo ? { thumbnail: { url: logo } } : {}),
-    footer: { text: 'Polícia Civil do Paraná · RP · Teste de integração' },
+    footer: { text: 'Corregedoria-Geral · Polícia Militar do Paraná · RP · Teste de integração' },
     timestamp: new Date().toISOString(),
   };
 
   return {
-    anexos,
-    cartaz: anexos.length ? nomeCartaz : undefined,
+    anexos: [],
     payload: {
       ...baseMensagem(cfg),
       embeds: [embed],
-      ...(anexos.length
-        ? { attachments: anexos.map((a, i) => ({ id: i, filename: a.nome, description: a.descricao })) }
-        : {}),
-    },
-  };
-}
-
-/* ------------------------------------------------------------------ */
-/* Mandados de prisão                                                  */
-/* ------------------------------------------------------------------ */
-
-function embedCartazMandado(m: Mandado, logo?: string, imagem?: string) {
-  return {
-    title: 'MANDADO DE PRISÃO · PCPR RP',
-    description: `**${limitar(textoOuTraco(m.nome), 200)}** · ID ${textoOuTraco(m.idRp)} · ${m.numero}`,
-    color: 0x000000,
-    fields: [
-      campo('⚖️ Situação', STATUS_MANDADO[m.status] ?? 'PENDENTE DE CUMPRIMENTO'),
-      campo('📜 Artigos', m.artigos),
-      campo('🏛️ Autoridade', m.autoridade),
-      campo('🎯 Unidade responsável', m.unidade),
-      campo(
-        '🗓️ Dia e data',
-        `${diaPorExtenso(m.criadoEm)} · ${dataBR(m.criadoEm)} às ${horaBR(m.criadoEm)}`,
-        false,
-      ),
-    ],
-    ...(imagem ? { image: { url: `attachment://${imagem}` } } : {}),
-    ...(logo ? { thumbnail: { url: logo } } : {}),
-    footer: {
-      text: `Polícia Civil do Paraná · RP | ${m.numero}`,
-      ...(logo ? { icon_url: logo } : {}),
-    },
-    timestamp: m.criadoEm,
-  };
-}
-
-function embedTextoMandado(m: Mandado, logo?: string, imagem?: string) {
-  return {
-    title: 'MANDADO DE PRISÃO · PCPR RP',
-    description: `**${limitar(textoOuTraco(m.nome), 200)}** — ${m.numero} · ${STATUS_MANDADO[m.status] ?? 'PENDENTE'}`,
-    color: 0x101010,
-    fields: [
-      campo('👤 Procurado', m.nome),
-      campo('🪪 ID RP', m.idRp),
-      campo('⚖️ Situação', STATUS_MANDADO[m.status] ?? 'PENDENTE DE CUMPRIMENTO'),
-      campo('📜 Artigos / tipificação', m.artigos, false),
-      campo('📝 Fundamento', m.fundamento, false),
-      campo('📁 Processo / inquérito', m.processo),
-      campo('🏛️ Autoridade que expediu', m.autoridade),
-      campo('🏢 Juízo / origem', m.origem, false),
-      campo('🎯 Unidade responsável', m.unidade),
-      campo('👮 Agente / equipe', m.agente),
-      campo('⏳ Validade', m.validade, false),
-      ...(m.observacoes?.trim() ? [campo('📝 Observações', m.observacoes, false)] : []),
-      campo(
-        '🗓️ Dia e data (gerado automaticamente)',
-        `${diaPorExtenso(m.criadoEm)} · ${dataBR(m.criadoEm)} às ${horaBR(m.criadoEm)}`,
-        false,
-      ),
-    ],
-    ...(imagem ? { image: { url: `attachment://${imagem}` } } : {}),
-    ...(logo ? { thumbnail: { url: logo } } : {}),
-    footer: { text: `Polícia Civil do Paraná · RP | ${m.numero}` },
-    timestamp: m.criadoEm,
-  };
-}
-
-/** Monta a mensagem de um mandado com o cartaz em imagem. */
-export function montarPacoteMandado(m: Mandado, cfg: ConfigDiscord, cartaz?: string): PacoteDiscord {
-  // O mandado vai SEMPRE em cartaz, independentemente do formato escolhido
-  // para as fichas de prisão. Só cai para texto se o canvas falhar.
-  const formato = cartaz ? 'cartaz' : 'texto';
-  const logo = urlLogo();
-  const anexos: AnexoDiscord[] = [];
-  const nomeCartaz = cartaz ? `cartaz-${m.numero.replace(/[^a-zA-Z0-9-]/g, '-')}.png` : undefined;
-
-  if (cartaz && nomeCartaz && formato !== 'texto') {
-    anexos.push({ nome: nomeCartaz, dataUrl: cartaz, descricao: `Cartaz do mandado ${m.numero}` });
-  }
-
-  const fotos = (m.fotos ?? []).slice(0, 4);
-  if (formato !== 'cartaz') {
-    fotos.forEach((foto, i) =>
-      anexos.push({ nome: nomeFoto(foto, i), dataUrl: foto, descricao: `Foto ${i + 1} do procurado` }),
-    );
-  }
-  const primeiraFoto = fotos.length ? nomeFoto(fotos[0], 0) : undefined;
-  const imagemCartaz = formato === 'texto' ? undefined : nomeCartaz;
-
-  let embeds: Record<string, unknown>[];
-  if (formato === 'cartaz') {
-    embeds = [embedCartazMandado(m, logo, imagemCartaz)];
-  } else if (formato === 'texto') {
-    embeds = [embedTextoMandado(m, logo, primeiraFoto)];
-  } else {
-    embeds = [
-      embedTextoMandado(m, logo),
-      { color: 0x000000, ...(imagemCartaz ? { image: { url: `attachment://${imagemCartaz}` } } : {}) },
-    ];
-  }
-
-  return {
-    anexos,
-    cartaz: imagemCartaz,
-    payload: {
-      ...baseMensagem(cfg),
-      embeds,
-      ...(anexos.length
-        ? { attachments: anexos.map((a, i) => ({ id: i, filename: a.nome, description: a.descricao })) }
-        : {}),
-    },
-  };
-}
-
-/** Teste do canal dos mandados, com cartaz de exemplo. */
-export function montarPacoteTesteMandado(cfg: ConfigDiscord, cartaz?: string): PacoteDiscord {
-  const formato = cartaz ? 'cartaz' : 'texto';
-  const logo = urlLogo();
-  const nomeCartaz = 'cartaz-mandado-exemplo.png';
-  const anexos: AnexoDiscord[] =
-    cartaz && formato !== 'texto'
-      ? [{ nome: nomeCartaz, dataUrl: cartaz, descricao: 'Cartaz de exemplo do mandado de prisão' }]
-      : [];
-
-  return {
-    anexos,
-    cartaz: anexos.length ? nomeCartaz : undefined,
-    payload: {
-      ...baseMensagem(cfg),
-      embeds: [
-        {
-          title: '✅ CANAL DE MANDADOS ATIVO · PCPR RP',
-          description: cartaz
-            ? 'Abaixo, um **cartaz de exemplo de mandado de prisão**, no mesmo formato enviado a cada expedição.'
-            : 'Canal vinculado aos mandados de prisão da Polícia Civil do Paraná RP.',
-          color: 0xffffff,
-          fields: [
-            { name: 'Canal', value: limitar(textoOuTraco(cfg.canal), 100), inline: true },
-            { name: 'Envio automático', value: cfg.autoEnviar ? 'Ativado' : 'Desativado', inline: true },
-            {
-              name: 'Formato',
-              value: formato === 'cartaz' ? 'Cartaz (imagem)' : 'Texto (cartaz indisponível)',
-              inline: true,
-            },
-          ],
-          ...(anexos.length ? { image: { url: `attachment://${nomeCartaz}` } } : {}),
-          ...(logo ? { thumbnail: { url: logo } } : {}),
-          footer: { text: 'Polícia Civil do Paraná · RP · Teste de mandados' },
-          timestamp: new Date().toISOString(),
-        },
-      ],
-      ...(anexos.length
-        ? { attachments: anexos.map((a, i) => ({ id: i, filename: a.nome, description: a.descricao })) }
-        : {}),
     },
   };
 }
@@ -467,7 +280,7 @@ export async function enviarPacote(webhook: string, pacote: PacoteDiscord): Prom
 
     const resposta = await fetch(url, { method: 'POST', headers: cabecalhos, body: corpo });
     if (resposta.ok || resposta.status === 204 || resposta.status === 0) {
-      return { ok: true, detalhe: 'Ficha entregue no canal do Discord.', via: 'navegador' };
+      return { ok: true, detalhe: 'Denúncia entregue no canal do Discord.', via: 'navegador' };
     }
     const texto = await resposta.text().catch(() => '');
     return interpretarStatus(resposta.status, texto);
@@ -487,7 +300,7 @@ export async function enviarPacote(webhook: string, pacote: PacoteDiscord): Prom
     });
     const dados = (await resposta.json().catch(() => ({}))) as { ok?: boolean; detalhe?: string };
     if (resposta.ok && dados.ok) {
-      return { ok: true, detalhe: dados.detalhe || 'Cartaz entregue pelo servidor.', via: 'servidor' };
+      return { ok: true, detalhe: dados.detalhe || 'Mensagem entregue pelo servidor.', via: 'servidor' };
     }
     return {
       ok: false,
