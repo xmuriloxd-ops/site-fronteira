@@ -1,0 +1,53 @@
+
+added 82 packages in 7s
+node v22.23.4 · chrome: /usr/bin/google-chrome
+[   0.0s] origem: https://fronteirasul-fmudazpm.manus.space
+[   0.0s] paginas pedidas: /convite/?v=c14b569  /
+[   1.3s] navegador: Chrome/156.0.8078.79 (/usr/bin/google-chrome)
+[   1.3s] 1) baixando as paginas e tudo que elas referenciam
+[   8.1s] AVISO: referencia sem arquivo (HTTP 500): https://fronteirasul-fmudazpm.manus.space/api/platform/config.js  <- https://fronteirasul-fmudazpm.manus.space/
+[   8.9s]    11 arquivo(s) do site ate aqui
+[   8.9s] AVISO: depuracao: so 2 de 5 cenarios (convite-desktop, rota-inexistente-desktop)
+[   8.9s] 2) abrindo o site original no navegador
+[   9.1s]       · convite-desktop (original (carga 1)): abrindo a pagina [0.2s]
+[   9.8s]       · convite-desktop (original (carga 1)): esperando a pagina assentar [0.9s]
+[  13.6s]       · convite-desktop (original (carga 1)): rolando a pagina inteira [4.7s]
+[  15.2s]       · convite-desktop (original (carga 1)): roteiro [6.3s]
+[  21.3s]       · convite-desktop (original (carga 1)): fim do roteiro [12.4s]
+[  22.0s]       · convite-desktop (original (carga 1)): recolhendo respostas; pedidos sem fim: 0
+[  22.0s]       · convite-desktop (original (carga 1)): terminou em 13.1s
+[  22.0s]    convite-desktop: 26 pedidos, "Fronteira do Sul RP — Convite oficial", altura 900px, 2 passos, 13s
+[  22.2s]       · rota-inexistente-desktop (original (carga 1)): abrindo a pagina [0.2s]
+[  23.7s]       · rota-inexistente-desktop (original (carga 1)): esperando a pagina assentar [1.7s]
+[  55.2s]       · rota-inexistente-desktop (original (carga 1)): rolando a pagina inteira [33.2s]
+[  76.1s]       · rota-inexistente-desktop (original (carga 1)): roteiro [54.1s]
+[  78.3s]       · rota-inexistente-desktop (original (carga 1)): fim do roteiro [56.3s]
+[  93.3s]       · rota-inexistente-desktop (original (carga 1)): recolhendo respostas; pedidos sem fim: 2 (GET https://sr-client-cfg.amplitude.com/config/46ac3f9abb41dd2d17a5785e052bc6d3?config_group=browser [fetch, sem resposta] ; GET https://sr-client-cfg.amplitude.com/config?api_key=46ac3f9abb41dd2d17a5785e052bc6d3&config_keys=analyticsSDK.pageActions [fetch, 403])
+[ 103.3s]       · rota-inexistente-desktop (original (carga 1)): terminou em 81.3s
+[ 103.3s]    rota-inexistente-desktop: 25 pedidos, "Fronteira do Sul RP — Uma nova história começa aqui", altura 900px, 2 passos, 81s
+[ 103.9s]    11 arquivo(s) do site depois do navegador
+[ 110.4s] AVISO: referencia sem arquivo (HTTP 500): https://fronteirasul-fmudazpm.manus.space/api/platform/config.js  <- https://fronteirasul-fmudazpm.manus.space/, navegador (convite-desktop)
+[ 110.4s]    nova tentativa de https://fronteirasul-fmudazpm.manus.space/api/platform/config.js: 500 -> 500
+[ 110.4s] 3) sondando o comportamento do servidor original
+[ 119.9s] 4) conferindo a copia em http://127.0.0.1:4173 (site original bloqueado)
+[ 120.1s]       · convite-desktop (copia (carga 1)): abrindo a pagina [0.1s]
+[ 121.0s]       · convite-desktop (copia (carga 1)): esperando a pagina assentar [1.1s]
+[ 124.4s]       · convite-desktop (copia (carga 1)): rolando a pagina inteira [4.5s]
+[ 126.0s]       · convite-desktop (copia (carga 1)): roteiro [6.1s]
+[ 132.1s]       · convite-desktop (copia (carga 1)): fim do roteiro [12.2s]
+[ 132.8s]       · convite-desktop (copia (carga 1)): recolhendo respostas; pedidos sem fim: 0
+[ 132.8s]       · convite-desktop (copia (carga 1)): terminou em 12.9s
+[ 132.8s]    convite-desktop, carga 1: 2 passos; fotos resolvidas 2, pendentes 0; estrutura igual; 13s
+[ 132.8s]    => convite-desktop: igual ao original · 2 fotos: 2 identicas, 0 arredondamento, 0 variam, 0 diferentes · 1 carga(s)
+[ 133.0s]       · rota-inexistente-desktop (copia (carga 1)): abrindo a pagina [0.2s]
+[ 134.6s]       · rota-inexistente-desktop (copia (carga 1)): esperando a pagina assentar [1.7s]
+[ 138.3s]       · rota-inexistente-desktop (copia (carga 1)): rolando a pagina inteira [5.5s]
+[ 139.9s]       · rota-inexistente-desktop (copia (carga 1)): roteiro [7.0s]
+[ 142.1s]       · rota-inexistente-desktop (copia (carga 1)): fim do roteiro [9.2s]
+[ 142.8s]       · rota-inexistente-desktop (copia (carga 1)): recolhendo respostas; pedidos sem fim: 1 (GET https://sr-client-cfg.amplitude.com/config?api_key=46ac3f9abb41dd2d17a5785e052bc6d3&config_keys=analyticsSDK.pageActions [fetch, 403])
+[ 152.8s]       · rota-inexistente-desktop (copia (carga 1)): terminou em 19.9s
+[ 152.8s]    rota-inexistente-desktop, carga 1: 2 passos; fotos resolvidas 2, pendentes 0; estrutura igual; 20s
+[ 152.8s]    => rota-inexistente-desktop: igual ao original · 2 fotos: 2 identicas, 0 arredondamento, 0 variam, 0 diferentes · 1 carga(s)
+[ 152.9s] 5) baixando tudo outra vez para conferir os arquivos gravados
+[ 155.4s] 6) escrevendo relatorios
+[ 155.4s] pronto: 11 arquivo(s) em site/, 3 aviso(s), 2 cenario(s) conferidos, 0 com problema
