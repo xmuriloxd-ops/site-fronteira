@@ -121,3 +121,4 @@ Depois:
 | Fotos somem depois do deploy | `PC_DATA_DIR` apontando para volume persistente |
 | "DADOS NESTE NAVEGADOR" no cabeçalho | A API não respondeu; veja se o processo Node está no ar |
 | Ficha de impressão sai em branco | Use o botão **Imprimir** da própria ficha (ele monta a folha dedicada) |
+| Logo antigo ainda aparece no site | Recarregue com Ctrl+F5. O `index.html` limpa service workers e Cache Storage de versões antigas, e os arquivos de logo usam nomes novos servidos com `no-store` |

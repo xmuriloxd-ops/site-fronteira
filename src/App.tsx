@@ -627,7 +627,7 @@ export default function App() {
       <footer className="rodape">
         <div className="rodape__interno">
           <div className="rodape__marca">
-            <img src="/brasao-pcpr-branco.png" alt="" />
+            <img src="/logo-pcpr-escuro.png" alt="" />
             <div>
               <strong>POLÍCIA CIVIL DO PARANÁ · RP</strong>
               <span>Sistema de Registro de Prisões e Mandados</span>

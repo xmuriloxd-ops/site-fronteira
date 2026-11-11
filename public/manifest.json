@@ -9,19 +9,19 @@
   "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "/favicon.png",
+      "src": "/favicon-pcpr.png",
       "sizes": "128x128",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/brasao-pcpr.png",
+      "src": "/logo-pcpr.png",
       "sizes": "642x848",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/icon-512.png",
+      "src": "/icon-pcpr-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"

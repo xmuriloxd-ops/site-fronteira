@@ -9,12 +9,17 @@ agente que prendeu, unidade da ocorrência, escrivão, **assinatura do escrivão
 
 > Projeto de **roleplay**, sem vínculo com órgãos oficiais. O brasão da PCPR é
 > usado apenas como identidade visual do servidor de RP. O logo oficial enviado
-> pelo usuário fica em `public/brasao-pcpr.png` (fundo transparente, cores
-> originais); `public/brasao-pcpr-branco.png` é a mesma arte usada no cabeçalho
-> e no rodapé escuros. `public/favicon.png` e `public/icon-512.png` são as
-> versões quadradas para a aba do navegador / PWA. O mesmo arquivo é desenhado
-> dentro dos cartazes de prisão e de mandado, preservando a proporção vertical
-> do distintivo.
+> pelo usuário fica em `public/logo-pcpr.png` (fundo transparente, cores
+> originais); `public/logo-pcpr-escuro.png` é a mesma arte usada no cabeçalho
+> e no rodapé escuros. `public/favicon-pcpr.png` e `public/icon-pcpr-512.png`
+> são as versões quadradas para a aba do navegador / PWA. O mesmo arquivo é
+> desenhado dentro dos cartazes de prisão e de mandado, preservando a
+> proporção vertical do distintivo.
+>
+> Os nomes antigos (`brasao-pcpr*.png`, `favicon.png`, `icon-512.png`) ficam
+> como cópias idênticas apenas para não quebrar páginas ainda em cache.
+> Os assets de logo são servidos com `Cache-Control: no-store` e o
+> `index.html` remove service workers/cache de versões anteriores.
 
 ## Como rodar
 

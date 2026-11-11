@@ -65,7 +65,7 @@ function campo(nome: string, valor: string, inline = true) {
 function urlLogo(): string | undefined {
   try {
     if (typeof window !== 'undefined' && window.location.protocol === 'https:') {
-      return new URL('/brasao-pcpr.png', window.location.origin).href;
+      return new URL('/logo-pcpr.png', window.location.origin).href;
     }
   } catch {
     /* origem sem URL pública */

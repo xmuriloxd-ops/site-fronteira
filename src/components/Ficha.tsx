@@ -31,7 +31,7 @@ export function Ficha({ dados, numero }: { dados: DadosFicha; numero?: string })
   return (
     <article className="ficha">
       <header className="ficha__topo">
-        <img className="ficha__brasao" src="/brasao-pcpr.png" alt="Logo da Polícia Civil do Paraná" />
+        <img className="ficha__brasao" src="/logo-pcpr.png" alt="Logo da Polícia Civil do Paraná" />
         <div className="ficha__identidade">
           <strong>POLÍCIA CIVIL DO PARANÁ</strong>
           <span>SECRETARIA DE SEGURANÇA PÚBLICA · SISTEMA RP</span>

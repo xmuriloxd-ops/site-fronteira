@@ -94,7 +94,7 @@ export async function gerarCartazMandado(
   ctx.strokeRect(MARGEM, MARGEM, W - 2 * MARGEM, H - 2 * MARGEM);
 
   /* cabeçalho */
-  const brasao = await carregarImagem('/brasao-pcpr.png');
+  const brasao = await carregarImagem('/logo-pcpr.png');
   const larguraBrasao = brasao ? desenharBrasao(ctx, brasao, ESQ, MARGEM + 12, 104) : 0;
 
   const xTexto = ESQ + Math.max(96, larguraBrasao + 24);

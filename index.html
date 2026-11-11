@@ -11,8 +11,47 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <link rel="manifest" href="/manifest.json" />
-    <link rel="icon" type="image/png" href="/favicon.png" />
+    <link rel="icon" type="image/png" href="/favicon-pcpr.png" />
     <title>PCPR RP · Prisões e Mandados</title>
+    <script>
+      // Versoes antigas deste portal registraram um service worker que guardava
+      // o brasao anterior no Cache Storage. Remove o resquicio uma unica vez:
+      // desregistra o SW, limpa os caches e recarrega para servir os assets novos.
+      (function () {
+        try {
+          var chave = 'pcpr-cache-limpo-v3';
+          if (sessionStorage.getItem(chave)) return;
+          var tarefas = [];
+          if ('serviceWorker' in navigator && navigator.serviceWorker.getRegistrations) {
+            tarefas.push(
+              navigator.serviceWorker.getRegistrations().then(function (lista) {
+                return Promise.all(lista.map(function (r) { return r.unregister(); })).then(function () {
+                  return lista.length;
+                });
+              }),
+            );
+          }
+          if (window.caches && caches.keys) {
+            tarefas.push(
+              caches.keys().then(function (chaves) {
+                return Promise.all(chaves.map(function (c) { return caches.delete(c); }));
+              }),
+            );
+          }
+          Promise.all(tarefas)
+            .then(function (resultados) {
+              var tinhaSW = resultados.some(function (r) { return typeof r === 'number' && r > 0; });
+              sessionStorage.setItem(chave, '1');
+              if (tinhaSW) location.reload();
+            })
+            .catch(function () {
+              try { sessionStorage.setItem(chave, '1'); } catch (e) {}
+            });
+        } catch (e) {
+          /* navegador sem storage/API: segue normalmente */
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

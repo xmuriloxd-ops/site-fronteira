@@ -275,6 +275,15 @@ async function startServer() {
   // Fotos vão em base64 no JSON: 15 MB dá folga para várias imagens.
   app.use(express.json({ limit: '15mb' }));
 
+  // Assets de identidade visual nunca entram em cache: trocar o logo deve
+  // aparecer no primeiro recarregamento, sem depender de Ctrl+F5.
+  app.use((req, res, next) => {
+    if (req.path === '/manifest.json' || /\.(png|jpe?g|webp|svg|ico)$/i.test(req.path)) {
+      res.set('Cache-Control', 'no-store, must-revalidate');
+    }
+    next();
+  });
+
   app.get('/api/health', (_req, res) => {
     const estado = carregar();
     res.json({
@@ -505,6 +514,8 @@ async function startServer() {
         setHeaders: (res, caminho) => {
           if (/[\\/]assets[\\/]/.test(caminho)) {
             res.set('Cache-Control', 'public, max-age=31536000, immutable');
+          } else if (/\.(png|jpe?g|webp|svg|json)$/i.test(caminho)) {
+            res.set('Cache-Control', 'no-store, must-revalidate');
           }
         },
       }),

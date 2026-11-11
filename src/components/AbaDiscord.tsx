@@ -413,7 +413,7 @@ export function AbaDiscord({
           />
           <div className="discord-preview">
             <div className="discord-preview__autor">
-              <img src="/brasao-pcpr.png" alt="" />
+              <img src="/logo-pcpr.png" alt="" />
               <div>
                 <strong>{form.nomeBot || 'PCPR · Registro de Prisões'}</strong>
                 <span>{form.canal || '#prisoes'} · FORMATO: {(form.formatoEnvio ?? 'cartaz').toUpperCase()}</span>
@@ -450,7 +450,7 @@ export function AbaDiscord({
           />
           <div className="discord-preview">
             <div className="discord-preview__autor">
-              <img src="/brasao-pcpr.png" alt="" />
+              <img src="/logo-pcpr.png" alt="" />
               <div>
                 <strong>{formMandados.nomeBot || 'PCPR · Mandados de Prisão'}</strong>
                 <span>{formMandados.canal || '#mandados'} · FORMATO: CARTAZ</span>

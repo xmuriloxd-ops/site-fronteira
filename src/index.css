@@ -65,7 +65,7 @@ img { display: block; max-width: 100%; }
   height: 46vw;
   z-index: -1;
   pointer-events: none;
-  background: url("/brasao-pcpr-branco.png") center / contain no-repeat;
+  background: url("/logo-pcpr-escuro.png") center / contain no-repeat;
   opacity: 0.026;
 }
 
