@@ -432,6 +432,12 @@ function destinoMesmoSite(reg, corpo) {
 }
 
 function salvarMesmoSite(reg, corpo) {
+  if (reg.status === 404 && ehHtml(reg.contentType) && indexRaizNorm !== null && semNonce(corpo) === indexRaizNorm) {
+    // A pagina "nao encontrada" do aplicativo: o index.html da raiz, com status 404.
+    reg.estado = 'rota-do-app';
+    reg.motivo = 'pagina "nao encontrada" do aplicativo: o servidor devolve o index.html da raiz com status 404';
+    return false;
+  }
   if (reg.status !== 200) {
     reg.estado = 'descartado';
     reg.motivo = `HTTP ${reg.status}`;
@@ -1442,6 +1448,9 @@ const SONDAS = [
   '/robots.txt',
   '/sitemap.xml',
   '/404',
+  '/404/',
+  '/404.html',
+  '/404/outra',
   '/nao-existe-xyz',
   '/nao-existe-xyz/',
   '/nao-existe-xyz/outra',

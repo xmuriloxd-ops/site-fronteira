@@ -8,6 +8,8 @@
  *
  *   /convite  e  /convite/      -> site/convite/index.html (sem redirecionar)
  *   /qualquer-rota (sem ponto)  -> site/index.html         (rota do aplicativo)
+ *   /404                        -> site/index.html com status 404 (a página
+ *                                  "não encontrada" do aplicativo)
  *   /arquivo-que-nao-existe.png -> 404 sem corpo
  *   /api/qualquer-coisa         -> 500 sem corpo (no original a API não está no ar)
  *
@@ -131,12 +133,15 @@ function localizar(caminhoUrl) {
   //  - /api/...            -> erro 500 (o site publicado não tem API funcionando);
   //  - nome com extensão   -> 404;
   //  - o resto (e .html)   -> é uma rota do aplicativo: responde o index.html da raiz.
+  //    O aplicativo manda toda rota desconhecida para /404, e para esse endereço
+  //    o original devolve o mesmo index.html, só que com status 404.
   if (relativo === '/api' || relativo.startsWith('/api/')) return { status: 500 };
   const ultimo = relativo.split('/').filter(Boolean).pop() || '';
   if (!ultimo.includes('.') || /\.html?$/i.test(ultimo)) {
     const arquivo = path.join(RAIZ, 'index.html');
     const info = arquivoComum(arquivo);
-    if (info) return { status: 200, arquivo, info, rotaDoApp: true };
+    const status = relativo === '/404' || relativo === '/404/' ? 404 : 200;
+    if (info) return { status, arquivo, info, rotaDoApp: true };
   }
   return { status: 404 };
 }
@@ -184,7 +189,7 @@ const servidor = http.createServer((req, res) => {
   }
 
   const achado = localizar(caminhoUrl);
-  if (achado.status !== 200) {
+  if (!achado.arquivo) {
     res.writeHead(achado.status, { ...comuns, 'Content-Length': 0 });
     res.end();
     registrar(req, achado.status);
@@ -196,6 +201,23 @@ const servidor = http.createServer((req, res) => {
   const etag = `W/"${info.size.toString(16)}-${Math.floor(info.mtimeMs).toString(16)}"`;
   const cabecalhos = { ...comuns, 'Content-Type': tipo, ETag: etag, 'Last-Modified': info.mtime.toUTCString() };
   const nota = achado.rotaDoApp ? '  (rota do aplicativo -> index.html)' : '';
+
+  // Só o /404 cai aqui: o arquivo inteiro, com o status que o original usa.
+  if (achado.status !== 200) {
+    let corpo;
+    try {
+      corpo = fs.readFileSync(arquivo);
+    } catch {
+      res.writeHead(500, { ...comuns, 'Content-Length': 0 });
+      res.end();
+      registrar(req, 500);
+      return;
+    }
+    res.writeHead(achado.status, { ...comuns, 'Content-Type': tipo, 'Content-Length': corpo.length });
+    res.end(req.method === 'HEAD' ? undefined : corpo);
+    registrar(req, achado.status, nota);
+    return;
+  }
 
   if (req.headers['if-none-match'] === etag) {
     res.writeHead(304, cabecalhos);
