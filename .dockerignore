@@ -4,9 +4,10 @@ dist
 .gitignore
 .exemplos
 image-search
-portal-data.json
-.portal-secret
-.portal-sessao.json
+dados-pcpr-rp.json
+dados-pcpr-rp.json.tmp
+.dados
+.dados-preview
 *.log
 .env
 .env.*

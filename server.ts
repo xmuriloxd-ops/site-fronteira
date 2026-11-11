@@ -1,1082 +1,490 @@
+/**
+ * Servidor do Sistema de Registro de Prisões — Polícia Civil RP do Paraná.
+ *
+ * - Em desenvolvimento: sobe o middleware do Vite (hot reload).
+ * - Em produção: serve o build de `dist/`.
+ * - Guarda os registros, a config do Discord e o histórico num JSON local
+ *   (`dados-pcpr-rp.json`, fora do Git). Se o servidor estiver indisponível,
+ *   o navegador continua funcionando com localStorage.
+ * - `/api/discord/proxy` é um fallback de entrega: alguns navegadores/rede
+ *   bloqueiam a chamada direta ao Discord, então o envio também pode sair
+ *   do servidor (que tem rede liberada num deploy normal).
+ */
 import express from 'express';
 import compression from 'compression';
 import path from 'path';
 import fs from 'fs';
-import crypto from 'crypto';
 import { createServer as createViteServer } from 'vite';
+import type {
+  ConfigDiscord,
+  EnvioDiscord,
+  EstadoApp,
+  Mandado,
+  OperacaoSync,
+  Prisao,
+} from './src/types';
+import { CONFIG_DISCORD_PADRAO, CONFIG_MANDADOS_PADRAO } from './src/types';
 
-/* ------------------------------------------------------------------ */
-/* Persistência simples em arquivo JSON                                */
-/* ------------------------------------------------------------------ */
-
-/**
- * Pasta dos dados do portal.
- * `PORTAL_DATA_DIR` permite apontar para um volume (ex.: /app/dados no
- * Docker), assim um novo deploy não apaga cadastros, webhook nem senha.
- */
-const DATA_DIR = process.env.PORTAL_DATA_DIR || process.cwd();
+const PORT = Number(process.env.PORT) || 3000;
+const DATA_DIR = process.env.PC_DATA_DIR || process.cwd();
 try {
   if (DATA_DIR !== process.cwd()) fs.mkdirSync(DATA_DIR, { recursive: true });
 } catch {
-  /* sem permissão de escrita: segue no diretório atual */
+  /* sem permissão de escrita: usa a raiz do projeto */
+}
+const DATA_FILE = path.join(DATA_DIR, 'dados-pcpr-rp.json');
+
+/* ------------------------------------------------------------------ */
+/* Persistência                                                        */
+/* ------------------------------------------------------------------ */
+
+function estadoVazio(): EstadoApp {
+  return {
+    prisoes: [],
+    mandados: [],
+    discord: { ...CONFIG_DISCORD_PADRAO },
+    discordMandados: { ...CONFIG_MANDADOS_PADRAO },
+    envios: [],
+  };
 }
 
-const DATA_FILE = path.join(DATA_DIR, 'portal-data.json');
-const SECRET_FILE = path.join(DATA_DIR, '.portal-secret');
-const SESSION_STATE_FILE = path.join(DATA_DIR, '.portal-sessao.json');
-const SESSION_TTL = 1000 * 60 * 60 * 8; // 8 horas
+function textoSeguro(valor: unknown, limite = 4000): string {
+  return typeof valor === 'string' ? valor.slice(0, limite) : '';
+}
 
-/**
- * Variações de login sempre aceitas, além do login atual definido no painel.
- * Corrige o desencontro entre "comando", "comandopmpr" e "comnadopmpr".
- */
-const APELIDOS_LOGIN = ['comando', 'comandopmpr', 'comnadopmpr'];
+/** Normaliza o que vem do cliente para nunca gravar lixo no JSON. */
+function normalizarPrisao(bruto: unknown): Prisao | null {
+  if (!bruto || typeof bruto !== 'object') return null;
+  const p = bruto as Record<string, unknown>;
+  if (!textoSeguro(p.id)) return null;
 
-/**
- * Segredo usado para assinar os tokens do comando.
- * Fica em arquivo próprio (fora do portal-data.json) e é criado uma única vez,
- * para que o login continue válido mesmo depois de reiniciar o servidor.
- */
-function carregarSegredo(): string {
-  if (process.env.PORTAL_SECRET) return process.env.PORTAL_SECRET;
-  try {
-    if (fs.existsSync(SECRET_FILE)) {
-      const salvo = fs.readFileSync(SECRET_FILE, 'utf8').trim();
-      if (salvo.length >= 32) return salvo;
-    }
-    const novo = crypto.randomBytes(32).toString('hex');
-    fs.writeFileSync(SECRET_FILE, novo, { encoding: 'utf8', mode: 0o600 });
-    return novo;
-  } catch {
-    // último recurso: segredo em memória (sessões caem no próximo reinício)
-    return crypto.randomBytes(32).toString('hex');
+  const fotos = Array.isArray(p.fotos)
+    ? p.fotos
+        .filter((f): f is string => typeof f === 'string' && /^data:image\//.test(f))
+        .slice(0, 4)
+        .map((f) => f.slice(0, 2_500_000))
+    : [];
+
+  const assinaturaBruta = textoSeguro(p.assinatura, 1_500_000);
+  const assinatura = /^data:image\/png;base64,/.test(assinaturaBruta) ? assinaturaBruta : undefined;
+
+  const criadoEm =
+    typeof p.criadoEm === 'string' && !Number.isNaN(Date.parse(p.criadoEm))
+      ? new Date(p.criadoEm).toISOString()
+      : new Date().toISOString();
+
+  return {
+    id: textoSeguro(p.id, 80),
+    numero: textoSeguro(p.numero, 60),
+    fotos,
+    nome: textoSeguro(p.nome, 200),
+    idRp: textoSeguro(p.idRp, 100),
+    artigos: textoSeguro(p.artigos),
+    tempoPrisao: textoSeguro(p.tempoPrisao, 200),
+    itensApreendidos: textoSeguro(p.itensApreendidos),
+    agente: textoSeguro(p.agente, 200),
+    unidade: textoSeguro(p.unidade, 200),
+    escrivao: textoSeguro(p.escrivao, 200),
+    local: textoSeguro(p.local, 300),
+    observacoes: textoSeguro(p.observacoes, 2000),
+    assinatura,
+    criadoEm,
+    discordEnviadoEm: textoSeguro(p.discordEnviadoEm, 40) || undefined,
+    discordErro: textoSeguro(p.discordErro, 500) || undefined,
+  };
+}
+
+function normalizarMandado(bruto: unknown): Mandado | null {
+  if (!bruto || typeof bruto !== 'object') return null;
+  const m = bruto as Record<string, unknown>;
+  if (!textoSeguro(m.id)) return null;
+
+  const fotos = Array.isArray(m.fotos)
+    ? m.fotos
+        .filter((f): f is string => typeof f === 'string' && /^data:image\//.test(f))
+        .slice(0, 4)
+        .map((f) => f.slice(0, 2_500_000))
+    : [];
+  const assinaturaBruta = textoSeguro(m.assinatura, 1_500_000);
+  const assinatura = /^data:image\/png;base64,/.test(assinaturaBruta) ? assinaturaBruta : undefined;
+  const criadoEm =
+    typeof m.criadoEm === 'string' && !Number.isNaN(Date.parse(m.criadoEm))
+      ? new Date(m.criadoEm).toISOString()
+      : new Date().toISOString();
+  const status: Mandado['status'] =
+    m.status === 'cumprido' || m.status === 'revogado' ? m.status : 'pendente';
+
+  return {
+    id: textoSeguro(m.id, 80),
+    numero: textoSeguro(m.numero, 60),
+    fotos,
+    nome: textoSeguro(m.nome, 200),
+    idRp: textoSeguro(m.idRp, 100),
+    artigos: textoSeguro(m.artigos),
+    fundamento: textoSeguro(m.fundamento),
+    processo: textoSeguro(m.processo, 200),
+    autoridade: textoSeguro(m.autoridade, 200),
+    origem: textoSeguro(m.origem, 300),
+    unidade: textoSeguro(m.unidade, 200),
+    agente: textoSeguro(m.agente, 200),
+    validade: textoSeguro(m.validade, 200),
+    status,
+    observacoes: textoSeguro(m.observacoes, 2000),
+    assinatura,
+    criadoEm,
+    cumpridoEm: textoSeguro(m.cumpridoEm, 40) || undefined,
+    discordEnviadoEm: textoSeguro(m.discordEnviadoEm, 40) || undefined,
+    discordErro: textoSeguro(m.discordErro, 500) || undefined,
+  };
+}
+
+function normalizarConfig(
+  bruto: unknown,
+  padrao: ConfigDiscord = CONFIG_DISCORD_PADRAO,
+): ConfigDiscord {
+  const c = (bruto && typeof bruto === 'object' ? bruto : {}) as Record<string, unknown>;
+  return {
+    webhook: textoSeguro(c.webhook, 500),
+    canal: textoSeguro(c.canal, 100) || padrao.canal,
+    autoEnviar: c.autoEnviar === true,
+    mencionarHere: c.mencionarHere === true,
+    cargoId: textoSeguro(c.cargoId, 40),
+    nomeBot: textoSeguro(c.nomeBot, 80) || padrao.nomeBot,
+    formatoEnvio:
+      c.formatoEnvio === 'texto' || c.formatoEnvio === 'ambos' ? c.formatoEnvio : 'cartaz',
+  };
+}
+
+function normalizarEstado(bruto: unknown): EstadoApp {
+  const estado = estadoVazio();
+  if (!bruto || typeof bruto !== 'object') return estado;
+  const e = bruto as Record<string, unknown>;
+  if (Array.isArray(e.prisoes)) {
+    estado.prisoes = e.prisoes
+      .map(normalizarPrisao)
+      .filter((p): p is Prisao => p !== null)
+      .slice(0, 5000);
   }
-}
-
-const SECRET = carregarSegredo();
-
-/**
- * Estado de autenticação em arquivo próprio.
- * Fica separado do portal-data.json porque limpar os dados do portal não pode
- * revalidar sessões encerradas nem invalidar sessões legítimas.
- */
-interface EstadoSessao {
-  /** Só cresce: identifica a geração das credenciais. */
-  versao: number;
-  /** Assinaturas (payloads) de tokens encerrados no logout. */
-  revogados: string[];
-}
-
-function carregarEstadoSessao(): EstadoSessao {
-  try {
-    if (fs.existsSync(SESSION_STATE_FILE)) {
-      const bruto = JSON.parse(fs.readFileSync(SESSION_STATE_FILE, 'utf8')) as Partial<EstadoSessao>;
-      return {
-        versao: typeof bruto.versao === 'number' ? bruto.versao : 0,
-        revogados: Array.isArray(bruto.revogados) ? bruto.revogados : [],
-      };
-    }
-  } catch {
-    /* arquivo corrompido: recomeça do zero */
+  if (Array.isArray(e.mandados)) {
+    estado.mandados = e.mandados
+      .map(normalizarMandado)
+      .filter((m): m is Mandado => m !== null)
+      .slice(0, 5000);
   }
-  return { versao: 0, revogados: [] };
-}
-
-function gravarEstadoSessao(estado: EstadoSessao) {
-  try {
-    fs.writeFileSync(
-      SESSION_STATE_FILE,
-      JSON.stringify({ versao: estado.versao, revogados: estado.revogados.slice(-300) }, null, 2),
-      { encoding: 'utf8', mode: 0o600 },
-    );
-  } catch {
-    /* sem permissão de escrita: segue em memória */
+  estado.discord = normalizarConfig(e.discord);
+  estado.discordMandados = normalizarConfig(e.discordMandados, CONFIG_MANDADOS_PADRAO);
+  if (Array.isArray(e.envios)) {
+    estado.envios = e.envios
+      .filter((x): x is Record<string, unknown> => Boolean(x) && typeof x === 'object')
+      .slice(0, 150)
+      .map((x) => ({
+        id: textoSeguro(x.id, 80),
+        prisaoId: textoSeguro(x.prisaoId, 80) || undefined,
+        titulo: textoSeguro(x.titulo, 200),
+        status: x.status === 'sucesso' ? ('sucesso' as const) : ('erro' as const),
+        detalhe: textoSeguro(x.detalhe, 600),
+        via:
+          x.via === 'servidor' || x.via === 'local'
+            ? x.via
+            : ('navegador' as const),
+        criadoEm: textoSeguro(x.criadoEm, 40) || new Date().toISOString(),
+      }));
   }
+  return estado;
 }
 
-interface Interessado {
-  id: string;
-  nome: string;
-  discord: string;
-  editais: string[];
-  criadoEm: string;
-  vinculado: boolean;
-}
+let cache: EstadoApp | null = null;
 
-interface EnvioDiscord {
-  id: string;
-  editalId: string;
-  titulo: string;
-  destino: string;
-  status: 'sucesso' | 'erro';
-  detalhe?: string;
-  criadoEm: string;
-}
-
-interface DivulgacaoInscricoes {
-  unidades: string[];
-  texto: string;
-  data: string;
-  horario: string;
-  responsavel: string;
-  link: string;
-  observacoes: string;
-  provaData?: string;
-  provaHorario?: string;
-  provaLocal?: string;
-  atualizadoEm?: string;
-}
-
-interface DiscordConfig {
-  webhook: string;
-  convite: string;
-  canal: string;
-  autoEnviar: boolean;
-  mencionarHere: boolean;
-}
-
-/**
- * Canal das divulgações.
- *
- * Fica separado do canal das fichas: o comando pode publicar os cartazes de
- * inscrições num canal e receber as fichas preenchidas em outro. Vazio = usa
- * o mesmo canal das fichas.
- */
-interface DiscordDivulgacaoConfig {
-  webhook: string;
-  canal: string;
-  mencionarHere: boolean;
-}
-
-interface InscricaoRecrutamento {
-  id: string;
-  formularioId: string;
-  nome: string;
-  idade: string;
-  idRp: string;
-  respostas: Record<string, string>;
-  criadoEm: string;
-  status: 'novo' | 'em-analise' | 'aprovado' | 'reprovado';
-  observacaoComando?: string;
-  discordEnviado?: boolean;
-  discordErro?: string;
-}
-
-interface Store {
-  auth: { login: string; senha: string };
-  discord: DiscordConfig;
-  interessados: Interessado[];
-  envios: EnvioDiscord[];
-  logs: { id: string; criadoEm: string; ip: string; ua: string }[];
-  sessions?: Record<string, { login: string; expiraEm: number }>;
-  /** Tokens encerrados manualmente (logout) que precisam ser recusados. */
-  revogados?: string[];
-  /** @deprecated mantido apenas para compatibilidade de leitura. */
-  versaoSessao?: number;
-  inscricoes: InscricaoRecrutamento[];
-  /** Documento de divulgação das inscrições abertas. */
-  divulgacao?: DivulgacaoInscricoes;
-  /** Canal próprio para publicar as divulgações (opcional). */
-  discordDivulgacao?: DiscordDivulgacaoConfig;
-}
-
-const DEFAULT_STORE: Store = {
-  auth: { login: 'comando', senha: '1234' },
-  discord: {
-    webhook: '',
-    convite: '',
-    canal: 'inscricoes-pmpr',
-    // Toda ficha preenchida vai para o canal assim que o webhook é cadastrado.
-    autoEnviar: true,
-    mencionarHere: true,
-  },
-  discordDivulgacao: { webhook: '', canal: '', mencionarHere: true },
-  interessados: [],
-  envios: [],
-  logs: [],
-  sessions: {},
-  revogados: [],
-  versaoSessao: 0,
-  inscricoes: [],
-  divulgacao: {
-    unidades: ['pmpr', 'rotam', 'rone'],
-    texto:
-      'Estão abertas as inscrições da Polícia Militar do Paraná, da ROTAM e da RONE. Preencha o formulário da unidade pretendida no portal; todas as fichas são analisadas pelo comando.',
-    data: new Date().toISOString().slice(0, 10),
-    horario: '20:00',
-    responsavel: 'Comando do 13º BPM',
-    link: '',
-    observacoes: 'Inscrições gratuitas. Leia os requisitos antes de enviar a ficha.',
-    provaData: '',
-    provaHorario: '08:00',
-    provaLocal: '',
-  },
-};
-
-function loadStore(): Store {
+function carregar(): EstadoApp {
+  if (cache) return cache;
   try {
     if (fs.existsSync(DATA_FILE)) {
-      const raw = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8')) as Partial<Store>;
-      const migrado = {
-        ...DEFAULT_STORE,
-        ...raw,
-        auth: { ...DEFAULT_STORE.auth, ...(raw.auth ?? {}) },
-        discord: { ...DEFAULT_STORE.discord, ...(raw.discord ?? {}) },
-        discordDivulgacao: {
-          ...DEFAULT_STORE.discordDivulgacao!,
-          ...(raw.discordDivulgacao ?? {}),
-        },
-        interessados: raw.interessados ?? [],
-        envios: raw.envios ?? [],
-        logs: raw.logs ?? [],
-        sessions: raw.sessions ?? {},
-        revogados: raw.revogados ?? [],
-        versaoSessao: raw.versaoSessao ?? 0,
-        inscricoes: raw.inscricoes ?? [],
-        divulgacao: { ...DEFAULT_STORE.divulgacao!, ...(raw.divulgacao ?? {}) },
-      };
-
-      // Migração: instalações antigas usavam "comnadopmpr". Passa a valer
-      // o login pedido pelo comando ("comando") mantendo a senha existente,
-      // a menos que a senha antiga seja a padrão antiga.
-      const loginAntigo = (raw.auth?.login ?? '').toLowerCase();
-      if (loginAntigo === 'comnadopmpr' || loginAntigo === 'comandopmpr') {
-        migrado.auth = {
-          login: DEFAULT_STORE.auth.login,
-          senha: raw.auth?.senha === '142536' ? DEFAULT_STORE.auth.senha : (raw.auth?.senha ?? DEFAULT_STORE.auth.senha),
-        };
-        try {
-          fs.writeFileSync(DATA_FILE, JSON.stringify(migrado, null, 2), 'utf8');
-        } catch {
-          /* segue com o valor em memória */
-        }
-      }
-
-      return migrado;
+      cache = normalizarEstado(JSON.parse(fs.readFileSync(DATA_FILE, 'utf8')));
+      return cache;
     }
-  } catch (error) {
-    console.error('Falha ao ler portal-data.json:', error);
-  }
-  return {
-    ...DEFAULT_STORE,
-    auth: { ...DEFAULT_STORE.auth },
-    discord: { ...DEFAULT_STORE.discord },
-    discordDivulgacao: { ...DEFAULT_STORE.discordDivulgacao! },
-  };
-}
-
-function saveStore(store: Store) {
-  try {
-    fs.writeFileSync(DATA_FILE, JSON.stringify(store, null, 2), 'utf8');
-  } catch (error) {
-    console.error('Falha ao gravar portal-data.json:', error);
-  }
-}
-
-/* ------------------------------------------------------------------ */
-/* Sessões do comando                                                  */
-/* ------------------------------------------------------------------ */
-
-interface SessaoAssinada {
-  login: string;
-  expiraEm: number;
-  versao: number;
-}
-
-function assinar(payload: string) {
-  return crypto.createHmac('sha256', SECRET).update(payload).digest('base64url');
-}
-
-function criarSessao(store: Store, login: string) {
-  const estado = carregarEstadoSessao();
-  const sessao: SessaoAssinada = {
-    login,
-    expiraEm: Date.now() + SESSION_TTL,
-    versao: estado.versao,
-  };
-  const payload = Buffer.from(JSON.stringify(sessao), 'utf8').toString('base64url');
-  // mantém o registro em disco apenas como histórico (não é mais fonte de verdade)
-  store.sessions = store.sessions ?? {};
-  store.sessions[payload] = sessao;
-  saveStore(store);
-  return `${payload}.${assinar(payload)}`;
-}
-
-/**
- * Valida o token assinado. Não depende de estado em memória nem do JSON,
- * então continua funcionando após reinícios e limpeza do portal-data.json.
- */
-function validarSessao(_store: Store, token: string | undefined): SessaoAssinada | null {
-  if (!token) return null;
-  const [payload, assinatura] = token.split('.');
-  if (!payload || !assinatura) return null;
-
-  const estado = carregarEstadoSessao();
-  if (estado.revogados.includes(payload)) return null;
-
-  const esperada = assinar(payload);
-  const a = Buffer.from(assinatura);
-  const b = Buffer.from(esperada);
-  if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) return null;
-
-  try {
-    const sessao = JSON.parse(Buffer.from(payload, 'base64url').toString('utf8')) as SessaoAssinada;
-    if (typeof sessao?.expiraEm !== 'number' || sessao.expiraEm < Date.now()) return null;
-    if (typeof sessao.login !== 'string') return null;
-    // token emitido antes de uma troca de credenciais deixa de valer
-    if ((sessao.versao ?? 0) !== estado.versao) return null;
-    return sessao;
   } catch {
-    return null;
+    /* arquivo corrompido: começa do zero, sem apagar o arquivo */
   }
+  cache = estadoVazio();
+  return cache;
 }
 
-const COOKIE_SESSAO = 'pmpr_sessao';
-
-function lerCookie(req: express.Request, nome: string): string | undefined {
-  const bruto = req.headers.cookie;
-  if (!bruto) return undefined;
-  for (const parte of bruto.split(';')) {
-    const [chave, ...resto] = parte.trim().split('=');
-    if (chave === nome) return decodeURIComponent(resto.join('='));
-  }
-  return undefined;
-}
-
-/**
- * O token pode chegar por três caminhos: cabeçalho Authorization, cookie ou
- * query string. O cookie existe porque alguns proxies removem o cabeçalho,
- * o que fazia o painel responder "sessão expirada" mesmo com login correto.
- */
-function tokenDaRequisicao(req: express.Request) {
-  const header = req.headers.authorization;
-  if (header?.startsWith('Bearer ')) return header.slice(7);
-  const alternativa = req.headers['x-admin-token'];
-  if (typeof alternativa === 'string' && alternativa) return alternativa;
-  const query = req.query.token;
-  return typeof query === 'string' ? query : undefined;
-}
-
-/* ------------------------------------------------------------------ */
-/* Discord                                                            */
-/* ------------------------------------------------------------------ */
-
-const DISCORD_HOSTS = ['discord.com', 'discordapp.com', 'ptb.discord.com', 'canary.discord.com'];
-
-function webhookValido(url: string) {
+function gravar(estado: EstadoApp): void {
+  cache = estado;
   try {
-    const parsed = new URL(url);
-    return parsed.protocol === 'https:' && DISCORD_HOSTS.includes(parsed.hostname);
+    const temporario = `${DATA_FILE}.tmp`;
+    fs.writeFileSync(temporario, JSON.stringify(estado, null, 2), { encoding: 'utf8' });
+    fs.renameSync(temporario, DATA_FILE);
+  } catch (erro) {
+    console.error('Não foi possível gravar os dados:', erro);
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Discord                                                             */
+/* ------------------------------------------------------------------ */
+
+function webhookPermitido(url: string): boolean {
+  try {
+    const u = new URL(url);
+    return (
+      u.protocol === 'https:' &&
+      ['discord.com', 'discordapp.com', 'ptb.discord.com', 'canary.discord.com'].includes(
+        u.hostname,
+      ) &&
+      /^\/api\/(v\d+\/)?webhooks\//.test(u.pathname)
+    );
   } catch {
     return false;
   }
 }
 
-interface EmbedField {
-  name: string;
-  value: string;
-  inline?: boolean;
+interface ArquivoDataUrl {
+  blob: Blob;
+  nome: string;
 }
 
-/**
- * Verifica se o servidor consegue falar com o Discord.
- * Sem isso, "fetch failed" não diz nada ao comando sobre o que consertar.
- */
-async function testarAlcanceDiscord(): Promise<{ alcancavel: boolean; motivo: string }> {
-  try {
-    const controle = new AbortController();
-    const t = setTimeout(() => controle.abort(), 6000);
-    const r = await fetch('https://discord.com/api/v10/gateway', {
-      method: 'GET',
-      signal: controle.signal,
-    });
-    clearTimeout(t);
-    if (r.status >= 200 && r.status < 500) {
-      return { alcancavel: true, motivo: `Discord respondeu ${r.status}.` };
-    }
-    return { alcancavel: false, motivo: `Discord respondeu ${r.status}.` };
-  } catch (error) {
-    const msg = (error as Error).message || '';
-    const abortou = /abort/i.test(msg);
-    return {
-      alcancavel: false,
-      motivo: abortou
-        ? 'O servidor não conseguiu conectar ao Discord (tempo esgotado).'
-        : 'O servidor não tem acesso à internet para o Discord (rede bloqueada).',
-    };
-  }
+function nomeSeguro(nome: string, indice: number): string {
+  const limpo = nome.replace(/[^a-zA-Z0-9._-]/g, '-').slice(0, 60);
+  return limpo || `anexo-${indice}.png`;
 }
 
-async function enviarDiscord(
-  config: DiscordConfig,
-  payload: { titulo: string; descricao: string; url?: string; cor?: number; fields?: EmbedField[] },
-) {
-  if (!config.webhook || !webhookValido(config.webhook)) {
-    return { ok: false, detalhe: 'Webhook do Discord não configurado ou inválido.' };
-  }
-
-  const body = {
-    username: 'Portal de Inscrições PMPR',
-    content: config.mencionarHere ? '@here' : undefined,
-    allowed_mentions: { parse: config.mencionarHere ? ['everyone'] : [] },
-    embeds: [
-      {
-        title: payload.titulo,
-        description: payload.descricao,
-        url: payload.url,
-        color: payload.cor ?? 0x0b6b3a,
-        fields: payload.fields ?? [],
-        footer: { text: 'Polícia Militar do Paraná · Portal de Inscrições' },
-        timestamp: new Date().toISOString(),
-      },
-    ],
-  };
-
+function dataUrlParaArquivo(dataUrl: string, nome: string, indice: number): ArquivoDataUrl | null {
+  const m = /^data:(image\/(?:jpeg|jpg|png|webp));base64,([A-Za-z0-9+/=]+)$/.exec(dataUrl);
+  if (!m) return null;
+  const tipo = m[1] === 'image/jpg' ? 'image/jpeg' : m[1];
+  if (m[2].length > 6_000_000) return null;
   try {
-    const resposta = await fetch(config.webhook, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-    });
-    if (!resposta.ok) {
-      const texto = await resposta.text().catch(() => '');
-      return { ok: false, detalhe: `Discord respondeu ${resposta.status}: ${texto.slice(0, 180)}` };
-    }
-    return { ok: true, detalhe: 'Mensagem entregue ao canal.' };
-  } catch (error) {
-    const msg = (error as Error).message || 'erro desconhecido';
-    const rede = await testarAlcanceDiscord();
     return {
-      ok: false,
-      detalhe: rede.alcancavel
-        ? `Não foi possível entregar a mensagem (${msg}). Confira se o webhook ainda existe no canal.`
-        : `${rede.motivo} O webhook está salvo, mas o envio só funciona quando o servidor tiver acesso ao Discord.`,
-      semRede: !rede.alcancavel,
+      blob: new Blob([Buffer.from(m[2], 'base64')], { type: tipo }),
+      nome: nomeSeguro(nome, indice),
     };
+  } catch {
+    return null;
   }
 }
 
 /* ------------------------------------------------------------------ */
-/* Servidor                                                           */
+/* Aplicação                                                           */
 /* ------------------------------------------------------------------ */
 
 async function startServer() {
   const app = express();
-  const PORT = Number(process.env.PORT) || 3000;
-  let store = loadStore();
-
-  app.use(express.json({ limit: '256kb' }));
-
-  // Compressão das respostas (HTML, JS, CSS e JSON) — reduz o que o visitante baixa.
+  app.disable('x-powered-by');
   app.use(compression());
-
-  // Cabeçalhos de segurança aplicados a tudo.
-  app.use((_req, res, next) => {
-    res.set('X-Content-Type-Options', 'nosniff');
-    res.set('X-Frame-Options', 'SAMEORIGIN');
-    res.set('Referrer-Policy', 'strict-origin-when-cross-origin');
-    res.set('Permissions-Policy', 'geolocation=(), microphone=(), camera=()');
-    next();
-  });
-
-  // Nenhuma resposta de API deve ser cacheada: um 401 antigo em cache faria
-  // o painel voltar para a tela de login mesmo com sessão válida.
-  app.use('/api', (_req, res, next) => {
-    res.set('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
-    res.set('Pragma', 'no-cache');
-    res.set('Expires', '0');
-    next();
-  });
-
-  const publicConfig = () => ({
-    discordVinculado: Boolean(store.discord.webhook && webhookValido(store.discord.webhook)),
-    canalDiscord: store.discord.canal,
-    conviteDiscord: store.discord.convite,
-    interessados: store.interessados.length,
-    inscricoes: store.inscricoes.length,
-    divulgacao: store.divulgacao,
-  });
-
-  app.get('/api/versao', (_req, res) => {
-    res.json({
-      versao: 3,
-      loginPadrao: DEFAULT_STORE.auth.login,
-      apelidosAceitos: APELIDOS_LOGIN,
-      autoLogin: false,
-    });
-  });
-
-  app.get('/api/ping', (_req, res) => {
-    res.json({ ok: true, hora: new Date().toISOString() });
-  });
+  // Fotos vão em base64 no JSON: 15 MB dá folga para várias imagens.
+  app.use(express.json({ limit: '15mb' }));
 
   app.get('/api/health', (_req, res) => {
-    // Sem editais: o portal trabalha com formulários de inscrição.
-    res.json({
-      status: 'ok',
-      editais: 0,
-      formularios: 3,
-      interessados: store.interessados.length,
-    });
-  });
-
-  app.get('/api/public/config', (_req, res) => {
-    res.json(publicConfig());
-  });
-
-  /* ------------------------------ Login ------------------------------ */
-
-  app.post('/api/admin/login', (req, res) => {
-    const { login, senha } = req.body ?? {};
-    if (typeof login !== 'string' || typeof senha !== 'string') {
-      return res.status(400).json({ erro: 'Informe login e senha.' });
-    }
-    const normalizar = (v: string) =>
-      v
-        .trim()
-        .toLowerCase()
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '');
-    const digitado = normalizar(login);
-    const loginOk =
-      digitado === normalizar(store.auth.login) ||
-      APELIDOS_LOGIN.some((apelido) => normalizar(apelido) === digitado);
-    const senhaOk = senha === store.auth.senha;
-
-    if (!loginOk || !senhaOk) {
-      store.logs.unshift({
-        id: crypto.randomUUID(),
-        criadoEm: new Date().toISOString(),
-        ip: req.ip ?? '',
-        ua: `tentativa de login: ${login}`,
-      });
-      store.logs = store.logs.slice(0, 300);
-      saveStore(store);
-      return res.status(401).json({ erro: 'Login ou senha incorretos.' });
-    }
-
-    const token = criarSessao(store, store.auth.login);
-    res.json({ token, login: store.auth.login, expiraEmMs: SESSION_TTL });
-  });
-
-  app.post('/api/admin/logout', (req, res) => {
-    const token = tokenDaRequisicao(req);
-    const payload = token?.split('.')[0];
-    if (payload && validarSessao(store, token)) {
-      const estado = carregarEstadoSessao();
-      gravarEstadoSessao({ ...estado, revogados: [...estado.revogados, payload] });
-    }
-    // limpa cookie de versões antigas (que permitiam reentrada automática)
-    res.clearCookie(COOKIE_SESSAO, { path: '/' });
-    res.json({ ok: true });
-  });
-
-  const exigirAdmin: express.RequestHandler = (req, res, next) => {
-    if (!validarSessao(store, tokenDaRequisicao(req))) {
-      return res.status(401).json({ erro: 'Sessão expirada. Entre novamente.' });
-    }
-    next();
-  };
-
-  /* --------------------------- Dados do painel ----------------------- */
-
-  app.get('/api/admin/data', exigirAdmin, (_req, res) => {
-    res.json({
-      login: store.auth.login,
-      discord: {
-        webhookConfigurado: Boolean(store.discord.webhook),
-        webhookMascarado: store.discord.webhook
-          ? store.discord.webhook.replace(/\/[\w-]{20,}$/, '/••••••••')
-          : '',
-        convite: store.discord.convite,
-        canal: store.discord.canal,
-        autoEnviar: store.discord.autoEnviar,
-        mencionarHere: store.discord.mencionarHere,
-        vinculado: Boolean(store.discord.webhook && webhookValido(store.discord.webhook)),
-        // Canal das divulgações (separado das fichas)
-        divulgacaoWebhookConfigurado: Boolean(store.discordDivulgacao?.webhook),
-        divulgacaoWebhookMascarado: store.discordDivulgacao?.webhook
-          ? store.discordDivulgacao.webhook.replace(/\/[\w-]{20,}$/, '/••••••••')
-          : '',
-        divulgacaoCanal: store.discordDivulgacao?.canal ?? '',
-        divulgacaoMencionarHere: store.discordDivulgacao?.mencionarHere ?? true,
-        divulgacaoVinculada: Boolean(
-          store.discordDivulgacao?.webhook && webhookValido(store.discordDivulgacao.webhook),
-        ),
-        // Quando a divulgação usa o mesmo canal das fichas
-        divulgacaoUsaCanalDasFichas: !store.discordDivulgacao?.webhook,
-      },
-      interessados: store.interessados,
-      envios: store.envios.slice(0, 40),
-      divulgacao: store.divulgacao,
-    });
-  });
-
-  /* ----------------------- Login e senha do comando ------------------ */
-
-  app.patch('/api/admin/credenciais', exigirAdmin, (req, res) => {
-    const { login, senha, senhaAtual } = req.body ?? {};
-
-    if (typeof senhaAtual !== 'string' || senhaAtual !== store.auth.senha) {
-      return res.status(400).json({ erro: 'A senha atual informada não confere.' });
-    }
-    if (login !== undefined) {
-      if (typeof login !== 'string' || login.trim().length < 4) {
-        return res.status(400).json({ erro: 'O login deve ter ao menos 4 caracteres.' });
-      }
-    }
-    if (senha !== undefined) {
-      if (typeof senha !== 'string' || senha.trim().length < 4) {
-        return res.status(400).json({ erro: 'A nova senha deve ter ao menos 4 caracteres.' });
-      }
-    }
-    if (login === undefined && senha === undefined) {
-      return res.status(400).json({ erro: 'Nada para alterar.' });
-    }
-
-    if (login !== undefined) store.auth.login = login.trim();
-    if (senha !== undefined) store.auth.senha = senha;
-
-    // Derruba todas as sessões antigas: só a geração muda, e o arquivo de
-    // sessão é separado para não voltar atrás quando os dados são limpos.
-    const estadoAtual = carregarEstadoSessao();
-    gravarEstadoSessao({ versao: estadoAtual.versao + 1, revogados: [] });
-    store.sessions = {};
-    const token = criarSessao(store, store.auth.login);
-    saveStore(store);
-
-    res.json({ ok: true, login: store.auth.login, token, mensagem: 'Credenciais atualizadas.' });
-  });
-
-  /* ------------------------------ Discord ---------------------------- */
-
-  app.patch('/api/admin/discord', exigirAdmin, (req, res) => {
-    const {
-      webhook,
-      convite,
-      canal,
-      autoEnviar,
-      mencionarHere,
-      divulgacaoWebhook,
-      divulgacaoCanal,
-      divulgacaoMencionarHere,
-    } = req.body ?? {};
-
-    if (webhook !== undefined) {
-      const limpo = String(webhook).trim();
-      if (limpo && !webhookValido(limpo)) {
-        return res
-          .status(400)
-          .json({ erro: 'Informe uma URL de webhook válida do Discord (https://discord.com/api/webhooks/...).' });
-      }
-      store.discord.webhook = limpo;
-    }
-    if (convite !== undefined) store.discord.convite = String(convite).trim();
-    if (canal !== undefined) store.discord.canal = String(canal).trim();
-    if (typeof autoEnviar === 'boolean') store.discord.autoEnviar = autoEnviar;
-    if (typeof mencionarHere === 'boolean') store.discord.mencionarHere = mencionarHere;
-
-    // Canal próprio das divulgações
-    const d = store.discordDivulgacao ?? { webhook: '', canal: '', mencionarHere: true };
-    if (divulgacaoWebhook !== undefined) {
-      const limpo = String(divulgacaoWebhook).trim();
-      if (limpo && !webhookValido(limpo)) {
-        return res
-          .status(400)
-          .json({ erro: 'Informe uma URL de webhook válida para o canal das divulgações.' });
-      }
-      d.webhook = limpo;
-    }
-    if (divulgacaoCanal !== undefined) d.canal = String(divulgacaoCanal).trim().slice(0, 100);
-    if (typeof divulgacaoMencionarHere === 'boolean') d.mencionarHere = divulgacaoMencionarHere;
-    store.discordDivulgacao = d;
-
-    saveStore(store);
+    const estado = carregar();
     res.json({
       ok: true,
-      vinculado: Boolean(store.discord.webhook && webhookValido(store.discord.webhook)),
-      mensagem: 'Configuração do Discord salva.',
+      servico: 'PCPR RP · Registro de Prisões e Mandados',
+      registros: estado.prisoes.length,
+      mandados: estado.mandados.length,
     });
   });
 
-  app.get('/api/admin/discord/diagnostico', exigirAdmin, async (_req, res) => {
-    const rede = await testarAlcanceDiscord();
-    const url = store.discord.webhook;
-    res.json({
-      redeOk: rede.alcancavel,
-      motivoRede: rede.motivo,
-      webhookSalvo: Boolean(url),
-      webhookValido: Boolean(url && webhookValido(url)),
-      canal: store.discord.canal,
-      vinculado: Boolean(url && webhookValido(url)),
-    });
+  app.get('/api/estado', (_req, res) => {
+    res.set('Cache-Control', 'no-store');
+    res.json({ ok: true, estado: carregar() });
   });
 
-  /**
-   * Entrega o webhook ao navegador do comando.
-   * O envio é feito direto do navegador (multipart/form-data, que não passa por
-   * CORS), porque este servidor não alcança o Discord. Só um administrador
-   * autenticado recebe a URL.
-   */
-  /**
-   * Webhook para o navegador enviar a mensagem.
-   * `?finalidade=divulgacao` devolve o canal das divulgações; sem o parâmetro,
-   * o canal das fichas. Se a divulgação não tiver canal próprio, usa o das
-   * fichas — assim nada deixa de ser publicado.
-   */
-  app.get('/api/admin/discord/webhook', exigirAdmin, (req, res) => {
-    const divulgar = req.query.finalidade === 'divulgacao';
+  /** Aplica uma operação atômica e devolve o estado authoritative. */
+  app.post('/api/sync', (req, res) => {
+    const operacao = req.body?.op as OperacaoSync | undefined;
+    if (!operacao || typeof operacao.tipo !== 'string') {
+      res.status(400).json({ erro: 'Operação inválida.' });
+      return;
+    }
+    const estado = carregar();
+    let estadoNovo: EstadoApp = {
+      prisoes: [...estado.prisoes],
+      mandados: [...estado.mandados],
+      discord: { ...estado.discord },
+      discordMandados: { ...estado.discordMandados },
+      envios: [...estado.envios],
+    };
 
-    const canalDivulgacao = store.discordDivulgacao;
-    if (divulgar && canalDivulgacao?.webhook && webhookValido(canalDivulgacao.webhook)) {
-      return res.json({
-        webhook: canalDivulgacao.webhook,
-        canal: canalDivulgacao.canal || 'divulgações',
-        mencionarHere: canalDivulgacao.mencionarHere,
-        origem: 'divulgacao',
+    switch (operacao.tipo) {
+      case 'criar': {
+        const prisao = normalizarPrisao(operacao.prisao);
+        if (!prisao) {
+          res.status(400).json({ erro: 'Registro inválido.' });
+          return;
+        }
+        estadoNovo.prisoes = [prisao, ...estadoNovo.prisoes.filter((p) => p.id !== prisao.id)];
+        break;
+      }
+      case 'atualizar': {
+        const prisao = normalizarPrisao(operacao.prisao);
+        if (!prisao) {
+          res.status(400).json({ erro: 'Registro inválido.' });
+          return;
+        }
+        const existe = estadoNovo.prisoes.some((p) => p.id === prisao.id);
+        estadoNovo.prisoes = existe
+          ? estadoNovo.prisoes.map((p) => (p.id === prisao.id ? prisao : p))
+          : [prisao, ...estadoNovo.prisoes];
+        break;
+      }
+      case 'excluir': {
+        const id = textoSeguro(operacao.id, 80);
+        estadoNovo.prisoes = estadoNovo.prisoes.filter((p) => p.id !== id);
+        break;
+      }
+      case 'criar-mandado': {
+        const mandado = normalizarMandado(operacao.mandado);
+        if (!mandado) {
+          res.status(400).json({ erro: 'Mandado inválido.' });
+          return;
+        }
+        estadoNovo.mandados = [mandado, ...estadoNovo.mandados.filter((m) => m.id !== mandado.id)].slice(0, 5000);
+        break;
+      }
+      case 'atualizar-mandado': {
+        const mandado = normalizarMandado(operacao.mandado);
+        if (!mandado) {
+          res.status(400).json({ erro: 'Mandado inválido.' });
+          return;
+        }
+        const existe = estadoNovo.mandados.some((m) => m.id === mandado.id);
+        estadoNovo.mandados = existe
+          ? estadoNovo.mandados.map((m) => (m.id === mandado.id ? mandado : m))
+          : [mandado, ...estadoNovo.mandados];
+        break;
+      }
+      case 'excluir-mandado': {
+        const id = textoSeguro(operacao.id, 80);
+        estadoNovo.mandados = estadoNovo.mandados.filter((m) => m.id !== id);
+        break;
+      }
+      case 'discord': {
+        estadoNovo.discord = normalizarConfig(operacao.config);
+        break;
+      }
+      case 'discord-mandados': {
+        estadoNovo.discordMandados = normalizarConfig(operacao.config, CONFIG_MANDADOS_PADRAO);
+        break;
+      }
+      case 'envio': {
+        const envio = operacao.envio as EnvioDiscord;
+        if (!envio || !textoSeguro(envio.id, 80)) {
+          res.status(400).json({ erro: 'Histórico inválido.' });
+          return;
+        }
+        const novoEnvio: EnvioDiscord = {
+          id: textoSeguro(envio.id, 80),
+          prisaoId: textoSeguro(envio.prisaoId, 80) || undefined,
+          titulo: textoSeguro(envio.titulo, 200),
+          status: envio.status === 'sucesso' ? 'sucesso' : 'erro',
+          detalhe: textoSeguro(envio.detalhe, 600),
+          via: envio.via === 'servidor' ? 'servidor' : 'navegador',
+          criadoEm: textoSeguro(envio.criadoEm, 40) || new Date().toISOString(),
+        };
+        estadoNovo.envios = [novoEnvio, ...estadoNovo.envios].slice(0, 150);
+        break;
+      }
+      default:
+        res.status(400).json({ erro: 'Tipo de operação desconhecido.' });
+        return;
+    }
+
+    gravar(estadoNovo);
+    res.set('Cache-Control', 'no-store');
+    res.json({ ok: true, estado: estadoNovo });
+  });
+
+  /** Fallback de entrega: o servidor posta no Discord quando o navegador não consegue. */
+  app.post('/api/discord/proxy', async (req, res) => {
+    const webhook = textoSeguro(req.body?.webhook, 500);
+    const payload = req.body?.payload;
+    // Formato novo: anexos nomeados (cartaz + fotos). Mantém `fotos` legado.
+    const anexosBrutos = Array.isArray(req.body?.anexos) ? req.body.anexos : null;
+    const anexos: { nome: string; dataUrl: string }[] = anexosBrutos
+      ? (anexosBrutos as unknown[])
+          .filter((a): a is Record<string, unknown> => Boolean(a) && typeof a === 'object')
+          .slice(0, 6)
+          .map((a, i) => ({
+            nome: nomeSeguro(textoSeguro(a.nome, 80), i),
+            dataUrl: textoSeguro(a.dataUrl, 6_000_000),
+          }))
+      : (Array.isArray(req.body?.fotos)
+          ? (req.body.fotos as unknown[])
+          : []
+        )
+          .filter((f): f is string => typeof f === 'string')
+          .slice(0, 4)
+          .map((f, i) => ({ nome: `foto-${i}.jpg`, dataUrl: f }));
+
+    if (!webhookPermitido(webhook)) {
+      res.status(400).json({
+        ok: false,
+        detalhe: 'Webhook inválido. Use uma URL https://discord.com/api/webhooks/...',
+      });
+      return;
+    }
+    if (!payload || typeof payload !== 'object') {
+      res.status(400).json({ ok: false, detalhe: 'Mensagem inválida.' });
+      return;
+    }
+
+    try {
+      let corpo: BodyInit;
+      let cabecalhos: Record<string, string> = {};
+
+      if (anexos.length > 0) {
+        const form = new FormData();
+        const confirmados: { id: number; filename: string }[] = [];
+        anexos.forEach((anexo, i) => {
+          const arquivo = dataUrlParaArquivo(anexo.dataUrl, anexo.nome, i);
+          if (arquivo) {
+            form.append(`files[${i}]`, arquivo.blob, arquivo.nome);
+            confirmados.push({ id: i, filename: arquivo.nome });
+          }
+        });
+        const copia = {
+          ...(payload as Record<string, unknown>),
+          // Só preenche se o cliente não mandou a lista (compatibilidade).
+          ...(Array.isArray((payload as Record<string, unknown>).attachments)
+            ? {}
+            : { attachments: confirmados }),
+        };
+        form.append('payload_json', JSON.stringify(copia));
+        corpo = form;
+      } else {
+        cabecalhos = { 'Content-Type': 'application/json' };
+        corpo = JSON.stringify(payload);
+      }
+
+      const controlador = new AbortController();
+      const timer = setTimeout(() => controlador.abort(), 12000);
+      const resposta = await fetch(`${webhook}${webhook.includes('?') ? '&' : '?'}wait=true`, {
+        method: 'POST',
+        headers: cabecalhos,
+        body: corpo,
+        signal: controlador.signal,
+      });
+      clearTimeout(timer);
+
+      if (resposta.ok || resposta.status === 204) {
+        res.json({ ok: true, detalhe: 'Mensagem entregue ao canal pelo servidor.' });
+        return;
+      }
+      const texto = await resposta.text().catch(() => '');
+      res.status(502).json({
+        ok: false,
+        detalhe: `Discord respondeu ${resposta.status}: ${texto.slice(0, 200)}`,
+      });
+    } catch (erro) {
+      res.status(502).json({
+        ok: false,
+        detalhe: `O servidor não alcançou o Discord: ${erro instanceof Error ? erro.message : 'falha de rede'}`,
       });
     }
-
-    if (!store.discord.webhook || !webhookValido(store.discord.webhook)) {
-      return res.status(404).json({
-        erro: divulgar
-          ? 'Cadastre o webhook do canal das divulgações (ou o canal das fichas) antes de publicar.'
-          : 'Nenhum webhook válido configurado.',
-      });
-    }
-
-    res.json({
-      webhook: store.discord.webhook,
-      canal: store.discord.canal,
-      mencionarHere: store.discord.mencionarHere,
-      origem: divulgar ? 'fichas' : 'fichas',
-    });
   });
 
-  // O teste de envio é feito pelo navegador do comando (src/lib/discord.ts):
-  // este servidor não alcança o Discord, então a rota antiga foi removida.
-
-  /* -------------------- Documento de divulgação ---------------------- */
-
-  const LIMITES_DIVULGACAO = { texto: 1200, responsavel: 120, link: 300, observacoes: 600, local: 160 };
-
-  /** Normaliza o que o comando enviou, sem deixar campos quebrarem o documento. */
-  const limparDivulgacao = (corpo: Record<string, unknown>): DivulgacaoInscricoes => {
-    const atual = store.divulgacao ?? DEFAULT_STORE.divulgacao!;
-
-    const unidades = Array.isArray(corpo.unidades)
-      ? [
-          ...new Set(
-            corpo.unidades
-              .filter((u): u is string => typeof u === 'string')
-              .filter((u) => ['pmpr', 'rotam', 'rone'].includes(u)),
-          ),
-        ]
-      : atual.unidades;
-
-    const texto = (campo: keyof typeof LIMITES_DIVULGACAO, padrao: string) =>
-      typeof corpo[campo] === 'string' ? (corpo[campo] as string).slice(0, LIMITES_DIVULGACAO[campo]) : padrao;
-
-    return {
-      unidades: unidades.length ? unidades : atual.unidades,
-      texto: texto('texto', atual.texto),
-      data: typeof corpo.data === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(corpo.data) ? corpo.data : atual.data,
-      horario:
-        typeof corpo.horario === 'string' && /^\d{2}:\d{2}$/.test(corpo.horario) ? corpo.horario : atual.horario,
-      responsavel: texto('responsavel', atual.responsavel),
-      link: texto('link', atual.link),
-      observacoes: texto('observacoes', atual.observacoes),
-      provaData:
-        typeof corpo.provaData === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(corpo.provaData)
-          ? corpo.provaData
-          : '',
-      provaHorario:
-        typeof corpo.provaHorario === 'string' && /^\d{2}:\d{2}$/.test(corpo.provaHorario)
-          ? corpo.provaHorario
-          : '',
-      provaLocal:
-        typeof corpo.provaLocal === 'string' ? corpo.provaLocal.slice(0, LIMITES_DIVULGACAO.local) : '',
-      atualizadoEm: new Date().toISOString(),
-    };
-  };
-
-  app.get('/api/admin/divulgacao', exigirAdmin, (_req, res) => {
-    res.json({ divulgacao: store.divulgacao ?? DEFAULT_STORE.divulgacao });
-  });
-
-  app.patch('/api/admin/divulgacao', exigirAdmin, (req, res) => {
-    store.divulgacao = limparDivulgacao((req.body ?? {}) as Record<string, unknown>);
-    saveStore(store);
-    res.json({ ok: true, divulgacao: store.divulgacao });
-  });
-
-  /* ------------------- Registro de envios ao Discord ------------------ */
-
-  app.post('/api/admin/envios', exigirAdmin, async (req, res) => {
-    const { editalId, titulo, descricao, campos, url } = req.body ?? {};
-    if (!editalId || typeof titulo !== 'string' || typeof descricao !== 'string') {
-      return res.status(400).json({ erro: 'Dados do envio incompletos.' });
-    }
-
-    const resultado = await enviarDiscord(store.discord, {
-      titulo,
-      descricao,
-      url: typeof url === 'string' ? url : undefined,
-      fields: Array.isArray(campos) ? campos.slice(0, 10) : [],
-    });
-
-    const envio: EnvioDiscord = {
-      id: crypto.randomUUID(),
-      editalId,
-      titulo,
-      destino: store.discord.canal || 'Discord',
-      status: resultado.ok ? 'sucesso' : 'erro',
-      detalhe: resultado.detalhe,
-      criadoEm: new Date().toISOString(),
-    };
-    store.envios.unshift(envio);
-    store.envios = store.envios.slice(0, 100);
-    saveStore(store);
-
-    res.status(resultado.ok ? 200 : 400).json({ ...resultado, envio });
-  });
-
-  /** Registra no histórico um envio feito pelo navegador do comando. */
-  app.post('/api/admin/envios/registrar', exigirAdmin, (req, res) => {
-    const { editalId, titulo, ok, detalhe } = req.body ?? {};
-    if (typeof titulo !== 'string' || !titulo.trim()) {
-      return res.status(400).json({ erro: 'Informe o título do envio.' });
-    }
-
-    const envio: EnvioDiscord = {
-      id: crypto.randomUUID(),
-      editalId: typeof editalId === 'string' ? editalId : 'portal',
-      titulo: titulo.trim().slice(0, 120),
-      destino: store.discord.canal || 'Discord',
-      status: ok ? 'sucesso' : 'erro',
-      detalhe: typeof detalhe === 'string' ? detalhe.slice(0, 300) : undefined,
-      criadoEm: new Date().toISOString(),
-    };
-    store.envios.unshift(envio);
-    store.envios = store.envios.slice(0, 100);
-    saveStore(store);
-
-    res.json({ ok: true, envio });
-  });
-
-  app.delete('/api/admin/envios', exigirAdmin, (_req, res) => {
-    store.envios = [];
-    saveStore(store);
-    res.json({ ok: true });
-  });
-
-  /* ------------------------ Lista de interessados -------------------- */
-
-  app.patch('/api/admin/interessados/:id', exigirAdmin, (req, res) => {
-    const { id } = req.params;
-    const { vinculado } = req.body ?? {};
-    const alvo = store.interessados.find((i) => i.id === id);
-    if (!alvo) return res.status(404).json({ erro: 'Interessado não encontrado.' });
-    if (typeof vinculado === 'boolean') alvo.vinculado = vinculado;
-    saveStore(store);
-    res.json({ ok: true, interessado: alvo });
-  });
-
-  app.delete('/api/admin/interessados/:id', exigirAdmin, (req, res) => {
-    const { id } = req.params;
-    store.interessados = store.interessados.filter((i) => i.id !== id);
-    saveStore(store);
-    res.json({ ok: true });
-  });
-
-  /* ---------------------- Inscrição pública no Discord --------------- */
-
-  app.post('/api/public/interesse', async (req, res) => {
-    const { nome, discord, editais } = req.body ?? {};
-
-    if (typeof nome !== 'string' || nome.trim().length < 3) {
-      return res.status(400).json({ erro: 'Informe seu nome completo.' });
-    }
-    if (typeof discord !== 'string' || discord.trim().length < 3) {
-      return res.status(400).json({ erro: 'Informe seu usuário do Discord.' });
-    }
-    if (!Array.isArray(editais) || editais.length === 0) {
-      return res.status(400).json({ erro: 'Selecione ao menos uma inscrição.' });
-    }
-
-    const interessado: Interessado = {
-      id: crypto.randomUUID(),
-      nome: nome.trim().slice(0, 80),
-      discord: discord.trim().slice(0, 60),
-      editais: editais.filter((e: unknown) => typeof e === 'string').slice(0, 3),
-      criadoEm: new Date().toISOString(),
-      vinculado: false,
-    };
-
-    store.interessados.unshift(interessado);
-    store.interessados = store.interessados.slice(0, 500);
-
-    let aviso = 'Cadastro registrado no portal.';
-    if (store.discord.webhook && webhookValido(store.discord.webhook)) {
-      const resultado = await enviarDiscord(store.discord, {
-        titulo: '📣 Novo interessado nas inscrições',
-        descricao: `**${interessado.nome}** vinculou o Discord \`${interessado.discord}\` ao portal.`,
-        cor: 0x1f7a4d,
-        fields: [
-          {
-            name: 'Inscrições',
-            value: interessado.editais
-              .map((e) => e.replace(/-operacional-\d+$/, '').replace(/-/g, ' ').toUpperCase())
-              .join(' · '),
-            inline: false,
-          },
-          { name: 'Próximo passo', value: 'Envie `!confirmar` no canal para validar a vinculação.', inline: false },
-        ],
-      });
-      aviso = resultado.ok
-        ? 'Cadastro registrado e enviado ao Discord.'
-        : 'Cadastro registrado no portal, mas o aviso ao Discord falhou.';
-    }
-
-    saveStore(store);
-    res.status(201).json({ ok: true, aviso, interessado, convite: store.discord.convite });
-  });
-
-  /* --------------------- Recrutamento RP (formulário) ---------------- */
-
-  const LIMITE_RESPOSTA = 4000;
-
-  app.post('/api/public/recrutamento', (req, res) => {
-    const { formularioId, nome, idade, idRp, respostas } = req.body ?? {};
-
-    if (typeof nome !== 'string' || nome.trim().length < 2) {
-      return res.status(400).json({ erro: 'Informe o nome dentro da cidade.' });
-    }
-    if (typeof idade !== 'string' || !/^\d{1,2}$/.test(idade.trim())) {
-      return res.status(400).json({ erro: 'Informe uma idade válida (fora do RP).' });
-    }
-    const idadeNum = Number(idade.trim());
-    if (idadeNum < 10 || idadeNum > 99) {
-      return res.status(400).json({ erro: 'A idade deve estar entre 10 e 99 anos.' });
-    }
-    if (typeof idRp !== 'string' || idRp.trim().length < 1) {
-      return res.status(400).json({ erro: 'Informe o ID dentro do RP.' });
-    }
-    if (!respostas || typeof respostas !== 'object' || Array.isArray(respostas)) {
-      return res.status(400).json({ erro: 'Respostas inválidas.' });
-    }
-
-    const limpas: Record<string, string> = {};
-    for (const [chave, valor] of Object.entries(respostas as Record<string, unknown>)) {
-      if (typeof valor !== 'string' || !valor.trim()) continue;
-      if (!/^[a-z0-9_-]{1,40}$/i.test(chave)) continue;
-      limpas[chave] = valor.trim().slice(0, LIMITE_RESPOSTA);
-    }
-
-    // Cada ficha tem um número próprio de perguntas: 13º BPM (9), ROTAM (6) e
-    // RONE (7). O mínimo é proporcional, para nenhuma ficha ser recusada.
-    const MINIMOS: Record<string, number> = {
-      'fronteira-sul-nov-2026': 8,
-      'rotam-operacional-2026': 6,
-      'rone-operacional-2026': 6,
-    };
-    const minimo = MINIMOS[String(formularioId ?? '')] ?? 5;
-
-    if (Object.keys(limpas).length < minimo) {
-      return res.status(400).json({ erro: 'Responda todas as perguntas obrigatórias antes de enviar.' });
-    }
-
-    const inscricao: InscricaoRecrutamento = {
-      id: crypto.randomUUID(),
-      formularioId: typeof formularioId === 'string' ? formularioId.slice(0, 60) : 'fronteira-sul-nov-2026',
-      nome: nome.trim().slice(0, 80),
-      idade: String(idadeNum),
-      idRp: idRp.trim().slice(0, 30),
-      respostas: limpas,
-      criadoEm: new Date().toISOString(),
-      status: 'novo',
-    };
-
-    store.inscricoes.unshift(inscricao);
-    store.inscricoes = store.inscricoes.slice(0, 800);
-    saveStore(store);
-
-    // Envio automático: o servidor não alcança o Discord nesta rede, então
-    // devolvemos o destino cadastrado e o navegador entrega a ficha.
-    // A URL do webhook só sai daqui com o envio automático ligado.
-    const podeEnviar =
-      store.discord.autoEnviar && Boolean(store.discord.webhook) && webhookValido(store.discord.webhook);
-
-    res.status(201).json({
-      ok: true,
-      aviso: 'Inscrição registrada. O comando do batalhão fará a análise.',
-      inscricao,
-      ...(podeEnviar
-        ? { discord: { webhook: store.discord.webhook, mencionarHere: store.discord.mencionarHere } }
-        : {}),
-    });
-  });
-
-  /* --------- Confirmação de entrega da ficha no Discord (navegador) -------- */
-
-  app.patch('/api/public/recrutamento/:id/discord', (req, res) => {
-    const { id } = req.params;
-    const { ok, detalhe } = req.body ?? {};
-    if (typeof ok !== 'boolean') {
-      return res.status(400).json({ erro: 'Informe se a entrega funcionou.' });
-    }
-
-    const inscricao = store.inscricoes.find((i) => i.id === id);
-    if (!inscricao) return res.status(404).json({ erro: 'Inscrição não encontrada.' });
-
-    inscricao.discordEnviado = ok;
-    inscricao.discordErro = ok ? undefined : String(detalhe ?? '').slice(0, 300);
-
-    store.envios.unshift({
-      id: crypto.randomUUID(),
-      editalId: inscricao.formularioId,
-      titulo: `Ficha ${inscricao.nome} — ${inscricao.formularioId}`,
-      destino: store.discord.canal || 'Discord',
-      status: ok ? 'sucesso' : 'erro',
-      detalhe: ok ? 'Ficha entregue ao canal.' : String(detalhe ?? 'Falha no envio.').slice(0, 300),
-      criadoEm: new Date().toISOString(),
-    });
-    store.envios = store.envios.slice(0, 100);
-    saveStore(store);
-
-    res.json({ ok: true });
-  });
-
-  app.get('/api/admin/inscricoes', exigirAdmin, (_req, res) => {
-    res.json({ inscricoes: store.inscricoes });
-  });
-
-  app.patch('/api/admin/inscricoes/:id', exigirAdmin, (req, res) => {
-    const { id } = req.params;
-    const { status, observacaoComando } = req.body ?? {};
-    const alvo = store.inscricoes.find((i) => i.id === id);
-    if (!alvo) return res.status(404).json({ erro: 'Inscrição não encontrada.' });
-
-    const permitido = ['novo', 'em-analise', 'aprovado', 'reprovado'];
-    if (status !== undefined && !permitido.includes(status)) {
-      return res.status(400).json({ erro: 'Status inválido.' });
-    }
-    if (status !== undefined) alvo.status = status;
-    if (observacaoComando !== undefined) {
-      alvo.observacaoComando = String(observacaoComando).slice(0, 2000);
-    }
-    saveStore(store);
-    res.json({ ok: true, inscricao: alvo });
-  });
-
-  app.delete('/api/admin/inscricoes/:id', exigirAdmin, (req, res) => {
-    const { id } = req.params;
-    store.inscricoes = store.inscricoes.filter((i) => i.id !== id);
-    saveStore(store);
-    res.json({ ok: true });
-  });
-
-  /* ------------------------------- Vite ------------------------------ */
+  /* --------------------- estáticos / Vite --------------------- */
 
   if (process.env.NODE_ENV !== 'production') {
     const vite = await createViteServer({
@@ -1086,44 +494,30 @@ async function startServer() {
     app.use(vite.middlewares);
   } else {
     const distPath = path.join(process.cwd(), 'dist');
-
-    // HTML e service worker nunca entram em cache: assim o navegador sempre
-    // pega o bundle novo (era isso que mantinha o painel no código antigo).
     app.use((req, res, next) => {
-      const url = req.path;
-      if (url === '/' || url.endsWith('.html') || url === '/sw.js' || url === '/manifest.json') {
-        res.set('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
-        res.set('Pragma', 'no-cache');
-        res.set('Expires', '0');
+      if (req.path === '/' || req.path.endsWith('.html')) {
+        res.set('Cache-Control', 'no-store');
       }
       next();
     });
-
     app.use(
       express.static(distPath, {
         setHeaders: (res, caminho) => {
-          // assets têm hash no nome: podem ser cacheados por muito tempo
           if (/[\\/]assets[\\/]/.test(caminho)) {
             res.set('Cache-Control', 'public, max-age=31536000, immutable');
           }
         },
       }),
     );
-    // API inexistente responde JSON, não a página do portal
     app.use('/api', (_req, res) => {
       res.status(404).json({ erro: 'Rota da API não encontrada.' });
     });
-
     app.get('*', (_req, res) => {
-      res.set('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
+      res.set('Cache-Control', 'no-store');
       res.sendFile(path.join(distPath, 'index.html'));
     });
   }
 
-  /**
-   * Em produção escutamos só a PORT (o host escolhe a porta). Fora de produção
-   * também abrimos a 24678, que é a porta acompanhada pelo preview local.
-   */
   const PORTAS =
     process.env.NODE_ENV === 'production'
       ? [PORT]
@@ -1131,7 +525,7 @@ async function startServer() {
 
   for (const porta of PORTAS) {
     const servidor = app.listen(porta, '0.0.0.0', () => {
-      console.log(`Portal de Inscrições PMPR em http://0.0.0.0:${porta}`);
+      console.log(`PCPR RP · Registro de Prisões em http://0.0.0.0:${porta}`);
     });
     servidor.on('error', (erro: NodeJS.ErrnoException) => {
       if (erro.code === 'EADDRINUSE') {
@@ -1143,17 +537,10 @@ async function startServer() {
   }
 }
 
-/* ------------------------------------------------------------------ */
-/* Encerramento limpo (Docker, Fly, Render, etc.)                      */
-/* ------------------------------------------------------------------ */
+process.on('SIGTERM', () => process.exit(0));
+process.on('SIGINT', () => process.exit(0));
 
-process.on('SIGTERM', () => {
-  console.log('Encerrando o portal...');
-  process.exit(0);
+startServer().catch((erro) => {
+  console.error('Falha ao iniciar o servidor:', erro);
+  process.exit(1);
 });
-process.on('SIGINT', () => {
-  console.log('Encerrando o portal...');
-  process.exit(0);
-});
-
-startServer();

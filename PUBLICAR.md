@@ -1,10 +1,8 @@
-# Colocando o portal no ar
+# Colocando o sistema no ar
 
-O portal é um site **Node.js + Express** que serve o front em React. Em produção
-ele roda como **um único processo** (`node dist/server.cjs`) na porta definida
-por `PORT`.
-
-Antes de publicar, faça **uma troca de senha** (veja o fim deste guia).
+O sistema é um site **Node.js + Express** que serve o front em React. Em
+produção roda como **um único processo** (`node dist/server.cjs`) na porta
+definida por `PORT`.
 
 ---
 
@@ -21,131 +19,105 @@ npm start          # sobe em http://localhost:3000
 | Caminho | O que é |
 | --- | --- |
 | `dist/index.html` + `dist/assets/` | front compilado (JS/CSS com hash) |
-| `dist/fontes/`, `dist/divulgacao/`, `dist/*.png` | imagens e fontes do cartaz |
+| `dist/fontes/`, `dist/*.png`, `dist/manifest.json` | brasões, fontes e manifesto |
 | `dist/server.cjs` | servidor Express já compilado |
 
 ---
 
 ## 2. Variáveis de ambiente
 
-Todas são opcionais. Copie `.env.example` para `.env` se quiser ajustar.
+Todas opcionais. Copie `.env.example` para `.env` se quiser ajustar.
 
 | Variável | Para que serve | Padrão |
 | --- | --- | --- |
 | `PORT` | porta HTTP | `3000` |
-| `NODE_ENV` | `production` serve o build e não abre a porta de preview | — |
-| `PORTAL_DATA_DIR` | pasta dos dados (use um volume) | raiz do projeto |
-| `PORTAL_SECRET` | segredo que assina as sessões | criado em `.portal-secret` |
+| `NODE_ENV` | `production` serve o build de `dist/` | — |
+| `PC_DATA_DIR` | pasta dos dados (aponte para um volume) | raiz do projeto |
 
-**Dados que precisam sobreviver ao deploy:**
+**O que precisa sobreviver ao deploy:** `dados-pcpr-rp.json` — prisões, mandados,
+fotos, assinaturas, configurações dos webhooks do Discord e histórico de envios. Sem volume ou disco
+persistente, esse arquivo some a cada publicação.
 
-- `portal-data.json` — formulários recebidos, documento de divulgação, canais do Discord, login e senha.
-- `.portal-secret` — assinatura das sessões do comando.
-- `.portal-sessao.json` — sessões encerradas.
-
-Sem um volume ou disco persistente, esses arquivos somem a cada publicação.
+> Não há login nem senha no sistema: ele foi pensado para uso interno do grupo
+> de RP. Se for expor publicamente, coloque uma camada de autenticação no
+> proxy/reverse proxy (Basic Auth, Cloudflare Access etc.) para proteger os
+> registros e a URL do webhook.
 
 ---
 
-## 3. Opção A — Docker (funciona em VPS, Fly.io, Render, Railway, EasyPanel…)
+## 3. Opção A — Docker (VPS, Fly.io, Render, Railway, EasyPanel…)
 
 O repositório já tem `Dockerfile` e `.dockerignore`.
 
 ```bash
-docker build -t portal-pmpr .
-docker run -d --name portal \
+docker build -t pcpr-prisoes .
+docker run -d --name pcpr-prisoes \
   -p 3000:3000 \
-  -v portal-dados:/app/dados \
+  -v pcpr-dados:/app/dados \
   -e NODE_ENV=production \
-  portal-pmpr
+  pcpr-prisoes
 ```
 
-O volume `portal-dados` guarda os dados entre subidas. Para atualizar:
-
-```bash
-git pull && docker build -t portal-pmpr . && docker rm -f portal && docker run ... (mesmo comando)
-```
-
-### Fly.io
-
-```bash
-fly launch --no-deploy
-fly volumes create dados --size 1
-fly secrets set PORTAL_SECRET="uma-frase-longa-e-aleatoria"
-fly deploy
-```
-
-No `fly.toml`, aponte o volume para `/app/dados` e defina `PORTAL_DATA_DIR=/app/dados`.
-
-### Render / Railway
-
-- **Build:** `npm ci && npm run build`
-- **Start:** `NODE_ENV=production node dist/server.cjs`
-- Adicione um **disco persistente** montado na pasta de `PORTAL_DATA_DIR` (ex.: `/dados`) e defina a variável com esse caminho.
+O `Dockerfile` já define `PC_DATA_DIR=/app/dados` e declara o volume.
 
 ---
 
-## 4. Opção B — VPS com Node + Nginx
+## 4. Opção B — VPS com Node
 
 ```bash
-# no servidor
-git clone <repo> /var/www/portal-pmpr
-cd /var/www/portal-pmpr
-npm ci && npm run build
+git clone <seu-repo> && cd Btz-contrile
+npm ci
+npm run build
+PC_DATA_DIR=/var/lib/pcpr-rp NODE_ENV=production PORT=3000 node dist/server.cjs
 ```
 
-Mantenha no ar com PM2:
-
-```bash
-npm i -g pm2
-PORT=3000 NODE_ENV=production PORTAL_DATA_DIR=/var/lib/portal-pmpr pm2 start dist/server.cjs --name portal-pmpr
-pm2 save && pm2 startup
-```
-
-Nginx (proxy + HTTPS via Certbot):
-
-```nginx
-server {
-  server_name seu-dominio.com.br;
-
-  client_max_body_size 5m;
-
-  location / {
-    proxy_pass http://127.0.0.1:3000;
-    proxy_http_version 1.1;
-    proxy_set_header Host $host;
-    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-    proxy_set_header X-Forwarded-Proto $scheme;
-  }
-}
-```
-
-```bash
-sudo certbot --nginx -d seu-dominio.com.br
-```
+Use `systemd`, `pm2` ou `supervisor` para manter o processo no ar, e um
+**reverse proxy** (Nginx/Caddy) com HTTPS na frente. O HTTPS é importante:
+o navegador só consegue enviar ao Discord a partir de uma origem segura.
 
 ---
 
-## 5. Depois de publicar — checklist
+## 5. Opção C — só o front (sem servidor)
 
-1. Abrir o site e conferir a página inicial (título, brasão, abas do topo).
-2. **painel → Divulgação**: trocar a senha em **Login e senha**.
-3. Cadastrar o **webhook do canal das fichas** e o **canal das divulgações**.
-   Use **Enviar teste** nos dois para conferir que a mensagem chega.
-4. Publicar um cartaz de teste (ROTAM ou RONE) e ver a imagem no Discord.
-5. Enviar uma ficha de teste e conferir se ela cai no canal das fichas.
-6. Apagar os dados de teste (`portal-data.json`) **somente** se quiser começar
-   do zero — isso também apaga o login e os webhooks.
+Se publicar apenas `dist/` num host estático (Netlify, Vercel, GitHub Pages),
+o site **continua funcionando**: a API não responde e ele passa a gravar tudo
+em `localStorage` naquele navegador. Nesse modo os registros **não são
+compartilhados** entre agentes e o botão de backup JSON é a forma de guardar
+os dados. Para uso em grupo, prefira as opções A ou B.
 
 ---
 
-## 6. Antes de abrir para o público
+## 6. Conferindo a instalação
 
-- **Troque a senha** `comando` / `1234` no painel (aba *Login e senha*).
-- O Discord recebe as mensagens pelo **navegador** de quem usa o painel, não
-  pelo servidor: a pessoa que publica precisa ter acesso à internet normal, e
-  o navegador precisa alcançar `discord.com`.
-- O certificado HTTPS deve ser do domínio final; sem HTTPS o cartaz e o envio ao
-  Discord continuam funcionando, mas não são recomendados.
-- Backup: copie a pasta de dados (`portal-data.json` e `.portal-secret`) com
-  regularidade.
+```bash
+curl https://seu-dominio/api/health
+# {"ok":true,"servico":"PCPR RP · Registro de Prisões e Mandados","registros":0,"mandados":0}
+```
+
+Depois:
+
+1. Abra a aba **Canal do Discord**, cole a URL do webhook e use **Enviar teste** —
+   deve chegar um **cartaz de exemplo** com marca d'água `EXEMPLO`.
+2. Registre uma prisão de teste com foto e assinatura do escrivão; confira se o
+   **cartaz** chegou no canal no mesmo modelo da ficha impressa.
+3. Abra **Mandados de prisão → Expedir mandado**, preencha os campos e salve:
+   deve chegar um **cartaz do mandado** com situação, assinatura da autoridade
+   e dia/data automáticos. Use **Enviar cartaz de teste** na aba Discord para
+   conferir o canal exclusivo sem criar um mandado real.
+4. Teste **Ver cartaz / Baixar PNG** na ficha e no mandado, e **Imprimir**.
+5. Faça um **Backup JSON** periodicamente.
+
+---
+
+## 7. Solução de problemas
+
+| Sintoma | O que checar |
+| --- | --- |
+| Discord não recebe | URL do webhook completa, canal ainda existe, `@here` e cargo com permissão, bloqueadores de extensão, HTTPS no site |
+| Chega só texto, sem cartaz | *Formato da ficha no canal* está em "Ficha em texto"; mude para "Cartaz em imagem" ou "Cartaz + texto" |
+| Cartaz sem assinatura | Desenhe a assinatura no formulário ou preencha o nome do escrivão / autoridade (usado em caligrafia) |
+| Mandado não chegou no Discord | Verifique o *webhook dos mandados* na aba Discord (vazio = usa o das prisões), o envio automático e o botão **Enviar pendentes** na lista de mandados |
+| "Discord respondeu 404/401" | Webhook apagado ou regenerado: copie a URL de novo |
+| Fotos somem depois do deploy | `PC_DATA_DIR` apontando para volume persistente |
+| "DADOS NESTE NAVEGADOR" no cabeçalho | A API não respondeu; veja se o processo Node está no ar |
+| Ficha de impressão sai em branco | Use o botão **Imprimir** da própria ficha (ele monta a folha dedicada) |

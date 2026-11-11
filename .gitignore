@@ -7,19 +7,13 @@ coverage/
 .env*
 !.env.example
 
-# dados locais do portal
-portal-data.json
-.portal-secret
-.portal-sessao.json
-btz_access_logs.json
-btz_operators.json
+# Dados locais do sistema (prisões, fotos, webhook do Discord)
+dados-pcpr-rp.json
+dados-pcpr-rp.json.tmp
+.dados/
 image-search/
 
-# Exemplos gerados localmente (não fazem parte do app)
+# Pastas de trabalho locais
 .exemplos/
-
-# Pacotes prontos para publicação
 entregas/
-
-# Dados locais do preview de produção
 .dados-preview/

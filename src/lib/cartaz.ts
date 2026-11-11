@@ -1,688 +1,506 @@
 /**
- * Cartaz de divulgação das inscrições — 1600×900.
+ * Cartaz da ficha de registro de prisão.
  *
- * Reproduz a arte do modelo oficial (Edital Aberto / Soldado PMPR): cabeçalho
- * com brasão e lema, faixa amarela inclinada, "CONCURSO PARA" + palavra em
- * destaque, frase de apoio, três ícones amarelos e rodapé com o brasão do
- * Governo do Paraná. Os textos são fixos: o cartaz é a arte, não um editor.
+ * Desenha em <canvas> a mesma ficha do modelo impresso (fundo branco, tinta
+ * preta, brasão da PCPR, foto, campos, dia/data automáticos e assinatura do
+ * escrivão) para ser enviada como IMAGEM no Discord, baixada ou impressa.
+ *
+ * Tudo é gerado no navegador: não depende de biblioteca externa nem de
+ * renderização do DOM, então o resultado é idêntico em qualquer navegador.
  */
+import type { Prisao } from '../types';
+import { carimboCompleto, dataBR, dataHoraBR, diaPorExtenso, horaBR, textoOuTraco } from './format';
 
-import type { DivulgacaoInscricoes } from '../types';
+export type DadosCartaz = Partial<Prisao> & { criadoEm: string };
 
-const LARGURA = 1600;
-const ALTURA = 900;
-
-const AMARELO = '#f5c518';
-const BRANCO = '#ffffff';
-const PRETO = '#0a0a0a';
-
-/** Anton: títulos grossos e condensados. Barlow: textos e legendas. */
-const FONTE_TITULO = '"Anton", "Arial Narrow", Impact, sans-serif';
-const FONTE_TEXTO = '"Barlow Condensed", "Arial Narrow", sans-serif';
-
-/** Textos e arte de cada unidade divulgada. */
-export interface TemaCartaz {
-  id: 'pmpr' | 'rotam' | 'rone';
-  /** Nome usado no selo de identificação do cartaz. */
+export interface Cartaz {
+  dataUrl: string;
+  blob: Blob;
   nome: string;
-  /** Foto de fundo. */
-  fundo: string;
-  /** Frase da faixa amarela. */
-  selo: string;
-  /** Linha pequena acima da palavra grande. */
-  chamada: string;
-  /** Palavra grande em destaque. */
-  destaque: string;
-  /** Frase de apoio. */
-  apoio: string;
-  /** Três blocos com ícone no rodapé da arte. */
-  blocos: { titulo: string; titulo2: string; icone: 'documento' | 'escudo' | 'pessoas' }[];
-  /** Mostra a data, o horário e o local da prova de ingresso no cartaz. */
-  mostraProva: boolean;
+  largura: number;
+  altura: number;
 }
 
-/**
- * A arte muda conforme a unidade da divulgação: foto, faixa, palavra grande,
- * frase de apoio e blocos. Estas são as três tropas do portal.
- */
-export const TEMAS_CARTAZ: Record<TemaCartaz['id'], TemaCartaz> = {
-  pmpr: {
-    id: 'pmpr',
-    nome: 'Polícia Militar do Paraná',
-    fundo: '/divulgacao/pano-de-fundo.jpg',
-    selo: 'EDITAL ABERTO',
-    chamada: 'CONCURSO PARA',
-    destaque: 'SOLDADO',
-    apoio: 'INGRESSE NA MAIOR FORÇA DE SEGURANÇA PÚBLICA DO PARANÁ',
-    blocos: [
-      { titulo: 'EDITAL', titulo2: 'PUBLICADO', icone: 'documento' },
-      { titulo: 'VAGAS PARA', titulo2: 'SOLDADO', icone: 'escudo' },
-      { titulo: 'NÍVEL MÉDIO', titulo2: 'COMPLETO', icone: 'pessoas' },
-    ],
-    mostraProva: false,
-  },
-  rotam: {
-    id: 'rotam',
-    nome: 'ROTAM',
-    fundo: '/divulgacao/rotam-real.jpg',
-    selo: 'INSCRIÇÕES ABERTAS',
-    chamada: 'SELEÇÃO INTERNA',
-    destaque: 'ROTAM',
-    apoio: 'RONDA TÁTICA EM TODO O PARANÁ, A QUALQUER HORA',
-    blocos: [
-      { titulo: 'CURSO', titulo2: 'OPERACIONAL', icone: 'escudo' },
-      { titulo: 'SELEÇÃO', titulo2: 'INTERNA', icone: 'documento' },
-      { titulo: 'EFETIVO DA', titulo2: 'ATIVA', icone: 'pessoas' },
-    ],
-    mostraProva: true,
-  },
-  rone: {
-    id: 'rone',
-    nome: 'RONE',
-    fundo: '/divulgacao/rone-real.jpg',
-    selo: 'INSCRIÇÕES ABERTAS',
-    chamada: 'SELEÇÃO INTERNA',
-    destaque: 'RONE',
-    apoio: 'OPERAÇÕES ESPECIAIS — A TROPA DE ELITE DA PMPR',
-    blocos: [
-      { titulo: 'CURSO DE', titulo2: 'OPERAÇÕES', icone: 'escudo' },
-      { titulo: 'SELEÇÃO', titulo2: 'INTERNA', icone: 'documento' },
-      { titulo: 'EFETIVO DA', titulo2: 'ATIVA', icone: 'pessoas' },
-    ],
-    mostraProva: true,
-  },
-};
+export const W = 1200;
+export const MARGEM = 40;
+export const ESQ = 60;
+export const DIR = 1140;
+export const LARG = DIR - ESQ;
+export const PRETO = '#000000';
+export const BRANCO = '#ffffff';
+export const CINZA = '#444444';
 
-/** Textos fixos da arte, iguais em qualquer unidade. */
-const textoFixo = {
-  orgao: 'POLÍCIA MILITAR',
-  orgao2: 'DO PARANÁ',
-  lema: 'DISCIPLINA   |   LEALDADE   |   SERVIÇO',
-  canto1: 'JUNTE-SE A NÓS',
-  canto2: 'E FAÇA A DIFERENÇA',
-  governo: 'GOVERNO DO ESTADO',
-};
+export type Familia = 'anton' | 'cond' | 'script';
 
-/** Tema do cartaz a partir da unidade escolhida. */
-export function temaDoCartaz(unidade?: string | null): TemaCartaz {
-  if (unidade && unidade in TEMAS_CARTAZ) return TEMAS_CARTAZ[unidade as TemaCartaz['id']];
-  return TEMAS_CARTAZ.pmpr;
+export function fonte(ctx: CanvasRenderingContext2D, familia: Familia, tamanho: number, peso = 400) {
+  if (familia === 'anton') {
+    ctx.font = `${tamanho}px Anton, "Arial Narrow", Impact, sans-serif`;
+  } else if (familia === 'script') {
+    ctx.font = `italic ${tamanho}px "Segoe Script", "Brush Script MT", "Comic Sans MS", cursive`;
+  } else {
+    ctx.font = `${peso} ${tamanho}px "Barlow Condensed", "Arial Narrow", sans-serif`;
+  }
 }
 
-/* ----------------------------- carregamento ----------------------------- */
+export async function garantirFontes() {
+  if (typeof document === 'undefined' || !('fonts' in document)) return;
+  try {
+    await Promise.all([
+      document.fonts.load('40px Anton'),
+      document.fonts.load('400 24px "Barlow Condensed"'),
+      document.fonts.load('700 24px "Barlow Condensed"'),
+    ]);
+    await document.fonts.ready;
+  } catch {
+    /* segue com a fonte de fallback do sistema */
+  }
+}
 
-const cacheImagens = new Map<string, Promise<HTMLImageElement>>();
-
-function carregarImagem(src: string): Promise<HTMLImageElement> {
-  const guardada = cacheImagens.get(src);
-  if (guardada) return guardada;
-  const promessa = new Promise<HTMLImageElement>((resolver, rejeitar) => {
+export function carregarImagem(src: string): Promise<HTMLImageElement | null> {
+  return new Promise((resolve) => {
     const img = new Image();
-    img.onload = () => resolver(img);
-    img.onerror = () => rejeitar(new Error(`Falha ao carregar ${src}`));
+    img.onload = () => resolve(img);
+    img.onerror = () => resolve(null);
     img.src = src;
   });
-  cacheImagens.set(src, promessa);
-  return promessa;
 }
 
-/* ------------------------------- desenho -------------------------------- */
+/** Desenha texto com espaçamento entre letras (rótulos institucionais). */
+export function espacado(
+  ctx: CanvasRenderingContext2D,
+  texto: string,
+  x: number,
+  y: number,
+  espaco = 1.8,
+): number {
+  let cx = x;
+  for (const ch of texto) {
+    ctx.fillText(ch, cx, y);
+    cx += ctx.measureText(ch).width + espaco;
+  }
+  return cx - x - espaco;
+}
 
-/** Desenha cobrindo a área indicada, sem distorcer. */
-function desenharCobrindo(
+function larguraEspacada(ctx: CanvasRenderingContext2D, texto: string, espaco: number) {
+  let largura = 0;
+  for (const ch of texto) largura += ctx.measureText(ch).width + espaco;
+  return largura - espaco;
+}
+
+export function espacadoDireita(
+  ctx: CanvasRenderingContext2D,
+  texto: string,
+  xDireita: number,
+  y: number,
+  espaco = 1.8,
+) {
+  espacado(ctx, texto, xDireita - larguraEspacada(ctx, texto, espaco), y, espaco);
+}
+
+export function espacadoCentro(
+  ctx: CanvasRenderingContext2D,
+  texto: string,
+  xCentro: number,
+  y: number,
+  espaco = 1.8,
+) {
+  espacado(ctx, texto, xCentro - larguraEspacada(ctx, texto, espaco) / 2, y, espaco);
+}
+
+/** Quebra o texto em linhas que caibam na largura, com elipse se sobrar. */
+export function quebrar(
+  ctx: CanvasRenderingContext2D,
+  texto: string,
+  larguraMax: number,
+  maxLinhas = 4,
+): string[] {
+  const bruto = (texto || '').trim() || '—';
+  const linhas: string[] = [];
+  let cortado = false;
+
+  for (const paragrafo of bruto.split('\n')) {
+    let atual = '';
+    for (const palavra of paragrafo.split(/\s+/).filter(Boolean)) {
+      const tentativa = atual ? `${atual} ${palavra}` : palavra;
+      if (ctx.measureText(tentativa).width <= larguraMax) {
+        atual = tentativa;
+        continue;
+      }
+      if (atual) {
+        linhas.push(atual);
+        atual = '';
+        if (linhas.length >= maxLinhas) {
+          cortado = true;
+          break;
+        }
+      }
+      if (ctx.measureText(palavra).width > larguraMax) {
+        let pedaco = '';
+        for (const letra of palavra) {
+          if (pedaco && ctx.measureText(pedaco + letra).width > larguraMax) {
+            linhas.push(pedaco);
+            pedaco = letra;
+            if (linhas.length >= maxLinhas) {
+              cortado = true;
+              break;
+            }
+          } else {
+            pedaco += letra;
+          }
+        }
+        atual = cortado ? '' : pedaco;
+      } else {
+        atual = palavra;
+      }
+      if (cortado) break;
+    }
+    if (cortado) break;
+    if (atual) {
+      linhas.push(atual);
+      if (linhas.length >= maxLinhas) {
+        cortado = true;
+        break;
+      }
+    }
+  }
+
+  const resultado = linhas.slice(0, maxLinhas);
+  if (cortado && resultado.length) {
+    let ultima = resultado[resultado.length - 1];
+    while (ultima && ctx.measureText(`${ultima}…`).width > larguraMax) ultima = ultima.slice(0, -1);
+    resultado[resultado.length - 1] = `${ultima}…`;
+  }
+  return resultado.length ? resultado : ['—'];
+}
+
+export interface LinhaCampo {
+  rotulo: string;
+  linhas: string[];
+  altura: number;
+}
+
+function prepararLinhas(ctx: CanvasRenderingContext2D, dados: DadosCartaz): LinhaCampo[] {
+  fonte(ctx, 'cond', 26, 400);
+  const campos: [string, string][] = [
+    ['ARTIGOS / ENQUADRAMENTO', dados.artigos ?? ''],
+    ['ITENS APREENDIDOS', dados.itensApreendidos ?? ''],
+    ['AGENTE QUE EFETUOU A PRISÃO', dados.agente ?? ''],
+    ['UNIDADE NA OCORRÊNCIA', dados.unidade ?? ''],
+    ['ESCRIVÃO RESPONSÁVEL', dados.escrivao ?? ''],
+    ['LOCAL DA OCORRÊNCIA', dados.local ?? ''],
+    ['OBSERVAÇÕES', dados.observacoes ?? ''],
+  ];
+  return campos.map(([rotulo, valor]) => {
+    const linhas = quebrar(ctx, valor, LARG - 44, 4);
+    return { rotulo, linhas, altura: Math.max(96, 46 + linhas.length * 30 + 18) };
+  });
+}
+
+export function imagemCover(
   ctx: CanvasRenderingContext2D,
   img: HTMLImageElement,
   x: number,
   y: number,
-  largura: number,
-  altura: number,
+  w: number,
+  h: number,
+  pb = true,
 ) {
-  const escala = Math.max(largura / img.width, altura / img.height);
-  const w = img.width * escala;
-  const h = img.height * escala;
-  ctx.drawImage(img, x + (largura - w) / 2, y + (altura - h) / 2, w, h);
+  const escala = Math.max(w / img.width, h / img.height);
+  const iw = img.width * escala;
+  const ih = img.height * escala;
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(x, y, w, h);
+  ctx.clip();
+  if (pb) ctx.filter = 'grayscale(1) contrast(1.1)';
+  ctx.drawImage(img, x + (w - iw) / 2, y + (h - ih) / 2, iw, ih);
+  ctx.restore();
 }
 
-/**
- * O brasão é um PNG opaco com fundo branco: vira transparente por luminância
- * e é recortado na margem, para não aparecer a caixa branca no cartaz.
- */
-function imagemSemFundo(img: HTMLImageElement): HTMLCanvasElement {
-  const tela = document.createElement('canvas');
-  tela.width = img.width;
-  tela.height = img.height;
-  const ctx = tela.getContext('2d');
-  if (!ctx) throw new Error('Este navegador não suporta geração de imagem.');
-  ctx.drawImage(img, 0, 0);
-
-  const dados = ctx.getImageData(0, 0, tela.width, tela.height);
-  const p = dados.data;
-  let minX = tela.width;
-  let minY = tela.height;
-  let maxX = 0;
-  let maxY = 0;
-
-  for (let i = 0; i < p.length; i += 4) {
-    const r = p[i];
-    const g = p[i + 1];
-    const b = p[i + 2];
-    const claro = (r + g + b) / 3;
-    if (claro > 205) {
-      p[i + 3] = 0;
-      continue;
-    }
-    p[i + 3] = claro > 175 ? Math.round(((205 - claro) / 30) * 255) : 255;
-
-    const pixel = i / 4;
-    const x = pixel % tela.width;
-    const y = Math.floor(pixel / tela.width);
-    if (p[i + 3] > 16) {
-      if (x < minX) minX = x;
-      if (x > maxX) maxX = x;
-      if (y < minY) minY = y;
-      if (y > maxY) maxY = y;
-    }
-  }
-  ctx.putImageData(dados, 0, 0);
-
-  const recorte = document.createElement('canvas');
-  recorte.width = Math.max(1, maxX - minX + 1);
-  recorte.height = Math.max(1, maxY - minY + 1);
-  const ctxRecorte = recorte.getContext('2d');
-  if (!ctxRecorte) throw new Error('Este navegador não suporta geração de imagem.');
-  ctxRecorte.drawImage(tela, -minX, -minY);
-  return recorte;
-}
-
-/** Data e hora em texto brasileiro, tolerando campos vazios. */
-function formatarQuando(data: string, horario: string): string {
-  const partes: string[] = [];
-  if (data) {
-    const [ano, mes, dia] = data.split('-');
-    if (ano && mes && dia) partes.push(`${dia}/${mes}/${ano}`);
-  }
-  if (horario) partes.push(`às ${horario}`);
-  return partes.join(' ');
-}
-
-/** Quebra o texto em linhas que caibam na largura dada. */
-function quebrarLinhas(ctx: CanvasRenderingContext2D, texto: string, largura: number): string[] {
-  const palavras = texto.split(/\s+/);
-  const linhas: string[] = [];
-  let atual = '';
-  for (const palavra of palavras) {
-    const tentativa = atual ? `${atual} ${palavra}` : palavra;
-    if (ctx.measureText(tentativa).width > largura && atual) {
-      linhas.push(atual);
-      atual = palavra;
-    } else {
-      atual = tentativa;
-    }
-  }
-  if (atual) linhas.push(atual);
-  return linhas;
-}
-
-/** Texto com espaçamento entre letras (o canvas não tem letterSpacing). */
-function textoEspacado(
+export function imagemContain(
   ctx: CanvasRenderingContext2D,
-  texto: string,
+  img: HTMLImageElement,
   x: number,
   y: number,
-  espaco: number,
-): number {
-  let cursor = x;
-  for (const letra of texto) {
-    ctx.fillText(letra, cursor, y);
-    cursor += ctx.measureText(letra).width + espaco;
-  }
-  return cursor;
-}
-
-/** Largura de um texto com espaçamento, sem desenhar. */
-function larguraEspacada(ctx: CanvasRenderingContext2D, texto: string, espaco: number): number {
-  return ctx.measureText(texto).width + espaco * Math.max(0, texto.length - 1);
-}
-
-/** Ícone de documento com linhas (bloco 1). */
-function iconeDocumento(ctx: CanvasRenderingContext2D, x: number, y: number, t: number) {
-  ctx.strokeStyle = AMARELO;
-  ctx.lineWidth = Math.max(4, t * 0.11);
-  ctx.lineJoin = 'round';
-  ctx.beginPath();
-  ctx.roundRect(x, y, t * 0.72, t, t * 0.1);
-  ctx.stroke();
-  ctx.lineWidth = Math.max(3, t * 0.08);
-  for (let i = 0; i < 3; i += 1) {
-    const yy = y + t * (0.28 + i * 0.22);
-    ctx.beginPath();
-    ctx.moveTo(x + t * 0.15, yy);
-    ctx.lineTo(x + t * (i === 2 ? 0.4 : 0.57), yy);
-    ctx.stroke();
-  }
-}
-
-/** Escudo com visto (bloco 2). */
-function iconeEscudo(ctx: CanvasRenderingContext2D, x: number, y: number, t: number) {
-  ctx.strokeStyle = AMARELO;
-  ctx.fillStyle = AMARELO;
-  ctx.lineWidth = Math.max(4, t * 0.11);
-  ctx.lineJoin = 'round';
-  const cx = x + t * 0.5;
-  ctx.beginPath();
-  ctx.moveTo(cx, y);
-  ctx.lineTo(cx + t * 0.46, y + t * 0.16);
-  ctx.lineTo(cx + t * 0.42, y + t * 0.62);
-  ctx.quadraticCurveTo(cx + t * 0.3, y + t * 0.92, cx, y + t);
-  ctx.quadraticCurveTo(cx - t * 0.3, y + t * 0.92, cx - t * 0.42, y + t * 0.62);
-  ctx.lineTo(cx - t * 0.46, y + t * 0.16);
-  ctx.closePath();
-  ctx.stroke();
-  ctx.lineWidth = Math.max(5, t * 0.13);
-  ctx.lineCap = 'round';
-  ctx.beginPath();
-  ctx.moveTo(cx - t * 0.2, y + t * 0.5);
-  ctx.lineTo(cx - t * 0.02, y + t * 0.68);
-  ctx.lineTo(cx + t * 0.24, y + t * 0.34);
-  ctx.stroke();
-}
-
-/** Três pessoas (bloco 3). */
-function iconePessoas(ctx: CanvasRenderingContext2D, x: number, y: number, t: number) {
-  ctx.fillStyle = AMARELO;
-  const cabeca = t * 0.15;
-  const pessoas: [number, number, number][] = [
-    [x + t * 0.5, y + t * 0.18, 1], // centro (maior)
-    [x + t * 0.18, y + t * 0.3, 0.78],
-    [x + t * 0.82, y + t * 0.3, 0.78],
-  ];
-  for (const [cx, cy, escala] of pessoas) {
-    ctx.beginPath();
-    ctx.arc(cx, cy, cabeca * escala, 0, Math.PI * 2);
-    ctx.fill();
-  }
-  // corpos
-  const corpo = (cx: number, cy: number, largura: number) => {
-    ctx.beginPath();
-    ctx.moveTo(cx - largura, cy + t * 0.5);
-    ctx.quadraticCurveTo(cx - largura, cy, cx, cy);
-    ctx.quadraticCurveTo(cx + largura, cy, cx + largura, cy + t * 0.5);
-    ctx.closePath();
-    ctx.fill();
-  };
-  corpo(x + t * 0.5, y + t * 0.42, t * 0.26);
-  corpo(x + t * 0.18, y + t * 0.5, t * 0.2);
-  corpo(x + t * 0.82, y + t * 0.5, t * 0.2);
-}
-
-const ICONES = {
-  documento: iconeDocumento,
-  escudo: iconeEscudo,
-  pessoas: iconePessoas,
-};
-
-/**
- * Desenha um texto numa camada do tamanho da faixa e cola só essa fatia.
- * Assim nenhuma marca da fonte (como a cedilha do Ç) aparece fora da faixa,
- * qualquer que seja o renderizador.
- */
-function textoNaFaixa(
-  ctx: CanvasRenderingContext2D,
-  texto: string,
-  x: number,
-  linhaDeBase: number,
-  topo: number,
-  altura: number,
-  fonte: string,
-  cor: string,
+  w: number,
+  h: number,
 ) {
-  const camada = document.createElement('canvas');
-  camada.width = ctx.canvas.width;
-  camada.height = altura;
-  const c = camada.getContext('2d');
-  if (!c) return;
-  c.fillStyle = cor;
-  c.font = fonte;
-  c.fillText(texto, x, linhaDeBase - topo);
-  ctx.drawImage(camada, 0, topo);
+  const escala = Math.min(w / img.width, h / img.height);
+  const iw = img.width * escala;
+  const ih = img.height * escala;
+  ctx.drawImage(img, x + (w - iw) / 2, y + (h - ih) / 2, iw, ih);
 }
 
-/** Espera as fontes do cartaz, com prazo para não travar a prévia. */
-async function carregarFontes() {
-  if (typeof document === 'undefined' || !('fonts' in document)) return;
-  const lista = [
-    `700 100px ${FONTE_TITULO}`,
-    `400 100px ${FONTE_TEXTO}`,
-    `600 100px ${FONTE_TEXTO}`,
-    `700 100px ${FONTE_TEXTO}`,
-  ];
-  await Promise.race([
-    Promise.all(lista.map((f) => document.fonts.load(f))),
-    new Promise((r) => setTimeout(r, 3000)),
-  ]);
-}
+/** Gera o cartaz em PNG. `marcaDagua` marca prévias e testes (ex.: "EXEMPLO"). */
+export async function gerarCartaz(
+  dados: DadosCartaz,
+  opcoes: { marcaDagua?: string } = {},
+): Promise<Cartaz> {
+  await garantirFontes();
 
-/**
- * Desenha o cartaz e devolve o canvas pronto.
- */
-export async function desenharCartaz(
-  divulgacao: DivulgacaoInscricoes,
-  opcoes: OpcoesCartaz = {},
-): Promise<HTMLCanvasElement> {
-  await carregarFontes();
+  const medida = document.createElement('canvas').getContext('2d');
+  if (!medida) throw new Error('Este navegador não suporta canvas.');
+  const linhas = prepararLinhas(medida, dados);
+  const alturaTabela = linhas.reduce((total, l) => total + l.altura, 0);
 
-  const tema = temaDoCartaz(opcoes.unidade ?? divulgacao.unidades[0]);
+  const Y_TABELA = 480;
+  const yFimTabela = Y_TABELA + alturaTabela;
+  const H = Math.max(1520, yFimTabela + 360);
 
-  const tela = document.createElement('canvas');
-  tela.width = LARGURA;
-  tela.height = ALTURA;
-  const ctx = tela.getContext('2d');
-  if (!ctx) throw new Error('Este navegador não suporta geração de imagem.');
+  const canvas = document.createElement('canvas');
+  canvas.width = W;
+  canvas.height = H;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) throw new Error('Não foi possível criar o cartaz.');
 
-  const [fundo, brasaoImg] = await Promise.all([
-    carregarImagem(tema.fundo),
-    carregarImagem('/pmpr-brasao.png').catch(() => null),
-  ]);
-  const brasao = brasaoImg ? imagemSemFundo(brasaoImg) : null;
+  ctx.fillStyle = BRANCO;
+  ctx.fillRect(0, 0, W, H);
+  ctx.textBaseline = 'alphabetic';
+  ctx.textAlign = 'left';
+  ctx.fillStyle = PRETO;
+  ctx.strokeStyle = PRETO;
 
-  /* ------------------------------ Fundo ------------------------------ */
-  desenharCobrindo(ctx, fundo, 0, 0, LARGURA, ALTURA);
+  /* ------------------------- moldura ------------------------- */
+  ctx.lineWidth = 3;
+  ctx.strokeRect(MARGEM, MARGEM, W - 2 * MARGEM, H - 2 * MARGEM);
 
-  // Escurece a esquerda (texto) e a base (rodapé)
-  const lateral = ctx.createLinearGradient(0, 0, LARGURA * 0.66, 0);
-  lateral.addColorStop(0, 'rgba(0,0,0,0.94)');
-  lateral.addColorStop(0.5, 'rgba(0,0,0,0.72)');
-  lateral.addColorStop(1, 'rgba(0,0,0,0.05)');
-  ctx.fillStyle = lateral;
-  ctx.fillRect(0, 0, LARGURA, ALTURA);
+  /* ------------------------- cabeçalho ----------------------- */
+  const brasao = await carregarImagem('/brasao-pcpr.png');
+  if (brasao) ctx.drawImage(brasao, ESQ, MARGEM + 18, 96, 96);
 
-  const topo = ctx.createLinearGradient(0, 0, 0, 230);
-  topo.addColorStop(0, 'rgba(0,0,0,0.72)');
-  topo.addColorStop(1, 'rgba(0,0,0,0)');
-  ctx.fillStyle = topo;
-  ctx.fillRect(0, 0, LARGURA, 230);
+  const xTexto = ESQ + 118;
+  fonte(ctx, 'anton', 44);
+  ctx.fillStyle = PRETO;
+  ctx.fillText('POLÍCIA CIVIL DO PARANÁ', xTexto, MARGEM + 66);
+  fonte(ctx, 'cond', 20, 600);
+  ctx.fillStyle = CINZA;
+  ctx.fillText('SECRETARIA DE SEGURANÇA PÚBLICA · SISTEMA RP', xTexto, MARGEM + 90);
+  ctx.fillText('REGISTRO DE PRISÕES E APREENSÕES', xTexto, MARGEM + 112);
 
-  /* --------------------------- Faixas da borda --------------------------- */
-  // Canto superior esquerdo: faixa amarela diagonal
   ctx.beginPath();
-  ctx.moveTo(0, 0);
-  ctx.lineTo(30, 0);
-  ctx.lineTo(0, 250);
-  ctx.closePath();
-  ctx.fillStyle = AMARELO;
-  ctx.fill();
-
-  // Fios amarelos no canto inferior direito
-  ctx.save();
-  ctx.strokeStyle = AMARELO;
-  ctx.lineWidth = 7;
-  ctx.beginPath();
-  ctx.moveTo(LARGURA - 210, ALTURA);
-  ctx.lineTo(LARGURA, ALTURA - 210);
+  ctx.lineWidth = 3;
+  ctx.moveTo(DIR - 112, MARGEM + 20);
+  ctx.lineTo(DIR - 112, MARGEM + 112);
   ctx.stroke();
-  ctx.lineWidth = 4;
-  ctx.beginPath();
-  ctx.moveTo(LARGURA - 130, ALTURA);
-  ctx.lineTo(LARGURA, ALTURA - 130);
-  ctx.stroke();
-  ctx.restore();
+  ctx.textAlign = 'right';
+  ctx.fillStyle = PRETO;
+  fonte(ctx, 'anton', 42);
+  ctx.fillText('PCPR', DIR, MARGEM + 66);
+  fonte(ctx, 'cond', 22, 700);
+  ctx.fillText('RP', DIR, MARGEM + 96);
+  ctx.textAlign = 'left';
 
-  /* ------------------------------ Cabeçalho ------------------------------ */
-  const margem = 56;
-  let x = margem;
+  /* ------------------------- faixa preta --------------------- */
+  const yFaixa = MARGEM + 132;
+  ctx.fillStyle = PRETO;
+  ctx.fillRect(ESQ, yFaixa, LARG, 56);
+  ctx.fillStyle = BRANCO;
+  fonte(ctx, 'cond', 26, 700);
+  espacado(ctx, 'FICHA DE REGISTRO DE PRISÃO', ESQ + 16, yFaixa + 36, 2.4);
+  ctx.textAlign = 'right';
+  fonte(ctx, 'cond', 24, 600);
+  ctx.fillText(`Nº ${dados.numero || 'A GERAR'}`, DIR - 16, yFaixa + 36);
+  ctx.textAlign = 'left';
 
-  if (brasao) {
-    const lado = 132;
-    ctx.drawImage(brasao, x, 34, lado, lado);
-    x += lado + 26;
-    ctx.save();
-    ctx.strokeStyle = 'rgba(255,255,255,0.45)';
-    ctx.lineWidth = 2;
+  /* ------------------------- identificação ------------------- */
+  const yPerfil = yFaixa + 76;
+  const fotoX = ESQ;
+  const fotoW = 176;
+  const fotoH = 214;
+  if (dados.fotos?.[0]) {
+    const foto = await carregarImagem(dados.fotos[0]);
+    if (foto) {
+      imagemCover(ctx, foto, fotoX, yPerfil, fotoW, fotoH);
+    } else {
+      ctx.fillStyle = '#e6e6e6';
+      ctx.fillRect(fotoX, yPerfil, fotoW, fotoH);
+    }
+  } else {
+    ctx.fillStyle = '#e6e6e6';
+    ctx.fillRect(fotoX, yPerfil, fotoW, fotoH);
+    ctx.fillStyle = '#666666';
+    ctx.textAlign = 'center';
+    fonte(ctx, 'anton', 38);
+    ctx.fillText('SEM', fotoX + fotoW / 2, yPerfil + fotoH / 2 - 4);
+    ctx.fillText('FOTO', fotoX + fotoW / 2, yPerfil + fotoH / 2 + 36);
+    ctx.textAlign = 'left';
+  }
+  ctx.strokeStyle = PRETO;
+  ctx.lineWidth = 3;
+  ctx.strokeRect(fotoX, yPerfil, fotoW, fotoH);
+  if ((dados.fotos?.length ?? 0) > 1) {
+    ctx.fillStyle = PRETO;
+    ctx.fillRect(fotoX, yPerfil + fotoH - 26, fotoW, 26);
+    ctx.fillStyle = BRANCO;
+    ctx.textAlign = 'center';
+    fonte(ctx, 'cond', 17, 700);
+    ctx.fillText(`+${(dados.fotos?.length ?? 0) - 1} FOTOS`, fotoX + fotoW / 2, yPerfil + fotoH - 8);
+    ctx.textAlign = 'left';
+  }
+
+  const xDir = fotoX + fotoW + 22;
+  ctx.fillStyle = CINZA;
+  fonte(ctx, 'cond', 17, 700);
+  espacado(ctx, 'IDENTIFICAÇÃO DO CUSTODIADO', xDir, yPerfil + 20, 1.8);
+
+  const nome = (dados.nome?.trim() || 'NOME DO CUSTODIADO').toUpperCase();
+  ctx.fillStyle = PRETO;
+  let tamanhoNome = 50;
+  fonte(ctx, 'anton', tamanhoNome);
+  while (ctx.measureText(nome).width > DIR - xDir && tamanhoNome > 26) {
+    tamanhoNome -= 2;
+    fonte(ctx, 'anton', tamanhoNome);
+  }
+  ctx.fillText(nome, xDir, yPerfil + 88);
+
+  fonte(ctx, 'cond', 23, 600);
+  ctx.fillText(`ID RP  ${textoOuTraco(dados.idRp)}`, xDir, yPerfil + 116);
+  const idLargura = ctx.measureText(`ID RP  ${textoOuTraco(dados.idRp)}`).width;
+  ctx.fillText(`TEMPO DE PRISÃO  ${textoOuTraco(dados.tempoPrisao)}`, xDir + idLargura + 30, yPerfil + 116);
+
+  /* -------------------- dia e data automáticos ---------------- */
+  const yAuto = yPerfil + 128;
+  const autoW = DIR - xDir;
+  ctx.setLineDash([7, 5]);
+  ctx.lineWidth = 2;
+  ctx.strokeStyle = PRETO;
+  ctx.strokeRect(xDir, yAuto, autoW, 88);
+  ctx.setLineDash([]);
+  ctx.fillStyle = PRETO;
+  fonte(ctx, 'cond', 16, 700);
+  espacado(ctx, 'DIA E DATA · GERADOS AUTOMATICAMENTE', xDir + 14, yAuto + 22, 1.6);
+  const col1 = xDir + 14;
+  const col2 = xDir + autoW * 0.55;
+  const col3 = xDir + autoW * 0.76;
+  [col2, col3].forEach((x) => {
     ctx.beginPath();
-    ctx.moveTo(x - 13, 46);
-    ctx.lineTo(x - 13, 154);
+    ctx.lineWidth = 1;
+    ctx.moveTo(x, yAuto + 30);
+    ctx.lineTo(x, yAuto + 78);
     ctx.stroke();
+  });
+  const colunas: [number, string, string][] = [
+    [col1, 'DIA DA SEMANA', diaPorExtenso(dados.criadoEm)],
+    [col2 + 14, 'DATA', dataBR(dados.criadoEm)],
+    [col3 + 14, 'HORA', horaBR(dados.criadoEm)],
+  ];
+  colunas.forEach(([x, rotulo, valor]) => {
+    ctx.fillStyle = CINZA;
+    fonte(ctx, 'cond', 15, 700);
+    ctx.fillText(rotulo, x, yAuto + 46);
+    ctx.fillStyle = PRETO;
+    fonte(ctx, 'cond', 27, 600);
+    ctx.fillText(valor.toUpperCase(), x, yAuto + 74);
+  });
+
+  /* --------------------------- tabela ------------------------ */
+  let y = Y_TABELA;
+  ctx.lineWidth = 2;
+  ctx.strokeStyle = PRETO;
+  ctx.strokeRect(ESQ, y, LARG, alturaTabela);
+  for (const linha of linhas) {
+    ctx.fillStyle = CINZA;
+    fonte(ctx, 'cond', 16, 700);
+    espacado(ctx, linha.rotulo, ESQ + 18, y + 27, 1.7);
+    ctx.fillStyle = PRETO;
+    fonte(ctx, 'cond', 26, 400);
+    linha.linhas.forEach((texto, i) => ctx.fillText(texto, ESQ + 18, y + 58 + i * 30));
+    y += linha.altura;
+    ctx.beginPath();
+    ctx.lineWidth = 1.5;
+    ctx.moveTo(ESQ, y);
+    ctx.lineTo(DIR, y);
+    ctx.stroke();
+  }
+
+  /* --------------------------- rodapé ------------------------ */
+  ctx.fillStyle = PRETO;
+  fonte(ctx, 'cond', 19, 400);
+  ctx.fillText(
+    `Documento gerado automaticamente em ${dataHoraBR(dados.criadoEm)} — horário de Brasília.`,
+    ESQ,
+    yFimTabela + 34,
+  );
+  ctx.fillStyle = CINZA;
+  fonte(ctx, 'cond', 17, 500);
+  ctx.fillText(carimboCompleto(dados.criadoEm), ESQ, yFimTabela + 58);
+
+  /* ------------------- assinatura do escrivão ---------------- */
+  const escrivao = dados.escrivao?.trim() || '—';
+  const yLinhaAssinatura = H - 118;
+  const xAssinatura = DIR - 430;
+
+  ctx.fillStyle = CINZA;
+  ctx.textAlign = 'right';
+  fonte(ctx, 'cond', 16, 700);
+  espacadoDireita(ctx, 'ASSINATURA DO ESCRIVÃO', DIR, yLinhaAssinatura - 92, 1.6);
+  ctx.textAlign = 'left';
+
+  if (dados.assinatura) {
+    const img = await carregarImagem(dados.assinatura);
+    if (img) imagemContain(ctx, img, xAssinatura, yLinhaAssinatura - 88, 430, 82);
+  } else {
+    ctx.fillStyle = PRETO;
+    ctx.textAlign = 'right';
+    fonte(ctx, 'script', 52);
+    // Caligrafia com nome do escrivão quando não há assinatura desenhada.
+    ctx.fillText(escrivao === '—' ? 'Escrivão' : escrivao, DIR - 10, yLinhaAssinatura - 12);
+    ctx.textAlign = 'left';
+  }
+
+  ctx.beginPath();
+  ctx.lineWidth = 1.6;
+  ctx.moveTo(xAssinatura, yLinhaAssinatura);
+  ctx.lineTo(DIR, yLinhaAssinatura);
+  ctx.stroke();
+
+  ctx.fillStyle = PRETO;
+  ctx.textAlign = 'left';
+  fonte(ctx, 'cond', 18, 700);
+  espacadoCentro(
+    ctx,
+    `ESCRIVÃO · ${escrivao.toUpperCase()}`,
+    (xAssinatura + DIR) / 2,
+    yLinhaAssinatura + 26,
+    1.4,
+  );
+
+  /* ------------------------- marca d'água -------------------- */
+  if (opcoes.marcaDagua) {
+    ctx.save();
+    ctx.translate(W / 2, H / 2);
+    ctx.rotate(-Math.PI / 7);
+    ctx.textAlign = 'center';
+    ctx.fillStyle = 'rgba(0,0,0,0.065)';
+    fonte(ctx, 'anton', 150);
+    ctx.fillText(opcoes.marcaDagua.toUpperCase(), 0, 0);
     ctx.restore();
   }
 
-  ctx.fillStyle = BRANCO;
-  ctx.font = `400 52px ${FONTE_TITULO}`;
-  ctx.textBaseline = 'alphabetic';
-  ctx.fillText(textoFixo.orgao, x, 88);
-  ctx.fillText(textoFixo.orgao2, x, 142);
-
-  ctx.fillStyle = 'rgba(255,255,255,0.92)';
-  ctx.font = `600 20px ${FONTE_TEXTO}`;
-  ctx.fillText(textoFixo.lema, x, 176, 430);
-
-  // Canto superior direito
-  ctx.fillStyle = BRANCO;
-  ctx.font = `600 22px ${FONTE_TEXTO}`;
-  const direita = LARGURA - margem;
-  let w = larguraEspacada(ctx, textoFixo.canto1, 1.2);
-  textoEspacado(ctx, textoFixo.canto1, direita - w, 56, 1.2);
-  w = larguraEspacada(ctx, textoFixo.canto2, 1.2);
-  textoEspacado(ctx, textoFixo.canto2, direita - w, 82, 1.2);
-  ctx.fillStyle = AMARELO;
-  ctx.fillRect(direita - 96, 94, 96, 4);
-
-  /* ----------------------------- Faixa amarela ---------------------------- */
-  const faixaY = 236;
-  const faixaH = 96;
-  // retângulo de base garante que nenhuma letra fique acima da faixa
-  ctx.fillRect(0, faixaY, LARGURA * 0.57, faixaH);
-  ctx.beginPath();
-  ctx.moveTo(0, faixaY);
-  ctx.lineTo(LARGURA * 0.57, faixaY);
-  ctx.lineTo(LARGURA * 0.53, faixaY + faixaH);
-  ctx.lineTo(0, faixaY + faixaH);
-  ctx.closePath();
-  ctx.fillStyle = AMARELO;
-  ctx.fill();
-
-  // O texto só existe dentro da faixa: nenhuma marca da fonte escapa para cima
-  textoNaFaixa(
-    ctx,
-    tema.selo,
-    margem,
-    faixaY + faixaH - 18,
-    faixaY,
-    faixaH,
-    `400 74px ${FONTE_TITULO}`,
-    PRETO,
-  );
-
-  /* ---------------------- Concurso para + destaque ---------------------- */
-  ctx.fillStyle = BRANCO;
-  ctx.font = `400 58px ${FONTE_TITULO}`;
-  ctx.fillText(tema.chamada, margem - 4, 392);
-
-  // Palavra grande: encolhe até caber na metade esquerda
-  let tamanho = 182;
-  const limite = LARGURA * 0.53;
-  ctx.font = `400 ${tamanho}px ${FONTE_TITULO}`;
-  while (ctx.measureText(tema.destaque).width > limite && tamanho > 60) {
-    tamanho -= 4;
-    ctx.font = `400 ${tamanho}px ${FONTE_TITULO}`;
-  }
-  ctx.fillStyle = BRANCO;
-  ctx.shadowColor = 'rgba(0,0,0,0.6)';
-  ctx.shadowBlur = 18;
-  ctx.fillText(tema.destaque, margem - 6, 404 + tamanho * 0.86);
-  ctx.shadowBlur = 0;
-
-  /* --------------------------- Frase de apoio --------------------------- */
-  const apoioY = 404 + tamanho * 0.86 + 42;
-  ctx.fillStyle = BRANCO;
-  const limiteApoio = LARGURA * 0.66;
-  let tamApoio = 28;
-  ctx.font = `600 ${tamApoio}px ${FONTE_TEXTO}`;
-  while (ctx.measureText(tema.apoio).width > limiteApoio && tamApoio > 17) {
-    tamApoio -= 1;
-    ctx.font = `600 ${tamApoio}px ${FONTE_TEXTO}`;
-  }
-  ctx.fillText(tema.apoio, margem, apoioY);
-
-  /* ------------------- Data e local da prova (ROTAM/RONE) ------------------- */
-  const blocoY = apoioY + 56;
-
-  if (tema.mostraProva) {
-    const quando = formatarQuando(divulgacao.provaData ?? '', divulgacao.provaHorario ?? '');
-    const local = (divulgacao.provaLocal ?? '').trim();
-
-    // Painel com borda amarela à esquerda
-    ctx.fillStyle = 'rgba(0,0,0,0.55)';
-    ctx.beginPath();
-    ctx.roundRect(margem - 16, blocoY - 18, LARGURA * 0.6, local ? 148 : 116, 10);
-    ctx.fill();
-    ctx.fillStyle = AMARELO;
-    ctx.fillRect(margem - 16, blocoY - 18, 6, local ? 148 : 116);
-
-    ctx.fillStyle = AMARELO;
-    ctx.font = `700 19px ${FONTE_TEXTO}`;
-    textoEspacado(ctx, 'PROVA DE INGRESSO', margem, blocoY + 8, 2.4);
-
-    // Data e horário
-    ctx.fillStyle = BRANCO;
-    let tamQuando = 42;
-    const textoQuando = quando || 'DATA A DEFINIR';
-    ctx.font = `400 ${tamQuando}px ${FONTE_TITULO}`;
-    while (ctx.measureText(textoQuando).width > LARGURA * 0.56 && tamQuando > 24) {
-      tamQuando -= 2;
-      ctx.font = `400 ${tamQuando}px ${FONTE_TITULO}`;
-    }
-    ctx.fillText(textoQuando, margem, blocoY + 56);
-
-    // Local
-    if (local) {
-      ctx.fillStyle = 'rgba(255,255,255,0.80)';
-      ctx.font = `600 23px ${FONTE_TEXTO}`;
-      const linhas = quebrarLinhas(ctx, local, LARGURA * 0.55).slice(0, 2);
-      linhas.forEach((linha, i) => ctx.fillText(linha, margem, blocoY + 88 + i * 26));
-    }
-  } else {
-  const coluna = 320;
-  tema.blocos.forEach((bloco, i) => {
-    const bx = margem + i * coluna;
-    ICONES[bloco.icone](ctx, bx, blocoY, 64);
-
-    ctx.fillStyle = BRANCO;
-    const larguraColuna = coluna - 56;
-    const ajustar = (texto: string) => {
-      let t = 30;
-      ctx.font = `700 ${t}px ${FONTE_TEXTO}`;
-      while (ctx.measureText(texto).width > larguraColuna && t > 20) {
-        t -= 1;
-        ctx.font = `700 ${t}px ${FONTE_TEXTO}`;
-      }
-      return t;
-    };
-    const cor = 'rgba(255,255,255,1)';
-    ctx.fillStyle = cor;
-    ajustar(bloco.titulo);
-    ctx.fillText(bloco.titulo, bx, blocoY + 110);
-    ctx.fillStyle = cor;
-    ajustar(bloco.titulo2);
-    ctx.fillText(bloco.titulo2, bx, blocoY + 142);
-
-    // Separador entre os blocos
-    if (i < tema.blocos.length - 1) {
-      ctx.save();
-      ctx.strokeStyle = 'rgba(255,255,255,0.35)';
-      ctx.lineWidth = 1.5;
-      ctx.beginPath();
-      ctx.moveTo(bx + coluna - 42, blocoY - 2);
-      ctx.lineTo(bx + coluna - 42, blocoY + 138);
-      ctx.stroke();
-      ctx.restore();
-    }
+  const numero = (dados.numero || 'ficha').replace(/[^a-zA-Z0-9-]/g, '-');
+  const nomeArquivo = `cartaz-${numero}.png`;
+  const dataUrl = canvas.toDataURL('image/png');
+  const blob = await new Promise<Blob>((resolve, reject) => {
+    canvas.toBlob((b) => (b ? resolve(b) : reject(new Error('Falha ao gerar o PNG do cartaz.'))), 'image/png');
   });
-  }
-
-  /* --------------------------- Faixa do rodapé --------------------------- */
-  const rodapeY = ALTURA - 78;
-  const grad = ctx.createLinearGradient(0, rodapeY, 0, ALTURA);
-  grad.addColorStop(0, 'rgba(0,0,0,0.0)');
-  grad.addColorStop(0.35, 'rgba(0,0,0,0.78)');
-  grad.addColorStop(1, 'rgba(0,0,0,0.92)');
-  ctx.fillStyle = grad;
-  ctx.fillRect(0, rodapeY - 20, LARGURA, 98);
-
-  // Assinatura do Governo do Paraná: PARANÁ + brasão, e "GOVERNO DO ESTADO" embaixo
-  ctx.fillStyle = BRANCO;
-  ctx.font = `400 34px ${FONTE_TITULO}`;
-  const assinatura = 'PARANÁ';
-  const larguraAssinatura = ctx.measureText(assinatura).width;
-  const larguraBrasao = 44;
-  const assinaturaX = LARGURA - margem - (larguraBrasao + 12) - 16 - larguraAssinatura;
-  ctx.fillText(assinatura, assinaturaX, ALTURA - 42);
-
-  // Selo escuro atrás do brasão: o fundo do rodapé pode estar claro
-  const seloX = assinaturaX + larguraAssinatura + 8;
-  const seloY = ALTURA - 74;
-  const seloLado = larguraBrasao + 12;
-  ctx.save();
-  const fundoSelo = ctx.createLinearGradient(seloX, seloY, seloX, seloY + seloLado);
-  fundoSelo.addColorStop(0, '#1a3a4a');
-  fundoSelo.addColorStop(1, '#0f2733');
-  ctx.fillStyle = fundoSelo;
-  ctx.beginPath();
-  ctx.roundRect(seloX, seloY, seloLado, seloLado, 6);
-  ctx.fill();
-  ctx.strokeStyle = 'rgba(255,255,255,0.25)';
-  ctx.lineWidth = 1.5;
-  ctx.stroke();
-  if (brasao) ctx.drawImage(brasao, seloX + 6, seloY + 6, larguraBrasao, larguraBrasao);
-  ctx.restore();
-
-  ctx.fillStyle = 'rgba(255,255,255,0.78)';
-  ctx.font = `600 14px ${FONTE_TEXTO}`;
-  const limiteLegenda = seloX - assinaturaX - 8;
-  ctx.fillText(textoFixo.governo, assinaturaX, ALTURA - 20, limiteLegenda);
-
-  return tela;
+  return { dataUrl, blob, nome: nomeArquivo, largura: W, altura: H };
 }
 
-/* ------------------------------ conversão ------------------------------- */
-
-/** Converte o canvas em Blob PNG. */
-export function canvasParaBlob(tela: HTMLCanvasElement): Promise<Blob> {
-  return new Promise((resolver, rejeitar) => {
-    tela.toBlob((blob) => {
-      if (blob) resolver(blob);
-      else rejeitar(new Error('Não foi possível gerar a imagem do cartaz.'));
-    }, 'image/png');
-  });
-}
-
-export interface OpcoesCartaz {
-  /** Unidade cuja arte será usada: pmpr, rotam ou rone. */
-  unidade?: string;
-}
-
-/** Gera o cartaz e devolve como arquivo pronto para anexar. */
-export async function gerarCartaz(
-  divulgacao: DivulgacaoInscricoes,
-  opcoes: OpcoesCartaz = {},
-): Promise<File> {
-  const tela = await desenharCartaz(divulgacao, opcoes);
-  const blob = await canvasParaBlob(tela);
-  const nome = arquivoDoCartaz(temaDoCartaz(opcoes.unidade ?? divulgacao.unidades[0]));
-  return new File([blob], nome, { type: 'image/png' });
-}
-
-/** Nome do arquivo enviado ao Discord. */
-export function arquivoDoCartaz(tema: TemaCartaz): string {
-  return tema.id === 'pmpr' ? 'edital-aberto-soldado-pmpr.png' : `divulgacao-${tema.id}.png`;
-}
-
-/** URL da prévia, com função para revogar o objeto. */
-export async function urlPreviaCartaz(
-  divulgacao: DivulgacaoInscricoes,
-  opcoes: OpcoesCartaz = {},
-): Promise<{ url: string; revogar: () => void }> {
-  const tela = await desenharCartaz(divulgacao, opcoes);
-  const blob = await canvasParaBlob(tela);
-  const url = URL.createObjectURL(blob);
-  return { url, revogar: () => URL.revokeObjectURL(url) };
+/** Ficha de exemplo usada na prévia e no teste do Discord. */
+export function dadosCartazExemplo(): DadosCartaz {
+  return {
+    numero: 'PCPR-2026-0001',
+    fotos: [],
+    nome: 'João da Silva',
+    idRp: '18420',
+    artigos: 'Art. 33 — Tráfico de Drogas\nArt. 12 — Porte Ilegal de Arma de Fogo',
+    tempoPrisao: '30 minutos',
+    itensApreendidos: '1 arma de fogo, 12 munições, R$ 3.500,00 em espécie, 1 celular',
+    agente: 'Agente R. Souza',
+    unidade: 'DENARC — Delegacia de Narcóticos',
+    escrivao: 'Escrivão M. Lima',
+    local: 'Avenida Central, Centro',
+    observacoes: 'Ocorrência atendida pela viatura 12. Custodiado encaminhado à carceragem.',
+    criadoEm: new Date().toISOString(),
+  };
 }

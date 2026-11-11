@@ -1,107 +1,210 @@
-import type { ReactNode } from 'react';
-/** Identidade visual das unidades do portal. */
-export type TomUnidade = 'rotam' | 'rone' | 'pmpr';
+import type { ButtonHTMLAttributes, InputHTMLAttributes, ReactNode, SelectHTMLAttributes, TextareaHTMLAttributes } from 'react';
+import { X } from 'lucide-react';
+import { anexarSugestao } from '../data/opcoes';
 
-/* ------------------------------------------------------------------ */
-/* Selo / brasão                                                       */
-/* ------------------------------------------------------------------ */
+/* ------------------------------- Botão -------------------------------- */
 
-export function Brasao({ size = 56, className = '' }: { size?: number; className?: string }) {
-  return (
-    <img
-      src="/pmpr-brasao.png"
-      alt="Brasão da Polícia Militar do Paraná"
-      width={size}
-      height={size}
-      className={`object-contain drop-shadow-[0_6px_18px_rgba(0,0,0,0.55)] ${className}`}
-      style={{ width: size, height: size }}
-    />
-  );
-}
+type Variante = 'primario' | 'secundario' | 'fantasma' | 'perigo';
 
-/* ------------------------------------------------------------------ */
-/* Cores por unidade                                                   */
-/* ------------------------------------------------------------------ */
-
-export const TOM_COLORS: Record<TomUnidade, { cor: string; brilho: string; texto: string; chip: string }> = {
-  pmpr: {
-    cor: '#0b6b3a',
-    brilho: 'rgba(11,107,58,0.55)',
-    texto: '#4ade80',
-    chip: 'bg-emerald-500/12 text-emerald-300 border-emerald-400/30',
-  },
-  rotam: {
-    cor: '#b8860b',
-    brilho: 'rgba(233,196,106,0.38)',
-    texto: '#e9c46a',
-    chip: 'bg-amber-500/12 text-amber-300 border-amber-400/30',
-  },
-  rone: {
-    cor: '#475569',
-    brilho: 'rgba(148,163,184,0.3)',
-    texto: '#cbd5e1',
-    chip: 'bg-slate-400/12 text-slate-300 border-slate-400/30',
-  },
-};
-
-/* ------------------------------------------------------------------ */
-/* Estruturas                                                          */
-/* ------------------------------------------------------------------ */
-
-export function Section({
-  id,
-  children,
-  className = '',
-}: {
-  id?: string;
-  children: ReactNode;
+interface BotaoProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+  variante?: Variante;
+  pequeno?: boolean;
+  bloco?: boolean;
+  icone?: ReactNode;
   className?: string;
-}) {
+  children?: ReactNode;
+}
+
+export function Botao({
+  variante = 'secundario',
+  pequeno = false,
+  bloco = false,
+  icone,
+  className = '',
+  children,
+  ...resto
+}: BotaoProps) {
+  const classes = [
+    'btn',
+    `btn--${variante}`,
+    pequeno ? 'btn--sm' : '',
+    bloco ? 'btn--bloco' : '',
+    className,
+  ]
+    .filter(Boolean)
+    .join(' ');
   return (
-    <section id={id} className={`mx-auto w-full max-w-6xl px-5 sm:px-8 ${className}`}>
+    <button className={classes} {...resto}>
+      {icone}
       {children}
-    </section>
+    </button>
   );
 }
 
-export function SectionHeading({
-  eyebrow,
-  title,
-  description,
-  align = 'left',
-}: {
-  eyebrow: string;
-  title: ReactNode;
-  description?: string;
-  align?: 'left' | 'center';
-}) {
-  return (
-    <div className={align === 'center' ? 'mx-auto max-w-2xl text-center' : 'max-w-3xl'}>
-      <p className="eyebrow text-pmpr-gold/80">{eyebrow}</p>
-      <h2 className="display-title mt-3 text-3xl text-white sm:text-4xl">{title}</h2>
-      {description && <p className="mt-4 text-sm leading-relaxed text-emerald-50/60 sm:text-base">{description}</p>}
-    </div>
-  );
-}
+/* ------------------------------- Campo -------------------------------- */
 
-export function StatBox({
-  label,
-  value,
-  hint,
-}: {
+interface CampoProps {
   label: string;
-  value: ReactNode;
-  hint?: string;
-}) {
+  obrigatorio?: boolean;
+  dica?: string;
+  className?: string;
+  children: ReactNode;
+}
+
+export function Campo({ label, obrigatorio, dica, className = '', children }: CampoProps) {
   return (
-    <div className="rounded-lg border border-pmpr-gold/12 bg-black/20 px-4 py-3">
-      <p className="text-[0.62rem] font-bold uppercase tracking-[0.18em] text-emerald-100/45">{label}</p>
-      <p className="font-display mt-1 text-lg font-semibold text-white">{value}</p>
-      {hint && <p className="mt-0.5 text-[0.7rem] text-emerald-100/40">{hint}</p>}
+    <label className={`campo ${className}`}>
+      <span className="campo__label">
+        {label}
+        {obrigatorio && <span className="campo__obrigatorio"> *</span>}
+      </span>
+      {children}
+      {dica && <span className="campo__hint">{dica}</span>}
+    </label>
+  );
+}
+
+export function Entrada(props: InputHTMLAttributes<HTMLInputElement>) {
+  const { className = '', ...resto } = props;
+  return <input className={`input ${className}`} {...resto} />;
+}
+
+export function AreaTexto(props: TextareaHTMLAttributes<HTMLTextAreaElement>) {
+  const { className = '', ...resto } = props;
+  return <textarea className={`textarea ${className}`} {...resto} />;
+}
+
+export function Selecao(props: SelectHTMLAttributes<HTMLSelectElement>) {
+  const { className = '', ...resto } = props;
+  return <select className={`select ${className}`} {...resto} />;
+}
+
+interface SugestoesProps {
+  titulo: string;
+  itens: string[];
+  valor: string;
+  onChange: (novo: string) => void;
+  separador?: string;
+}
+
+/** Chips clicáveis que acrescentam texto ao campo. */
+export function Sugestoes({ titulo, itens, valor, onChange, separador = '\n' }: SugestoesProps) {
+  return (
+    <div className="sugestoes">
+      <span className="sugestoes__titulo">{titulo}</span>
+      <div className="chips">
+        {itens.map((item) => (
+          <button
+            key={item}
+            type="button"
+            className="chip"
+            onClick={() => onChange(anexarSugestao(valor, item, separador))}
+            title={`Adicionar: ${item}`}
+          >
+            + {item}
+          </button>
+        ))}
+      </div>
     </div>
   );
 }
 
-export function Divider() {
-  return <div className="gold-rule my-12 w-full" />;
+/* ------------------------------ Cartão -------------------------------- */
+
+export function Cartao({ children, className = '' }: { children: ReactNode; className?: string }) {
+  return <section className={`cartao ${className}`}>{children}</section>;
+}
+
+export function SecaoTitulo({
+  numero,
+  titulo,
+  descricao,
+  acao,
+}: {
+  numero?: string;
+  titulo: string;
+  descricao?: string;
+  acao?: ReactNode;
+}) {
+  return (
+    <div className="secao-titulo">
+      <div>
+        <div className="secao-titulo__linha">
+          {numero && <span className="secao-titulo__numero">{numero}</span>}
+          <h2>{titulo}</h2>
+        </div>
+        {descricao && <p>{descricao}</p>}
+      </div>
+      {acao}
+    </div>
+  );
+}
+
+export function Etiqueta({ children, claro = false }: { children: ReactNode; claro?: boolean }) {
+  return <span className={`etiqueta ${claro ? 'etiqueta--claro' : ''}`}>{children}</span>;
+}
+
+/* ------------------------------- Modal -------------------------------- */
+
+export function Modal({
+  titulo,
+  subtitulo,
+  onFechar,
+  children,
+  acoes,
+  largo = false,
+}: {
+  titulo: string;
+  subtitulo?: string;
+  onFechar: () => void;
+  children: ReactNode;
+  acoes?: ReactNode;
+  largo?: boolean;
+}) {
+  return (
+    <div className="modal-fundo" role="presentation" onMouseDown={onFechar}>
+      <div
+        className={`modal ${largo ? 'modal--largo' : ''}`}
+        role="dialog"
+        aria-modal="true"
+        aria-label={titulo}
+        onMouseDown={(e) => e.stopPropagation()}
+      >
+        <header className="modal__topo">
+          <div>
+            <h3>{titulo}</h3>
+            {subtitulo && <p>{subtitulo}</p>}
+          </div>
+          <button className="modal__fechar" onClick={onFechar} aria-label="Fechar">
+            <X size={20} />
+          </button>
+        </header>
+        <div className="modal__corpo">{children}</div>
+        {acoes && <footer className="modal__acoes">{acoes}</footer>}
+      </div>
+    </div>
+  );
+}
+
+export function Vazio({ icone, titulo, texto, acao }: { icone: ReactNode; titulo: string; texto: string; acao?: ReactNode }) {
+  return (
+    <div className="vazio">
+      <div className="vazio__icone">{icone}</div>
+      <h3>{titulo}</h3>
+      <p>{texto}</p>
+      {acao}
+    </div>
+  );
+}
+
+export function Toast({ mensagem, tipo, onFechar }: { mensagem: string; tipo: 'ok' | 'erro' | 'info'; onFechar: () => void }) {
+  return (
+    <div className={`toast toast--${tipo}`} role="status">
+      <span className="toast__marca" />
+      <span>{mensagem}</span>
+      <button onClick={onFechar} aria-label="Fechar aviso">
+        <X size={15} />
+      </button>
+    </div>
+  );
 }

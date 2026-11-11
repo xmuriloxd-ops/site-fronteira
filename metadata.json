@@ -1,6 +1,6 @@
 {
-  "name": "Portal de Editais - Polícia Militar do Paraná",
-  "description": "Portal de editais da PMPR, ROTAM e RONE: requisitos, etapas, cronograma, provas anteriores, simulado e integração com o Discord do comando.",
+  "name": "PCPR RP - Sistema de Registro de Prisões e Mandados",
+  "description": "Site preto e branco da Polícia Civil RP do Paraná para registrar prisões com foto, nome, ID, artigos, tempo de prisão, itens apreendidos, agente, unidade, escrivão, dia e data automáticos e assinatura do escrivão. Gera a ficha e o mandado de prisão em cartaz PNG e envia ao canal do Discord.",
   "requestFramePermissions": [],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+  "majorCapabilities": []
 }
