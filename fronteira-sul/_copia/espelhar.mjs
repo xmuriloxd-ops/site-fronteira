@@ -552,7 +552,7 @@ async function abrirNavegador() {
   const args = process.env.CHROME_ARGS
     ? JSON.parse(process.env.CHROME_ARGS)
     : ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--hide-scrollbars', '--force-color-profile=srgb', '--font-render-hinting=none', '--mute-audio'];
-  const browser = await puppeteer.launch({ executablePath, args, headless: process.env.CHROME_HEADLESS || true, protocolTimeout: 180000 });
+  const browser = await puppeteer.launch({ executablePath, args, headless: process.env.CHROME_HEADLESS || true, protocolTimeout: 60000 });
   const versao = await browser.version();
   const maior = (versao.match(/\/(\d+)\./) || [])[1];
   if (maior) {
@@ -567,7 +567,13 @@ async function abrirNavegador() {
 const ESPERA = 350;
 /** Maximo de cargas de cada lado por cenario, e ate quando (minutos) ainda se fazem cargas extras. */
 const MAX_RODADAS = Number(process.env.MAX_RODADAS || 4);
-const PRAZO_EXTRAS_MS = Number(process.env.MINUTOS_EXTRAS || 13) * 60000;
+const PRAZO_EXTRAS_MS = Number(process.env.MINUTOS_EXTRAS || 12) * 60000;
+/** Nenhuma carga pode passar disto; e depois do limite total nada novo comeca (os relatorios saem com o que houver). */
+const LIMITE_CAPTURA_MS = Number(process.env.SEGUNDOS_CAPTURA || 200) * 1000;
+const LIMITE_TOTAL_MS = Number(process.env.MINUTOS_TOTAL || 17) * 60000;
+/** Para depurar: so os cenarios cujo nome casa com esta expressao; e linhas de progresso de cada carga. */
+const FILTRO_CENARIOS = process.env.CENARIOS ? new RegExp(process.env.CENARIOS) : null;
+const DETALHES = process.env.DETALHES !== '0';
 
 const TAMANHOS = {
   desktop: { width: 1440, height: 900, deviceScaleFactor: 1, isMobile: false, hasTouch: false },
@@ -760,6 +766,8 @@ async function clicar(page, seletor, indice) {
  * inteira, uma foto por tela, de cima a baixo).
  */
 async function ponto(page, res, nome, { fotos = 'viewport', estado = false } = {}) {
+  if (res.encerrada) throw new Error('captura encerrada');
+  if (res.etapa) res.etapa = `roteiro: ${nome}`;
   const p = { nome, fotos: [] };
   try {
     if (estado || fotos !== 'viewport') {
@@ -815,6 +823,7 @@ async function ponto(page, res, nome, { fotos = 'viewport', estado = false } = {
   } catch (erro) {
     p.erro = String(erro?.message || erro).slice(0, 160);
   }
+  if (res.encerrada) throw new Error('captura encerrada');
   res.pontos.push(p);
   return p;
 }
@@ -999,11 +1008,16 @@ async function capturar(browser, cenario, { base, bloquearHost = null, rotulo = 
   };
   const corpos = new Map();
   const tarefas = [];
+  const emAberto = new Map();
   const t0 = Date.now();
   let contexto = null;
   let page = null;
   let aoCriarAlvo = null;
-  try {
+  const etapa = (nome) => {
+    res.etapa = nome;
+    if (DETALHES) log(`      · ${cenario.nome} (${rotulo}): ${nome} [${((Date.now() - t0) / 1000).toFixed(1)}s]`);
+  };
+  const executar = async () => {
     contexto = await browser.createBrowserContext();
     await contexto.overridePermissions(origemCenario, ['clipboard-read', 'clipboard-write']).catch(() => {});
     page = await contexto.newPage();
@@ -1029,6 +1043,7 @@ async function capturar(browser, cenario, { base, bloquearHost = null, rotulo = 
     page.on('request', (req) => {
       const primeiro = req.redirectChain()[0] || req;
       if (!iniciosDePedido.has(primeiro)) iniciosDePedido.set(primeiro, Date.now());
+      emAberto.set(req, Date.now());
       if (req.isInterceptResolutionHandled()) return;
       let u;
       try {
@@ -1064,7 +1079,10 @@ async function capturar(browser, cenario, { base, bloquearHost = null, rotulo = 
       if (ms > 0) setTimeout(() => req.continue().catch(() => {}), ms);
       else req.continue().catch(() => {});
     });
-    page.on('requestfinished', anotarTempo);
+    page.on('requestfinished', (req) => {
+      emAberto.delete(req);
+      anotarTempo(req);
+    });
 
     page.on('response', (resp) => {
       const req = resp.request();
@@ -1101,6 +1119,7 @@ async function capturar(browser, cenario, { base, bloquearHost = null, rotulo = 
       );
     });
     page.on('requestfailed', (req) => {
+      emAberto.delete(req);
       res.falhas.push({ url: curto(req.url()), tipo: req.resourceType(), metodo: req.method(), erro: req.failure()?.errorText || '' });
     });
     page.on('console', (msg) => {
@@ -1110,31 +1129,60 @@ async function capturar(browser, cenario, { base, bloquearHost = null, rotulo = 
       if (res.erros.length < 40) res.erros.push(String(erro?.message || erro).slice(0, 300));
     });
 
-    const resposta = await page.goto(url, { waitUntil: 'load', timeout: 90000 });
+    etapa('abrindo a pagina');
+    const resposta = await page.goto(url, { waitUntil: 'load', timeout: 60000 });
     res.statusPagina = resposta ? resposta.status() : null;
+    etapa('esperando a pagina assentar');
     await assentar(page, res);
+    etapa('rolando a pagina inteira');
     await rolarTudo(page);
     await page.waitForNetworkIdle({ idleTime: 700, timeout: 20000 }).catch(() => {});
     await dormir(500);
     res.info = await page.evaluate(infoDaPagina);
+    etapa('roteiro');
     await roteiro(page, res, cenario);
+    etapa('fim do roteiro');
     await page.waitForNetworkIdle({ idleTime: 700, timeout: 15000 }).catch(() => {});
     res.urlNoFim = page.url();
+  };
+
+  // O trabalho corre contra um relogio: uma pagina travada nao pode segurar tudo.
+  const trabalho = executar();
+  trabalho.catch(() => {});
+  let relogio = null;
+  let estourou = false;
+  try {
+    await Promise.race([
+      trabalho,
+      new Promise((_, rejeitar) => {
+        relogio = setTimeout(() => {
+          estourou = true;
+          rejeitar(new Error(`passou de ${LIMITE_CAPTURA_MS / 1000}s (parou em: ${res.etapa})`));
+        }, LIMITE_CAPTURA_MS);
+      }),
+    ]);
   } catch (erro) {
     res.falhou = String(erro?.stack || erro).slice(0, 500);
     avisar(`captura "${cenario.nome}" (${rotulo}) falhou: ${String(erro?.message || erro).slice(0, 200)}`);
   } finally {
-    await Promise.allSettled(tarefas);
+    clearTimeout(relogio);
+    res.encerrada = true;
+    res.semFim = [...emAberto.keys()].map((req) => `${req.method()} ${curto(req.url())} [${req.resourceType()}${req.response() ? `, ${req.response().status()}` : ', sem resposta'}]`);
+    if (DETALHES) log(`      · ${cenario.nome} (${rotulo}): recolhendo respostas; pedidos sem fim: ${res.semFim.length}${res.semFim.length ? ` (${res.semFim.slice(0, 4).join(' ; ')})` : ''}`);
+    const chegaram = await Promise.race([Promise.allSettled(tarefas).then(() => true), dormir(10000).then(() => false)]);
+    if (!chegaram) res.avisos.push('algumas respostas nao terminaram de chegar');
     try {
-      if (page) res.janelas.push(...(await page.evaluate(() => window.__janelas || [])));
+      if (page && !estourou) res.janelas.push(...(await Promise.race([page.evaluate(() => window.__janelas || []), dormir(5000).then(() => [])])));
     } catch {
       /* pagina indisponivel */
     }
     if (aoCriarAlvo) browser.off('targetcreated', aoCriarAlvo);
-    if (contexto) await contexto.close().catch(() => {});
+    if (contexto) await Promise.race([contexto.close().catch(() => {}), dormir(15000)]);
+    if (estourou) await Promise.race([trabalho.catch(() => {}), dormir(5000)]);
   }
   res.duracao = Date.now() - t0;
   res.corpos = corpos;
+  if (DETALHES) log(`      · ${cenario.nome} (${rotulo}): terminou em ${(res.duracao / 1000).toFixed(1)}s${res.falhou ? ' COM FALHA' : ''}`);
   return res;
 }
 
@@ -1547,6 +1595,11 @@ async function principal() {
     cenarios.push({ nome: `${nome}-desktop`, caminho, tela: 'desktop', interagir: caminho === ROTA_INEXISTENTE ? 'cliques' : 'tudo' });
     if (caminho !== ROTA_INEXISTENTE) cenarios.push({ nome: `${nome}-movel`, caminho, tela: 'movel', interagir: false });
   }
+  if (FILTRO_CENARIOS) {
+    const antes = cenarios.length;
+    for (let i = cenarios.length - 1; i >= 0; i--) if (!FILTRO_CENARIOS.test(cenarios[i].nome)) cenarios.splice(i, 1);
+    avisar(`depuracao: so ${cenarios.length} de ${antes} cenarios (${cenarios.map((c) => c.nome).join(', ')})`);
+  }
   const originais = new Map();
   const corposNavegador = new Map();
   if (browser) {
@@ -1570,7 +1623,7 @@ async function principal() {
     let extras = 0;
     for (const rota of rotasExtras) {
       const chave = rota.split('?')[0].replace(/\/+$/, '') || '/';
-      if (jaVistas.has(chave) || extras >= 4) continue;
+      if (jaVistas.has(chave) || extras >= 4 || FILTRO_CENARIOS) continue;
       jaVistas.add(chave);
       extras++;
       const c = { nome: `rota-${chave.replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '') || 'x'}-desktop`, caminho: rota, tela: 'desktop', interagir: 'cliques' };
@@ -1678,6 +1731,10 @@ async function principal() {
 
     for (const c of browser ? cenarios : []) {
       const item = { cenario: c.nome, caminho: c.caminho, tela: c.tela, problemas: [], observacoes: [] };
+      if (Date.now() - inicio > LIMITE_TOTAL_MS) {
+        avisar(`tempo esgotado: o cenario ${c.nome} nao foi conferido`);
+        continue;
+      }
       const cargasO = [originais.get(c.nome)];
       const cargasC = [];
       const decididas = new Map();

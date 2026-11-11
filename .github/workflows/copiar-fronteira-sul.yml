@@ -36,13 +36,13 @@ jobs:
           git log --oneline -1
 
       - name: Copiar o site
+        timeout-minutes: 21
+        env:
+          CENARIOS: 'rota-inexistente|convite-desktop'
         run: |
           set -u
           bash fronteira-sul/_copia/executar.sh 2>&1 | tee "$RUNNER_TEMP/log.txt"
-          codigo="${PIPESTATUS[0]}"
-          mkdir -p fronteira-sul/_copia/saida
-          cp "$RUNNER_TEMP/log.txt" fronteira-sul/_copia/saida/log.txt
-          exit "$codigo"
+          exit "${PIPESTATUS[0]}"
 
       - name: Salvar o resultado no branch
         if: always()
@@ -51,6 +51,9 @@ jobs:
           AUTH="AUTHORIZATION: basic $(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)"
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          # O registro vai junto mesmo quando o passo anterior e interrompido.
+          mkdir -p fronteira-sul/_copia/saida
+          cp "$RUNNER_TEMP/log.txt" fronteira-sul/_copia/saida/log.txt 2>/dev/null || true
           git add -A -f fronteira-sul
           if git diff --cached --quiet; then
             echo "::warning::Nada novo para salvar."
