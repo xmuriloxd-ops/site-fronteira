@@ -159,7 +159,33 @@ grupo, prefira as opções A ou B.
 
 ---
 
-## 6. Conferindo a instalação
+## 6. Opção D — GitHub Pages (modo estático, grátis)
+
+O repositório publica **sozinho** no GitHub Pages a cada push, pelo workflow
+`.github/workflows/deploy-pages.yml`. Pré-requisitos:
+
+1. Repositório **público** (Settings → General → Danger Zone →
+   *Change visibility* → Public).
+2. Settings → Pages → Build and deployment → Source: **GitHub Actions**.
+3. Push no branch → aba **Actions** → o *workflow "Deploy · GitHub Pages"*
+   conclui → site em **`https://xmuriloxd-ops.github.io/projetos-cidades2/`**.
+
+O workflow roda `vite build --base=/projetos-cidades2/` (subcaminho do
+repositório) e publica só o `dist/` estático. Nesse modo **não há servidor**:
+
+- as denúncias ficam em **cada navegador** (`localStorage`) — não são
+  compartilhadas entre agentes;
+- a URL do webhook fica salva naquele navegador;
+- o envio ao Discord sai **direto do navegador** (o webhook do Discord aceita
+  isso normalmente);
+- use **Backup JSON** (aba Denúncias) para guardar os registros.
+
+Para dados compartilhados entre vários agentes, use a opção A ou B
+(servidor com `dados-corregedoria-pmpr.json` em volume).
+
+---
+
+## 7. Conferindo a instalação
 
 ```bash
 curl https://seu-dominio/api/health
@@ -179,7 +205,7 @@ Depois, já autenticado no navegador:
 
 ---
 
-## 7. Solução de problemas
+## 8. Solução de problemas
 
 | Sintoma | O que checar |
 | --- | --- |

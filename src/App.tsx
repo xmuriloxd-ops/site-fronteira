@@ -337,7 +337,7 @@ export default function App() {
       <footer className="rodape">
         <div className="rodape__interno">
           <div className="rodape__marca">
-            <img src="/brasao-pmpr.png" alt="" />
+            <img src={`${import.meta.env.BASE_URL}brasao-pmpr.png`} alt="" />
             <div>
               <strong>CORREGEDORIA-GERAL · POLÍCIA MILITAR DO PARANÁ</strong>
               <span>Canal de Denúncias e Ouvidoria · RP</span>

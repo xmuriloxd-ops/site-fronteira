@@ -2,26 +2,27 @@
   "name": "Corregedoria PMPR · Denúncias",
   "short_name": "Corregedoria PMPR",
   "description": "Canal de denúncias da Corregedoria-Geral da Polícia Militar do Paraná (RP), com protocolo automático e envio ao Discord.",
-  "start_url": "/",
+  "start_url": "./",
+  "scope": "./",
   "display": "standalone",
   "background_color": "#061527",
   "theme_color": "#061527",
   "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "/favicon-pmpr.png",
+      "src": "favicon-pmpr.png",
       "sizes": "128x128",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/brasao-pmpr.png",
+      "src": "brasao-pmpr.png",
       "sizes": "359x446",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/icon-pmpr-512.png",
+      "src": "icon-pmpr-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"

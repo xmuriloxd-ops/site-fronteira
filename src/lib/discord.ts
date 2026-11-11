@@ -62,7 +62,9 @@ function campo(nome: string, valor: string, inline = true) {
 function urlLogo(): string | undefined {
   try {
     if (typeof window !== 'undefined' && window.location.protocol === 'https:') {
-      return new URL('/brasao-pmpr.png', window.location.origin).href;
+      // BASE_URL cobre a raiz do servidor e o subcaminho do GitHub Pages
+      // (https://usuario.github.io/projetos-cidades2/).
+      return new URL(`${import.meta.env.BASE_URL}brasao-pmpr.png`, window.location.href).href;
     }
   } catch {
     /* origem sem URL pública */

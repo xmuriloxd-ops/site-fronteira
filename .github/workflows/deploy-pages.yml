@@ -1,0 +1,59 @@
+# Publica o site estático no GitHub Pages a cada push neste branch.
+#
+# Modo estático: sem servidor, as denúncias ficam em cada navegador
+# (localStorage) e o envio ao Discord sai direto do navegador.
+# Para dados compartilhados, suba a versão com servidor (PUBLICAR.md).
+name: Deploy · GitHub Pages
+
+on:
+  push:
+    branches: [main, arena/06f46c0d-projetos-cidades2]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Instalar dependências
+        run: npm ci
+
+      - name: Tipos (tsc)
+        run: npm run lint
+
+      # Base do subcaminho do Pages do repositório:
+      # https://<usuario>.github.io/projetos-cidades2/
+      - name: Build estático
+        run: npx vite build --base=/projetos-cidades2/
+
+      - name: Configurar Pages
+        uses: actions/configure-pages@v5
+
+      - name: Enviar artefato
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+      - name: Publicar
+        id: deployment
+        uses: actions/deploy-pages@v4

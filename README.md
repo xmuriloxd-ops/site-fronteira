@@ -44,7 +44,16 @@ ela, `/api/estado` devolve a URL do webhook para qualquer visitante) e monte um
 volume em `PC_DATA_DIR` para não perder os registros.
 
 Para publicar, rode `npm run check:deploy` e veja
-**[PUBLICAR.md](./PUBLICAR.md)** (Docker, VPS, Render, Fly.io e checklist).
+**[PUBLICAR.md](./PUBLICAR.md)** (Docker, VPS, Render, Fly.io, **GitHub
+Pages** e checklist).
+
+**GitHub Pages (modo estático):** o workflow `.github/workflows/deploy-pages.yml`
+publica o site em
+**https://xmuriloxd-ops.github.io/projetos-cidades2/**
+a cada push neste branch — exigindo repositório público e
+*Settings → Pages → Source: GitHub Actions*. Sem servidor, cada navegador
+guarda as denúncias em `localStorage` (use *Backup JSON*); para dados
+compartilhados, suba a versão com servidor (Docker/VPS).
 
 ## As três abas
 
@@ -122,6 +131,7 @@ fallback de rotas. Não altera os dados locais.
 ## Estrutura
 
 ```
+.github/workflows/           deploy automático no GitHub Pages
 scripts/verificar-deploy.mjs  smoke de produção usado por check:deploy
 server.ts                    Express: API, auth opcional, persistência JSON, estáticos/Vite
 src/App.tsx                  shell, abas, regras de protocolo e envio

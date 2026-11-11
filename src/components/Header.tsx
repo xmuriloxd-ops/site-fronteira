@@ -22,7 +22,7 @@ export function Header({ modo, total }: { modo: 'carregando' | 'servidor' | 'loc
       <div className="topo__interno">
         <div className="topo__identidade">
           <div className="topo__logo">
-            <img src="/brasao-pmpr.png" alt="Brasão da Polícia Militar do Paraná" />
+            <img src={`${import.meta.env.BASE_URL}brasao-pmpr.png`} alt="Brasão da Polícia Militar do Paraná" />
           </div>
           <div className="topo__textos">
             <div className="topo__linha">

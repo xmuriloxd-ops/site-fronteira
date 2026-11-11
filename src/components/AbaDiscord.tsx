@@ -252,7 +252,7 @@ export function AbaDiscord({ config, envios, pendentes, testando, onSalvar, onTe
           />
           <div className="discord-preview">
             <div className="discord-preview__autor">
-              <img src="/brasao-pmpr.png" alt="" />
+              <img src={`${import.meta.env.BASE_URL}brasao-pmpr.png`} alt="" />
               <div>
                 <strong>{form.nomeBot || 'Corregedoria · Denúncias PMPR'}</strong>
                 <span>{form.canal || '#denuncias'} · FORMATO: {ROTULO_FORMATO[formato]}</span>
