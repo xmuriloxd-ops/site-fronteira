@@ -1,0 +1,67 @@
+# TEMPORARIO - usado uma unica vez para baixar a copia exata do site
+# https://fronteirasul-fmudazpm.manus.space para a pasta fronteira-sul/.
+# Este arquivo e removido assim que a copia termina.
+name: Copiar site Fronteira do Sul
+
+on:
+  push:
+    branches:
+      - 'arena/fc360186-btz-contrile'
+    paths:
+      - '.github/workflows/copiar-fronteira-sul.yml'
+      - 'fronteira-sul/_copia/**'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: copiar-fronteira-sul
+  cancel-in-progress: false
+
+jobs:
+  copiar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Baixar o repositorio
+        run: |
+          set -eu
+          AUTH="AUTHORIZATION: basic $(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)"
+          git init -q .
+          git remote add origin "https://github.com/${GITHUB_REPOSITORY}.git"
+          git -c "http.extraheader=$AUTH" fetch -q --depth=1 origin "$GITHUB_REF_NAME"
+          git checkout -q -B "$GITHUB_REF_NAME" FETCH_HEAD
+          git log --oneline -1
+
+      - name: Copiar o site
+        run: |
+          set -u
+          mkdir -p fronteira-sul/_copia/saida
+          bash fronteira-sul/_copia/executar.sh 2>&1 | tee fronteira-sul/_copia/saida/log.txt
+          exit "${PIPESTATUS[0]}"
+
+      - name: Salvar o resultado no branch
+        if: always()
+        run: |
+          set -u
+          AUTH="AUTHORIZATION: basic $(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A -f fronteira-sul
+          if git diff --cached --quiet; then
+            echo "::warning::Nada novo para salvar."
+            exit 0
+          fi
+          git commit -q -m "Fronteira do Sul: resultado da copia automatica do site"
+          for tentativa in 1 2 3 4; do
+            if git -c "http.extraheader=$AUTH" push -q origin "HEAD:$GITHUB_REF_NAME"; then
+              echo "::notice::Resultado salvo no branch $GITHUB_REF_NAME ($(git rev-parse --short HEAD))."
+              exit 0
+            fi
+            sleep 3
+            git -c "http.extraheader=$AUTH" pull -q --rebase origin "$GITHUB_REF_NAME" || true
+          done
+          echo "::error::Nao foi possivel enviar o resultado para o branch."
+          exit 1
