@@ -16,6 +16,7 @@ import {
   PRETO,
   W,
   carregarImagem,
+  desenharBrasao,
   espacado,
   espacadoCentro,
   espacadoDireita,
@@ -94,9 +95,9 @@ export async function gerarCartazMandado(
 
   /* cabeçalho */
   const brasao = await carregarImagem('/brasao-pcpr.png');
-  if (brasao) ctx.drawImage(brasao, ESQ, MARGEM + 18, 96, 96);
+  const larguraBrasao = brasao ? desenharBrasao(ctx, brasao, ESQ, MARGEM + 12, 104) : 0;
 
-  const xTexto = ESQ + 118;
+  const xTexto = ESQ + Math.max(96, larguraBrasao + 24);
   ctx.fillStyle = PRETO;
   fonte(ctx, 'anton', 44);
   ctx.fillText('POLÍCIA CIVIL DO PARANÁ', xTexto, MARGEM + 66);

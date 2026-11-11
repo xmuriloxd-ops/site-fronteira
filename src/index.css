@@ -105,7 +105,7 @@ img { display: block; max-width: 100%; }
   border: 1px solid var(--linha-forte);
   background: #0a0a0a;
 }
-.topo__logo img { width: 60px; height: 60px; object-fit: contain; }
+.topo__logo img { width: 66px; height: 66px; object-fit: contain; }
 .topo__textos { min-width: 0; }
 .topo__linha { display: flex; align-items: center; gap: 10px; margin-bottom: 3px; }
 .topo__estado, .topo__rp {
@@ -610,7 +610,7 @@ img { display: block; max-width: 100%; }
 
 .discord-preview { background: #1e1e1e; border: 1px solid var(--linha-forte); padding: 14px; }
 .discord-preview__autor { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
-.discord-preview__autor img { width: 34px; height: 34px; object-fit: contain; background: #fff; }
+.discord-preview__autor img { width: 40px; height: 40px; object-fit: contain; background: #fff; }
 .discord-preview__autor strong { display: block; font-size: 15px; color: var(--branco); }
 .discord-preview__autor span { font-size: 10px; letter-spacing: 0.1em; color: var(--cinza); }
 .discord-preview__mencao { display: inline-block; background: rgba(255,255,255,.12); color: var(--branco); padding: 1px 5px; font-size: 13px; margin-bottom: 8px; }
@@ -763,7 +763,7 @@ img { display: block; max-width: 100%; }
 @media (max-width: 780px) {
   .topo__interno { padding: 14px 16px; }
   .topo__logo { width: 58px; height: 58px; flex-basis: 58px; }
-  .topo__logo img { width: 46px; height: 46px; }
+  .topo__logo img { width: 52px; height: 52px; }
   .topo__textos h1 { font-size: 22px; white-space: normal; }
   .topo__textos p { font-size: 10px; letter-spacing: 0.1em; }
   .topo__lado { display: none; }

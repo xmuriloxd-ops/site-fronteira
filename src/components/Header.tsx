@@ -22,7 +22,7 @@ export function Header({ modo, total }: { modo: 'carregando' | 'servidor' | 'loc
       <div className="topo__interno">
         <div className="topo__identidade">
           <div className="topo__logo">
-            <img src="/brasao-pcpr-branco.png" alt="Brasão da Polícia Civil do Paraná" />
+            <img src="/brasao-pcpr-branco.png" alt="Logo da Polícia Civil do Paraná" />
           </div>
           <div className="topo__textos">
             <div className="topo__linha">

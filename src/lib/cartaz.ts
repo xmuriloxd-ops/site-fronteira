@@ -231,6 +231,24 @@ export function imagemContain(
   ctx.drawImage(img, x + (w - iw) / 2, y + (h - ih) / 2, iw, ih);
 }
 
+/**
+ * Desenha o logo oficial no cabeçalho preservando a proporção vertical do
+ * distintivo da PCPR (ele é mais alto do que largo). Devolve a largura
+ * ocupada para o texto ser posicionado logo ao lado, sem distorcer a arte.
+ */
+export function desenharBrasao(
+  ctx: CanvasRenderingContext2D,
+  img: HTMLImageElement,
+  x: number,
+  y: number,
+  altura = 104,
+): number {
+  const proporcao = img.height ? img.width / img.height : 0.76;
+  const largura = Math.round(altura * proporcao);
+  ctx.drawImage(img, x, y, largura, altura);
+  return largura;
+}
+
 /** Gera o cartaz em PNG. `marcaDagua` marca prévias e testes (ex.: "EXEMPLO"). */
 export async function gerarCartaz(
   dados: DadosCartaz,
@@ -266,9 +284,9 @@ export async function gerarCartaz(
 
   /* ------------------------- cabeçalho ----------------------- */
   const brasao = await carregarImagem('/brasao-pcpr.png');
-  if (brasao) ctx.drawImage(brasao, ESQ, MARGEM + 18, 96, 96);
+  const larguraBrasao = brasao ? desenharBrasao(ctx, brasao, ESQ, MARGEM + 12, 104) : 0;
 
-  const xTexto = ESQ + 118;
+  const xTexto = ESQ + Math.max(96, larguraBrasao + 24);
   fonte(ctx, 'anton', 44);
   ctx.fillStyle = PRETO;
   ctx.fillText('POLÍCIA CIVIL DO PARANÁ', xTexto, MARGEM + 66);

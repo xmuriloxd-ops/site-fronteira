@@ -16,7 +16,13 @@
     },
     {
       "src": "/brasao-pcpr.png",
-      "sizes": "1000x1000",
+      "sizes": "642x848",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
     }

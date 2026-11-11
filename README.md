@@ -8,9 +8,13 @@ agente que prendeu, unidade da ocorrência, escrivão, **assinatura do escrivão
 (no modelo do documento impresso) e é enviada ao **canal do Discord**.
 
 > Projeto de **roleplay**, sem vínculo com órgãos oficiais. O brasão da PCPR é
-> usado apenas como identidade visual do servidor de RP (a arte vetorial é
-> pública; `public/brasao-pcpr-branco.png` é a versão negativa gerada para o
-> fundo preto).
+> usado apenas como identidade visual do servidor de RP. O logo oficial enviado
+> pelo usuário fica em `public/brasao-pcpr.png` (fundo transparente, cores
+> originais); `public/brasao-pcpr-branco.png` é a mesma arte usada no cabeçalho
+> e no rodapé escuros. `public/favicon.png` e `public/icon-512.png` são as
+> versões quadradas para a aba do navegador / PWA. O mesmo arquivo é desenhado
+> dentro dos cartazes de prisão e de mandado, preservando a proporção vertical
+> do distintivo.
 
 ## Como rodar
 
@@ -154,7 +158,7 @@ src/lib/discord.ts           montagem do cartaz/embed e entrega ao webhook
 src/lib/useEstado.ts         servidor com fallback para localStorage
 src/data/opcoes.ts           unidades, artigos, itens e tempos sugeridos
 src/index.css                tema preto e branco + ficha para impressão
-public/                      brasões (positivo/negativo), favicon, fontes, manifest
+public/                      logo oficial (transparente), favicon, ícone PWA, fontes, manifest
 ```
 
 Fontes **Anton** e **Barlow Condensed** self-hosted em `public/fontes`
