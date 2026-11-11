@@ -1,139 +1,208 @@
 # Copia de https://fronteirasul-fmudazpm.manus.space
 
-Gerado em 2026-11-11T18:10:11.078Z
+Gerado em 2026-11-11T19:24:57.977Z · Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36
 
 ## Arquivos do site (11)
 
-| arquivo | tamanho | tipo | sha256 | navegador confere | redirecionava |
-|---|---|---|---|---|---|
-| site/__manus/pwa/manifest.webmanifest | 0.3 kB | application/manifest+json; charset=utf-8 | 7c12b59d22e85683 | - |  |
-| site/assets/index-DMP8NyHf.css | 120.6 kB | text/css; charset=utf-8 | 19d4496e133beceb | sim |  |
-| site/assets/index-FbaU4KfD.js | 462.0 kB | text/javascript; charset=utf-8 | de95a285ca5e0ac9 | sim |  |
-| site/convite/index.html | 5.8 kB | text/html; charset=utf-8 | f25b25b75f1be01f | - |  |
-| site/favicon.ico | 238.5 kB | image/webp | 6ba2906093fad36d | - | 302 -> files.manuscdn.com |
-| site/fronteira-sul-convite-preview.jpg | 360.5 kB | image/jpeg | 07584c62ac7cd814 | sim |  |
-| site/fronteira-sul-logo.webp | 238.5 kB | image/webp | 6ba2906093fad36d | - |  |
-| site/index.html | 3.5 kB | text/html; charset=utf-8 | 6d422389b72b9b05 | sim |  |
-| site/manus-storage/fronteira-sul-logo_1b1b4c2d.webp | 238.5 kB | image/webp | 6ba2906093fad36d | - | 307 -> d36hbw14aib5lz.cloudfront.net |
-| site/robots.txt | 0.1 kB | text/plain | 753ab454d2bccaee | - |  |
-| site/sitemap.xml | 0.2 kB | application/xml | a0a2f07226984cf3 | - |  |
+| arquivo | bytes | tipo no original | sha256 | igual ao que o navegador recebeu | igual no 2o download | redirecionava |
+|---|---|---|---|---|---|---|
+| site/__manus/pwa/manifest.webmanifest | 345 (0.3 kB) | application/manifest+json; charset=utf-8 | 7c12b59d22e85683 | - | sim |  |
+| site/assets/index-DMP8NyHf.css | 123524 (120.6 kB) | text/css; charset=utf-8 | 19d4496e133beceb | sim | sim |  |
+| site/assets/index-FbaU4KfD.js | 473107 (462.0 kB) | text/javascript; charset=utf-8 | de95a285ca5e0ac9 | sim | sim |  |
+| site/convite/index.html | 5934 (5.8 kB) | text/html; charset=utf-8 | a20e1653a2b4e69f | sim | sim |  |
+| site/favicon.ico | 244246 (238.5 kB) | image/webp | 6ba2906093fad36d | sim | sim | 302 -> files.manuscdn.com |
+| site/fronteira-sul-convite-preview.jpg | 369138 (360.5 kB) | image/jpeg | 07584c62ac7cd814 | sim | sim |  |
+| site/fronteira-sul-logo.webp | 244246 (238.5 kB) | image/webp | 6ba2906093fad36d | - | sim |  |
+| site/index.html | 3613 (3.5 kB) | text/html; charset=utf-8 | c6317dafad190cd7 | sim | sim |  |
+| site/manus-storage/fronteira-sul-logo_1b1b4c2d.webp | 244246 (238.5 kB) | image/webp | 6ba2906093fad36d | sim | sim | 307 -> d36hbw14aib5lz.cloudfront.net |
+| site/robots.txt | 102 (0.1 kB) | text/plain | 753ab454d2bccaee | - | sim |  |
+| site/sitemap.xml | 220 (0.2 kB) | application/xml | 759afcdbaf924b0d | - | NAO |  |
 
-## Avisos (2)
+## Avisos (3)
 
 - referencia sem arquivo (HTTP 500): https://fronteirasul-fmudazpm.manus.space/api/platform/config.js  <- https://fronteirasul-fmudazpm.manus.space/
-- conteudo recebido pelo navegador difere do arquivo baixado: https://fronteirasul-fmudazpm.manus.space/api/platform/config.js
+- referencia sem arquivo (HTTP 404): https://fronteirasul-fmudazpm.manus.space/404  <- navegador (rota-inexistente-desktop)
+- referencia sem arquivo (HTTP 500): https://fronteirasul-fmudazpm.manus.space/api/platform/config.js  <- https://fronteirasul-fmudazpm.manus.space/, navegador (convite-desktop)
 
 ## Conferencia (copia x original)
 
-### convite-desktop — /convite/?v=c14b569
+Cada foto e comparada pixel a pixel, sem tolerancia. "identica" = alguma carga da copia saiu exatamente igual a alguma carga do original.
 
-- resultado: igual ao original
-- titulo igual: true · texto igual: true · altura igual: true (900 x 900) · elementos iguais: true (42 x 42)
-- fotos: 1: 0 px (0.000%)
-- pedidos ao proprio site: 3 no original, 3 na copia
-- pedidos so no original: -
-- pedidos so na copia: -
-- respostas diferentes: -
-- redirecionava no original, arquivo local na copia: GET /favicon.ico
-- envios a terceiros (original): POST https://api.manus.im/api/user_behavior/batch_create_event_v2
-- envios a terceiros (copia): POST https://api.manus.im/api/user_behavior/batch_create_event_v2
-- estatisticas barradas: original 2, copia 2
-- pedidos da copia ao site original: nenhum
-- erros no original: Failed to load resource: net::ERR_BLOCKED_BY_CLIENT ¦ Failed to load resource: the server responded with a status of 403 () ¦ Amplitude Logger [Error]: Failed to fetch remote config: Error: Network error occurred, remote config fetch failed ¦ Failed to load resource: the server responded with a status of 403 () ¦ Failed to load resource: the server responded with a status of 403 () ¦ Failed to load resource: the server responded with a status of 403 () ¦ Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector
-- erros na copia: Failed to load resource: net::ERR_BLOCKED_BY_CLIENT ¦ Failed to load resource: the server responded with a status of 403 () ¦ Amplitude Logger [Error]: Failed to fetch remote config: Error: Network error occurred, remote config fetch failed ¦ Failed to load resource: the server responded with a status of 403 () ¦ Failed to load resource: the server responded with a status of 403 () ¦ Failed to load resource: the server responded with a status of 403 () ¦ Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector
-- falhas de rede no original: https://manus-analytics.com/api/send (net::ERR_BLOCKED_BY_CLIENT) ; https://api2.amplitude.com/2/httpapi (net::ERR_BLOCKED_BY_CLIENT.Inspector)
-- falhas de rede na copia: https://manus-analytics.com/api/send (net::ERR_BLOCKED_BY_CLIENT) ; https://api2.amplitude.com/2/httpapi (net::ERR_BLOCKED_BY_CLIENT.Inspector)
-- emblema Manus: original {"filhos":0,"sombra":true,"caixa":[720,845,0,0]} · copia {"filhos":0,"sombra":true,"caixa":[720,845,0,0]}
+### convite-desktop — /convite/?v=c14b569 (desktop)
 
-### convite-movel — /convite/?v=c14b569
+**Igual ao original**
 
-- resultado: igual ao original
-- titulo igual: true · texto igual: true · altura igual: true (844 x 844) · elementos iguais: true (42 x 42)
-- fotos: 1: 0 px (0.000%)
-- pedidos ao proprio site: 3 no original, 3 na copia
-- pedidos so no original: -
-- pedidos so na copia: -
-- respostas diferentes: -
-- redirecionava no original, arquivo local na copia: GET /favicon.ico
-- envios a terceiros (original): POST https://api.manus.im/api/user_behavior/batch_create_event_v2
-- envios a terceiros (copia): POST https://api.manus.im/api/user_behavior/batch_create_event_v2
-- estatisticas barradas: original 2, copia 2
-- pedidos da copia ao site original: nenhum
-- erros no original: Failed to load resource: net::ERR_BLOCKED_BY_CLIENT ¦ Failed to load resource: the server responded with a status of 403 () ¦ Amplitude Logger [Error]: Failed to fetch remote config: Error: Network error occurred, remote config fetch failed ¦ Failed to load resource: the server responded with a status of 403 () ¦ Failed to load resource: the server responded with a status of 403 () ¦ Failed to load resource: the server responded with a status of 403 () ¦ Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector
-- erros na copia: Failed to load resource: net::ERR_BLOCKED_BY_CLIENT ¦ Failed to load resource: the server responded with a status of 403 () ¦ Amplitude Logger [Error]: Failed to fetch remote config: Error: Network error occurred, remote config fetch failed ¦ Failed to load resource: the server responded with a status of 403 () ¦ Failed to load resource: the server responded with a status of 403 () ¦ Failed to load resource: the server responded with a status of 403 () ¦ Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector
-- falhas de rede no original: https://manus-analytics.com/api/send (net::ERR_BLOCKED_BY_CLIENT) ; https://api2.amplitude.com/2/httpapi (net::ERR_BLOCKED_BY_CLIENT.Inspector)
-- falhas de rede na copia: https://manus-analytics.com/api/send (net::ERR_BLOCKED_BY_CLIENT) ; https://api2.amplitude.com/2/httpapi (net::ERR_BLOCKED_BY_CLIENT.Inspector)
-- emblema Manus: original {"filhos":0,"sombra":true,"caixa":[195,739,0,0]} · copia {"filhos":0,"sombra":true,"caixa":[195,739,0,0]}
+- cargas: 1 de cada lado (segundos: original 13; copia 13)
+- fotos: 2 · identicas 2 · so arredondamento 0 · variam 0 · diferentes 0 · ausentes 0
+- original: "Fronteira do Sul RP — Convite oficial" 1440x900px, 42 elementos, 149 caracteres, 26 pedidos · copia: "Fronteira do Sul RP — Convite oficial" 1440x900px, 42 elementos, 149 caracteres, 23 pedidos
+- pedidos ao proprio site: 8 x 8 · so no original: - · so na copia: - · respostas diferentes: - · conteudo diferente: -
+- redirecionava no original (arquivo local na copia): GET /favicon.ico ; GET /manus-storage/fronteira-sul-logo_1b1b4c2d.webp
+- pedidos da copia ao site original: nenhum · saidas barradas: original - / copia - · janelas: - / -
+- estatisticas barradas: 6 x 6 · outros envios a terceiros: - / -
+- erros de script: original - / copia -
+- selo da plataforma: original {"sombra":true,"filhosNaSombra":1} / copia {"sombra":true,"filhosNaSombra":1} · animacoes sem fim congeladas: 0 / 0 · avisos: - · endereco no fim: https://fronteirasul-fmudazpm.manus.space/ / http://127.0.0.1:4173/
 
-### regras-desktop — /
+| passo | fotos | identicas | arredond. | variam | diferentes | estrutura | elementos (dif/total) |
+|---|---|---|---|---|---|---|---|
+| inicial | 1 | 1 | 0 | 0 | 0 | igual | 0/10 |
+| link › / | 1 | 1 | 0 | 0 | 0 | igual | 0/754 |
 
-- resultado: **PROBLEMAS** — respostas diferentes: GET /api/platform/config.js: original 500, copia 404 | foto 2: 0.79% dos pixels diferentes | foto 3: 0.95% dos pixels diferentes
-- titulo igual: true · texto igual: true · altura igual: true (22608 x 22608) · elementos iguais: true (789 x 789)
-- fotos: 1: 8 px (0.001%) · 2: 10181 px (0.786%) · 3: 12293 px (0.949%)
-- cliques: 1 "Buscar": 0.001% · 2 "Ir para ocorrência anterior": 0.001% · 3 "Ir para próxima ocorrência": 0.001% · 4 "Regulamento geral": 0.001% · 5 "Regras da Polícia": 0.000%
-- busca: 0.000% (texto 2664 x 2664)
-- pedidos ao proprio site: 6 no original, 6 na copia
-- pedidos so no original: -
-- pedidos so na copia: -
-- respostas diferentes: GET /api/platform/config.js: original 500, copia 404
-- redirecionava no original, arquivo local na copia: GET /favicon.ico ; GET /manus-storage/fronteira-sul-logo_1b1b4c2d.webp
-- envios a terceiros (original): POST https://api.manus.im/api/user_behavior/batch_create_event_v2
-- envios a terceiros (copia): POST https://api.manus.im/api/user_behavior/batch_create_event_v2
-- estatisticas barradas: original 5, copia 5
-- pedidos da copia ao site original: nenhum
-- erros no original: Failed to load resource: the server responded with a status of 500 () ¦ Refused to execute script from 'https://fronteirasul-fmudazpm.manus.space/api/platform/config.js' because its MIME type ('text/html') is not executable, and strict MIME type checking is enabled. ¦ Failed to load resource: net::ERR_BLOCKED_BY_CLIENT ¦ Failed to load resource: the server responded with a status of 403 () ¦ Amplitude Logger [Error]: Failed to fetch remote config: Error: Network error occurred, remote config fetch failed ¦ Failed to load resource: the server responded with a status of 403 () ¦ Failed to load resource: the server responded with a status of 403 () ¦ Failed to load resource: the server responded with a status of 403 () ¦ Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector ¦ Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector ¦ Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector ¦ Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector
-- erros na copia: Failed to load resource: the server responded with a status of 404 (Not Found) ¦ Refused to execute script from 'http://127.0.0.1:4173/api/platform/config.js' because its MIME type ('') is not executable, and strict MIME type checking is enabled. ¦ Failed to load resource: net::ERR_BLOCKED_BY_CLIENT ¦ Failed to load resource: the server responded with a status of 403 () ¦ Amplitude Logger [Error]: Failed to fetch remote config: Error: Network error occurred, remote config fetch failed ¦ Failed to load resource: the server responded with a status of 403 () ¦ Failed to load resource: the server responded with a status of 403 () ¦ Failed to load resource: the server responded with a status of 403 () ¦ Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector ¦ Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector ¦ Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector ¦ Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector
-- falhas de rede no original: https://fronteirasul-fmudazpm.manus.space/api/platform/config.js (net::ERR_ABORTED) ; https://manus-analytics.com/api/send (net::ERR_BLOCKED_BY_CLIENT) ; https://api2.amplitude.com/2/httpapi (net::ERR_BLOCKED_BY_CLIENT.Inspector) ; https://api2.amplitude.com/2/httpapi (net::ERR_BLOCKED_BY_CLIENT.Inspector) ; https://api2.amplitude.com/2/httpapi (net::ERR_BLOCKED_BY_CLIENT.Inspector) ; https://api2.amplitude.com/2/httpapi (net::ERR_BLOCKED_BY_CLIENT.Inspector)
-- falhas de rede na copia: http://127.0.0.1:4173/api/platform/config.js (net::ERR_ABORTED) ; https://manus-analytics.com/api/send (net::ERR_BLOCKED_BY_CLIENT) ; https://api2.amplitude.com/2/httpapi (net::ERR_BLOCKED_BY_CLIENT.Inspector) ; https://api2.amplitude.com/2/httpapi (net::ERR_BLOCKED_BY_CLIENT.Inspector) ; https://api2.amplitude.com/2/httpapi (net::ERR_BLOCKED_BY_CLIENT.Inspector) ; https://api2.amplitude.com/2/httpapi (net::ERR_BLOCKED_BY_CLIENT.Inspector)
-- emblema Manus: original {"filhos":0,"sombra":true,"caixa":[0,22608,0,0]} · copia {"filhos":0,"sombra":true,"caixa":[0,22608,0,0]}
+Console (erros/avisos) — original: Failed to load resource: net::ERR_BLOCKED_BY_CLIENT ¦ []Automatic fallback to software WebGL has been deprecated. Please use the --enable-unsafe-swiftshader flag to opt in to lower security guarantees for trusted content. ¦ []Automatic fallback to software WebGL has been deprecated. Please use the --enable-unsafe-swiftshader flag to opt in to lower security guarantees for trusted content. ¦ [.WebGL-0x265c00903e00]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels ¦ Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector ¦ Failed to load resource: the server responded with a status of 403 () ¦ Amplitude Logger [Error]: Failed to fetch remote config: Error: Network error occurred, remote config fetch failed ¦ Failed to load resource: the server responded with a status of 403 () ¦ Failed to load resource: the server responded with a status of 
+Console (erros/avisos) — copia: Ignoring Event: localhost ¦ Ignoring Event: localhost ¦ Failed to load resource: net::ERR_BLOCKED_BY_CLIENT ¦ []Automatic fallback to software WebGL has been deprecated. Please use the --enable-unsafe-swiftshader flag to opt in to lower security guarantees for trusted content. ¦ []Automatic fallback to software WebGL has been deprecated. Please use the --enable-unsafe-swiftshader flag to opt in to lower security guarantees for trusted content. ¦ Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector ¦ Failed to load resource: the server responded with a status of 403 () ¦ Amplitude Logger [Error]: Failed to fetch remote config: Error: Network error occurred, remote config fetch failed ¦ Failed to load resource: the server responded with a status of 403 () ¦ Failed to load resource: the server responded with a status of 403 () ¦ Failed to load resource: the server responded with a 
+Falhas de rede — original: https://manus-analytics.com/api/send (net::ERR_BLOCKED_BY_CLIENT) ; https://api.manus.im/api/user_behavior/batch_create_event_v2 (net::ERR_BLOCKED_BY_CLIENT.Inspector) ; https://api2.amplitude.com/2/httpapi (net::ERR_BLOCKED_BY_CLIENT.Inspector) ; https://fronteirasul-fmudazpm.manus.space/api/platform/config.js (net::ERR_ABORTED) ; https://manus-analytics.com/api/send (net::ERR_BLOCKED_BY_CLIENT) ; https://api.manus.im/api/user_behavior/batch_create_event_v2 (net::ERR_BLOCKED_BY_CLIENT.Inspector) ; https://api2.amplitude.com/2/httpapi (net::ERR_BLOCKED_BY_CLIENT.Inspector)
+Falhas de rede — copia: https://manus-analytics.com/api/send (net::ERR_BLOCKED_BY_CLIENT) ; https://api.manus.im/api/user_behavior/batch_create_event_v2 (net::ERR_BLOCKED_BY_CLIENT.Inspector) ; https://api2.amplitude.com/2/httpapi (net::ERR_BLOCKED_BY_CLIENT.Inspector) ; http://127.0.0.1:4173/api/platform/config.js (net::ERR_ABORTED) ; https://manus-analytics.com/api/send (net::ERR_BLOCKED_BY_CLIENT) ; https://api.manus.im/api/user_behavior/batch_create_event_v2 (net::ERR_BLOCKED_BY_CLIENT.Inspector) ; https://api2.amplitude.com/2/httpapi (net::ERR_BLOCKED_BY_CLIENT.Inspector)
 
-### regras-movel — /
+### convite-movel — /convite/?v=c14b569 (movel)
 
-- resultado: **PROBLEMAS** — respostas diferentes: GET /api/platform/config.js: original 500, copia 404
-- titulo igual: true · texto igual: true · altura igual: true (30982 x 30982) · elementos iguais: true (789 x 789)
-- fotos: 1: 0 px (0.000%) · 2: 0 px (0.000%) · 3: 0 px (0.000%)
-- pedidos ao proprio site: 6 no original, 6 na copia
-- pedidos so no original: -
-- pedidos so na copia: -
-- respostas diferentes: GET /api/platform/config.js: original 500, copia 404
-- redirecionava no original, arquivo local na copia: GET /manus-storage/fronteira-sul-logo_1b1b4c2d.webp ; GET /favicon.ico
-- envios a terceiros (original): POST https://api.manus.im/api/user_behavior/batch_create_event_v2
-- envios a terceiros (copia): POST https://api.manus.im/api/user_behavior/batch_create_event_v2
-- estatisticas barradas: original 2, copia 2
-- pedidos da copia ao site original: nenhum
-- erros no original: Failed to load resource: the server responded with a status of 500 () ¦ Refused to execute script from 'https://fronteirasul-fmudazpm.manus.space/api/platform/config.js' because its MIME type ('text/html') is not executable, and strict MIME type checking is enabled. ¦ Failed to load resource: net::ERR_BLOCKED_BY_CLIENT ¦ Failed to load resource: the server responded with a status of 403 () ¦ Amplitude Logger [Error]: Failed to fetch remote config: Error: Network error occurred, remote config fetch failed ¦ Failed to load resource: the server responded with a status of 403 () ¦ Failed to load resource: the server responded with a status of 403 () ¦ Failed to load resource: the server responded with a status of 403 () ¦ Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector
-- erros na copia: Failed to load resource: the server responded with a status of 404 (Not Found) ¦ Refused to execute script from 'http://127.0.0.1:4173/api/platform/config.js' because its MIME type ('') is not executable, and strict MIME type checking is enabled. ¦ Failed to load resource: net::ERR_BLOCKED_BY_CLIENT ¦ Failed to load resource: the server responded with a status of 403 () ¦ Amplitude Logger [Error]: Failed to fetch remote config: Error: Network error occurred, remote config fetch failed ¦ Failed to load resource: the server responded with a status of 403 () ¦ Failed to load resource: the server responded with a status of 403 () ¦ Failed to load resource: the server responded with a status of 403 () ¦ Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector
-- falhas de rede no original: https://fronteirasul-fmudazpm.manus.space/api/platform/config.js (net::ERR_ABORTED) ; https://manus-analytics.com/api/send (net::ERR_BLOCKED_BY_CLIENT) ; https://api2.amplitude.com/2/httpapi (net::ERR_BLOCKED_BY_CLIENT.Inspector)
-- falhas de rede na copia: http://127.0.0.1:4173/api/platform/config.js (net::ERR_ABORTED) ; https://manus-analytics.com/api/send (net::ERR_BLOCKED_BY_CLIENT) ; https://api2.amplitude.com/2/httpapi (net::ERR_BLOCKED_BY_CLIENT.Inspector)
-- emblema Manus: original {"filhos":0,"sombra":true,"caixa":[0,30982,0,0]} · copia {"filhos":0,"sombra":true,"caixa":[0,30982,0,0]}
+**Igual ao original**
+
+- cargas: 1 de cada lado (segundos: original 8; copia 8)
+- fotos: 1 · identicas 1 · so arredondamento 0 · variam 0 · diferentes 0 · ausentes 0
+- original: "Fronteira do Sul RP — Convite oficial" 390x844px, 42 elementos, 149 caracteres, 11 pedidos · copia: "Fronteira do Sul RP — Convite oficial" 390x844px, 42 elementos, 149 caracteres, 10 pedidos
+- pedidos ao proprio site: 3 x 3 · so no original: - · so na copia: - · respostas diferentes: - · conteudo diferente: -
+- redirecionava no original (arquivo local na copia): GET /favicon.ico
+- pedidos da copia ao site original: nenhum · saidas barradas: original - / copia - · janelas: - / -
+- estatisticas barradas: 3 x 3 · outros envios a terceiros: - / -
+- erros de script: original - / copia -
+- selo da plataforma: original {"sombra":true,"filhosNaSombra":1} / copia {"sombra":true,"filhosNaSombra":1} · animacoes sem fim congeladas: 0 / 0 · avisos: - · endereco no fim: https://fronteirasul-fmudazpm.manus.space/convite/?v=c14b569 / http://127.0.0.1:4173/convite/?v=c14b569
+
+| passo | fotos | identicas | arredond. | variam | diferentes | estrutura | elementos (dif/total) |
+|---|---|---|---|---|---|---|---|
+| inicial | 1 | 1 | 0 | 0 | 0 | igual | 0/10 |
+
+Console (erros/avisos) — original: Failed to load resource: net::ERR_BLOCKED_BY_CLIENT ¦ []Automatic fallback to software WebGL has been deprecated. Please use the --enable-unsafe-swiftshader flag to opt in to lower security guarantees for trusted content. ¦ []Automatic fallback to software WebGL has been deprecated. Please use the --enable-unsafe-swiftshader flag to opt in to lower security guarantees for trusted content. ¦ [.WebGL-0x265c02260000]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels ¦ Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector ¦ Failed to load resource: the server responded with a status of 403 () ¦ Amplitude Logger [Error]: Failed to fetch remote config: Error: Network error occurred, remote config fetch failed ¦ Failed to load resource: the server responded with a status of 403 () ¦ Failed to load resource: the server responded with a status of 
+Console (erros/avisos) — copia: Ignoring Event: localhost ¦ Ignoring Event: localhost ¦ Failed to load resource: net::ERR_BLOCKED_BY_CLIENT ¦ []Automatic fallback to software WebGL has been deprecated. Please use the --enable-unsafe-swiftshader flag to opt in to lower security guarantees for trusted content. ¦ []Automatic fallback to software WebGL has been deprecated. Please use the --enable-unsafe-swiftshader flag to opt in to lower security guarantees for trusted content. ¦ Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector ¦ Failed to load resource: the server responded with a status of 403 () ¦ Amplitude Logger [Error]: Failed to fetch remote config: Error: Network error occurred, remote config fetch failed ¦ Failed to load resource: the server responded with a status of 403 () ¦ Failed to load resource: the server responded with a status of 403 () ¦ Failed to load resource: the server responded with a 
+Falhas de rede — original: https://manus-analytics.com/api/send (net::ERR_BLOCKED_BY_CLIENT) ; https://api.manus.im/api/user_behavior/batch_create_event_v2 (net::ERR_BLOCKED_BY_CLIENT.Inspector) ; https://api2.amplitude.com/2/httpapi (net::ERR_BLOCKED_BY_CLIENT.Inspector)
+Falhas de rede — copia: https://manus-analytics.com/api/send (net::ERR_BLOCKED_BY_CLIENT) ; https://api.manus.im/api/user_behavior/batch_create_event_v2 (net::ERR_BLOCKED_BY_CLIENT.Inspector) ; https://api2.amplitude.com/2/httpapi (net::ERR_BLOCKED_BY_CLIENT.Inspector)
+
+### regras-desktop — / (desktop)
+
+**Igual ao original**
+
+- cargas: 2 de cada lado (segundos: original 54, 53; copia 54, 54)
+- fotos: 50 · identicas 50 · so arredondamento 0 · variam 0 · diferentes 0 · ausentes 0
+- original: "Fronteira do Sul RP — Uma nova história começa aqui" 1440x22608px, 789 elementos, 38047 caracteres, 15 pedidos · copia: "Fronteira do Sul RP — Uma nova história começa aqui" 1440x22608px, 789 elementos, 38047 caracteres, 13 pedidos
+- pedidos ao proprio site: 6 x 6 · so no original: - · so na copia: - · respostas diferentes: - · conteudo diferente: -
+- redirecionava no original (arquivo local na copia): GET /manus-storage/fronteira-sul-logo_1b1b4c2d.webp ; GET /favicon.ico
+- pedidos da copia ao site original: nenhum · saidas barradas: original - / copia - · janelas: - / -
+- estatisticas barradas: 17 x 17 · outros envios a terceiros: - / -
+- erros de script: original - / copia -
+- selo da plataforma: original {"sombra":true,"filhosNaSombra":1} / copia {"sombra":true,"filhosNaSombra":1} · animacoes sem fim congeladas: 0 / 0 · avisos: - · endereco no fim: https://fronteirasul-fmudazpm.manus.space/ / http://127.0.0.1:4173/
+
+| passo | fotos | identicas | arredond. | variam | diferentes | estrutura | elementos (dif/total) |
+|---|---|---|---|---|---|---|---|
+| inicial | 26 | 26 | 0 | 0 | 0 | igual | 0/754 |
+| inicial › clique "Buscar" | 1 | 1 | 0 | 0 | 0 | igual | - |
+| inicial › clique "Ir para ocorrência anterior" (desabilitado) | 1 | 1 | 0 | 0 | 0 | igual | - |
+| inicial › clique "Ir para próxima ocorrência" (desabilitado) | 1 | 1 | 0 | 0 | 0 | igual | - |
+| inicial › clique "@sr__black_ Copiar Discord" | 1 | 1 | 0 | 0 | 0 | igual | - |
+| aba "Regras da Polícia" | 4 | 4 | 0 | 0 | 0 | igual | 0/749 |
+| aba "Regras da Polícia" › clique "Buscar" | 1 | 1 | 0 | 0 | 0 | igual | - |
+| aba "Regras da Polícia" › clique "Ir para ocorrência anterior" (desabilitado) | 1 | 1 | 0 | 0 | 0 | igual | - |
+| aba "Regras da Polícia" › clique "Ir para próxima ocorrência" (desabilitado) | 1 | 1 | 0 | 0 | 0 | igual | - |
+| volta para a aba "Regulamento geral" | 1 | 1 | 0 | 0 | 0 | igual | 0/754 |
+| busca › digitar "arma" | 1 | 1 | 0 | 0 | 0 | igual | - |
+| busca › Enter | 1 | 1 | 0 | 0 | 0 | igual | - |
+| busca › clique "Buscar" | 1 | 1 | 0 | 0 | 0 | igual | - |
+| busca › clique "Ir para ocorrência anterior" | 1 | 1 | 0 | 0 | 0 | igual | - |
+| busca › clique "Ir para próxima ocorrência" | 1 | 1 | 0 | 0 | 0 | igual | - |
+| busca › clique "@sr__black_ Copiar Discord" | 1 | 1 | 0 | 0 | 0 | igual | - |
+| busca › limpar | 1 | 1 | 0 | 0 | 0 | igual | - |
+| menu › "Regras de ações" | 1 | 1 | 0 | 0 | 0 | igual | - |
+| menu › "Ações e negociações" | 1 | 1 | 0 | 0 | 0 | igual | - |
+| indice › #apresentacao | 1 | 1 | 0 | 0 | 0 | igual | - |
+| indice › #pacificacao | 1 | 1 | 0 | 0 | 0 | igual | - |
+| indice › #negociacoes | 1 | 1 | 0 | 0 | 0 | igual | - |
+
+Console (erros/avisos) — original: Failed to load resource: the server responded with a status of 500 () ¦ Refused to execute script from 'https://fronteirasul-fmudazpm.manus.space/api/platform/config.js' because its MIME type ('text/html') is not executable, and strict MIME type checking is enabled. ¦ Failed to load resource: net::ERR_BLOCKED_BY_CLIENT ¦ []Automatic fallback to software WebGL has been deprecated. Please use the --enable-unsafe-swiftshader flag to opt in to lower security guarantees for trusted content. ¦ []Automatic fallback to software WebGL has been deprecated. Please use the --enable-unsafe-swiftshader flag to opt in to lower security guarantees for trusted content. ¦ [.WebGL-0x265c001c6e00]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels (this message will no longer repeat) ¦ Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector ¦ Failed to load res
+Console (erros/avisos) — copia: Failed to load resource: the server responded with a status of 500 (Internal Server Error) ¦ Refused to execute script from 'http://127.0.0.1:4173/api/platform/config.js' because its MIME type ('') is not executable, and strict MIME type checking is enabled. ¦ Ignoring Event: localhost ¦ Ignoring Event: localhost ¦ Failed to load resource: net::ERR_BLOCKED_BY_CLIENT ¦ []Automatic fallback to software WebGL has been deprecated. Please use the --enable-unsafe-swiftshader flag to opt in to lower security guarantees for trusted content. ¦ []Automatic fallback to software WebGL has been deprecated. Please use the --enable-unsafe-swiftshader flag to opt in to lower security guarantees for trusted content. ¦ Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector ¦ Failed to load resource: the server responded with a status of 403 () ¦ Amplitude Logger [Error]: Failed to fetch remote conf
+Falhas de rede — original: https://fronteirasul-fmudazpm.manus.space/api/platform/config.js (net::ERR_ABORTED) ; https://manus-analytics.com/api/send (net::ERR_BLOCKED_BY_CLIENT) ; https://api.manus.im/api/user_behavior/batch_create_event_v2 (net::ERR_BLOCKED_BY_CLIENT.Inspector) ; https://api2.amplitude.com/2/httpapi (net::ERR_BLOCKED_BY_CLIENT.Inspector) ; https://api2.amplitude.com/2/httpapi (net::ERR_BLOCKED_BY_CLIENT.Inspector) ; https://api2.amplitude.com/2/httpapi (net::ERR_BLOCKED_BY_CLIENT.Inspector) ; https://api2.amplitude.com/2/httpapi (net::ERR_BLOCKED_BY_CLIENT.Inspector) ; https://api2.amplitude.com/2/htt
+Falhas de rede — copia: http://127.0.0.1:4173/api/platform/config.js (net::ERR_ABORTED) ; https://manus-analytics.com/api/send (net::ERR_BLOCKED_BY_CLIENT) ; https://api.manus.im/api/user_behavior/batch_create_event_v2 (net::ERR_BLOCKED_BY_CLIENT.Inspector) ; https://api2.amplitude.com/2/httpapi (net::ERR_BLOCKED_BY_CLIENT.Inspector) ; https://api2.amplitude.com/2/httpapi (net::ERR_BLOCKED_BY_CLIENT.Inspector) ; https://api2.amplitude.com/2/httpapi (net::ERR_BLOCKED_BY_CLIENT.Inspector) ; https://api2.amplitude.com/2/httpapi (net::ERR_BLOCKED_BY_CLIENT.Inspector) ; https://api2.amplitude.com/2/httpapi (net::ERR_BLOCK
+
+### regras-movel — / (movel)
+
+**Igual ao original**
+
+- cargas: 1 de cada lado (segundos: original 34; copia 34)
+- fotos: 43 · identicas 43 · so arredondamento 0 · variam 0 · diferentes 0 · ausentes 0
+- original: "Fronteira do Sul RP — Uma nova história começa aqui" 390x30982px, 789 elementos, 37581 caracteres, 15 pedidos · copia: "Fronteira do Sul RP — Uma nova história começa aqui" 390x30982px, 789 elementos, 37581 caracteres, 13 pedidos
+- pedidos ao proprio site: 6 x 6 · so no original: - · so na copia: - · respostas diferentes: - · conteudo diferente: -
+- redirecionava no original (arquivo local na copia): GET /manus-storage/fronteira-sul-logo_1b1b4c2d.webp ; GET /favicon.ico
+- pedidos da copia ao site original: nenhum · saidas barradas: original - / copia - · janelas: - / -
+- estatisticas barradas: 5 x 5 · outros envios a terceiros: - / -
+- erros de script: original - / copia -
+- selo da plataforma: original {"sombra":true,"filhosNaSombra":1} / copia {"sombra":true,"filhosNaSombra":1} · animacoes sem fim congeladas: 0 / 0 · avisos: - · endereco no fim: https://fronteirasul-fmudazpm.manus.space/ / http://127.0.0.1:4173/
+
+| passo | fotos | identicas | arredond. | variam | diferentes | estrutura | elementos (dif/total) |
+|---|---|---|---|---|---|---|---|
+| inicial | 37 | 37 | 0 | 0 | 0 | igual | 0/754 |
+| aba "Regras da Polícia" | 5 | 5 | 0 | 0 | 0 | igual | 0/749 |
+| volta para a aba "Regulamento geral" | 1 | 1 | 0 | 0 | 0 | igual | 0/754 |
+
+Console (erros/avisos) — original: Failed to load resource: the server responded with a status of 500 () ¦ Refused to execute script from 'https://fronteirasul-fmudazpm.manus.space/api/platform/config.js' because its MIME type ('text/html') is not executable, and strict MIME type checking is enabled. ¦ Failed to load resource: net::ERR_BLOCKED_BY_CLIENT ¦ []Automatic fallback to software WebGL has been deprecated. Please use the --enable-unsafe-swiftshader flag to opt in to lower security guarantees for trusted content. ¦ []Automatic fallback to software WebGL has been deprecated. Please use the --enable-unsafe-swiftshader flag to opt in to lower security guarantees for trusted content. ¦ Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector ¦ Failed to load resource: the server responded with a status of 403 () ¦ Amplitude Logger [Error]: Failed to fetch remote config: Error: Network error occurred, remote config
+Console (erros/avisos) — copia: Failed to load resource: the server responded with a status of 500 (Internal Server Error) ¦ Refused to execute script from 'http://127.0.0.1:4173/api/platform/config.js' because its MIME type ('') is not executable, and strict MIME type checking is enabled. ¦ Ignoring Event: localhost ¦ Ignoring Event: localhost ¦ []Automatic fallback to software WebGL has been deprecated. Please use the --enable-unsafe-swiftshader flag to opt in to lower security guarantees for trusted content. ¦ []Automatic fallback to software WebGL has been deprecated. Please use the --enable-unsafe-swiftshader flag to opt in to lower security guarantees for trusted content. ¦ Failed to load resource: net::ERR_BLOCKED_BY_CLIENT ¦ Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector ¦ Failed to load resource: the server responded with a status of 403 () ¦ Amplitude Logger [Error]: Failed to fetch remote conf
+Falhas de rede — original: https://fronteirasul-fmudazpm.manus.space/api/platform/config.js (net::ERR_ABORTED) ; https://manus-analytics.com/api/send (net::ERR_BLOCKED_BY_CLIENT) ; https://api.manus.im/api/user_behavior/batch_create_event_v2 (net::ERR_BLOCKED_BY_CLIENT.Inspector) ; https://api2.amplitude.com/2/httpapi (net::ERR_BLOCKED_BY_CLIENT.Inspector) ; https://api2.amplitude.com/2/httpapi (net::ERR_BLOCKED_BY_CLIENT.Inspector) ; https://api2.amplitude.com/2/httpapi (net::ERR_BLOCKED_BY_CLIENT.Inspector)
+Falhas de rede — copia: http://127.0.0.1:4173/api/platform/config.js (net::ERR_ABORTED) ; https://manus-analytics.com/api/send (net::ERR_BLOCKED_BY_CLIENT) ; https://api.manus.im/api/user_behavior/batch_create_event_v2 (net::ERR_BLOCKED_BY_CLIENT.Inspector) ; https://api2.amplitude.com/2/httpapi (net::ERR_BLOCKED_BY_CLIENT.Inspector) ; https://api2.amplitude.com/2/httpapi (net::ERR_BLOCKED_BY_CLIENT.Inspector) ; https://api2.amplitude.com/2/httpapi (net::ERR_BLOCKED_BY_CLIENT.Inspector)
+
+### rota-inexistente-desktop — /pagina-que-nao-existe (desktop)
+
+**PROBLEMAS (1)**
+
+- PROBLEMA: respostas diferentes: GET /404: original 404, copia 200
+- cargas: 1 de cada lado (segundos: original 71; copia 10)
+- fotos: 2 · identicas 2 · so arredondamento 0 · variam 0 · diferentes 0 · ausentes 0
+- original: "Fronteira do Sul RP — Uma nova história começa aqui" 1440x900px, 59 elementos, 114 caracteres, 27 pedidos · copia: "Fronteira do Sul RP — Uma nova história começa aqui" 1440x900px, 59 elementos, 114 caracteres, 24 pedidos
+- pedidos ao proprio site: 7 x 7 · so no original: - · so na copia: - · respostas diferentes: GET /404: original 404, copia 200 · conteudo diferente: -
+- redirecionava no original (arquivo local na copia): GET /favicon.ico ; GET /manus-storage/fronteira-sul-logo_1b1b4c2d.webp
+- pedidos da copia ao site original: nenhum · saidas barradas: original - / copia - · janelas: - / -
+- estatisticas barradas: 7 x 7 · outros envios a terceiros: - / -
+- erros de script: original - / copia -
+- selo da plataforma: original {"sombra":true,"filhosNaSombra":1} / copia {"sombra":true,"filhosNaSombra":1} · animacoes sem fim congeladas: 1 / 1 · avisos: a rede nao ficou parada · endereco no fim: https://fronteirasul-fmudazpm.manus.space/ / http://127.0.0.1:4173/
+
+| passo | fotos | identicas | arredond. | variam | diferentes | estrutura | elementos (dif/total) |
+|---|---|---|---|---|---|---|---|
+| inicial | 1 | 1 | 0 | 0 | 0 | igual | 0/23 |
+| inicial › clique "Go Home" | 1 | 1 | 0 | 0 | 0 | igual | - |
+
+Console (erros/avisos) — original: Failed to load resource: the server responded with a status of 500 () ¦ Refused to execute script from 'https://fronteirasul-fmudazpm.manus.space/api/platform/config.js' because its MIME type ('text/html') is not executable, and strict MIME type checking is enabled. ¦ Failed to load resource: net::ERR_BLOCKED_BY_CLIENT ¦ []Automatic fallback to software WebGL has been deprecated. Please use the --enable-unsafe-swiftshader flag to opt in to lower security guarantees for trusted content. ¦ []Automatic fallback to software WebGL has been deprecated. Please use the --enable-unsafe-swiftshader flag to opt in to lower security guarantees for trusted content. ¦ Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector ¦ Failed to load resource: the server responded with a status of 403 () ¦ Amplitude Logger [Error]: Failed to fetch remote config: Error: Network error occurred, remote config
+Console (erros/avisos) — copia: Failed to load resource: the server responded with a status of 500 (Internal Server Error) ¦ Refused to execute script from 'http://127.0.0.1:4173/api/platform/config.js' because its MIME type ('') is not executable, and strict MIME type checking is enabled. ¦ Ignoring Event: localhost ¦ Ignoring Event: localhost ¦ Failed to load resource: net::ERR_BLOCKED_BY_CLIENT ¦ []Automatic fallback to software WebGL has been deprecated. Please use the --enable-unsafe-swiftshader flag to opt in to lower security guarantees for trusted content. ¦ []Automatic fallback to software WebGL has been deprecated. Please use the --enable-unsafe-swiftshader flag to opt in to lower security guarantees for trusted content. ¦ Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector ¦ Failed to load resource: the server responded with a status of 403 () ¦ Amplitude Logger [Error]: Failed to fetch remote conf
+Falhas de rede — original: https://fronteirasul-fmudazpm.manus.space/api/platform/config.js (net::ERR_ABORTED) ; https://manus-analytics.com/api/send (net::ERR_BLOCKED_BY_CLIENT) ; https://api.manus.im/api/user_behavior/batch_create_event_v2 (net::ERR_BLOCKED_BY_CLIENT.Inspector) ; https://fronteirasul-fmudazpm.manus.space/api/platform/config.js (net::ERR_ABORTED) ; https://manus-analytics.com/api/send (net::ERR_BLOCKED_BY_CLIENT) ; https://api.manus.im/api/user_behavior/batch_create_event_v2 (net::ERR_BLOCKED_BY_CLIENT.Inspector) ; https://api2.amplitude.com/2/httpapi (net::ERR_BLOCKED_BY_CLIENT.Inspector) ; https://ma
+Falhas de rede — copia: http://127.0.0.1:4173/api/platform/config.js (net::ERR_ABORTED) ; https://manus-analytics.com/api/send (net::ERR_BLOCKED_BY_CLIENT) ; https://api.manus.im/api/user_behavior/batch_create_event_v2 (net::ERR_BLOCKED_BY_CLIENT.Inspector) ; http://127.0.0.1:4173/api/platform/config.js (net::ERR_ABORTED) ; https://manus-analytics.com/api/send (net::ERR_BLOCKED_BY_CLIENT) ; https://api.manus.im/api/user_behavior/batch_create_event_v2 (net::ERR_BLOCKED_BY_CLIENT.Inspector) ; https://api2.amplitude.com/2/httpapi (net::ERR_BLOCKED_BY_CLIENT.Inspector) ; https://manus-analytics.com/api/send (net::ERR_BLO
 
 ## Comportamento do servidor (original x copia)
 
-| caminho | original | copia | igual |
-|---|---|---|---|
-| / | 200 text/html; charset=utf-8 3613b 807dd331d3871980 | 200 text/html; charset=utf-8 3613b 807dd331d3871980 | sim |
-| /index.html | 200 text/html; charset=utf-8 3613b 807dd331d3871980 | 200 text/html; charset=utf-8 3613b 807dd331d3871980 | sim |
-| /convite | 200 text/html; charset=utf-8 5934b 5e876420dd7877f4 | 200 text/html; charset=utf-8 5934b 5e876420dd7877f4 | sim |
-| /convite/ | 200 text/html; charset=utf-8 5934b 5e876420dd7877f4 | 200 text/html; charset=utf-8 5934b 5e876420dd7877f4 | sim |
-| /convite/index.html | 200 text/html; charset=utf-8 5934b 5e876420dd7877f4 | 200 text/html; charset=utf-8 5934b 5e876420dd7877f4 | sim |
-| /convite/?v=c14b569 | 200 text/html; charset=utf-8 5934b 5e876420dd7877f4 | 200 text/html; charset=utf-8 5934b 5e876420dd7877f4 | sim |
-| /favicon.ico | 302→200 image/webp 244246b 6ba2906093fad36d | 200 image/webp 244246b 6ba2906093fad36d | sim |
-| /robots.txt | 200 text/plain 102b 753ab454d2bccaee | 200 text/plain 102b 753ab454d2bccaee | sim |
-| /sitemap.xml | 200 application/xml 220b 9ff2fccd909ac863 | 200 application/xml 220b a0a2f07226984cf3 | NAO |
-| /nao-existe-xyz | 200 text/html; charset=utf-8 3613b 807dd331d3871980 | 200 text/html; charset=utf-8 3613b 807dd331d3871980 | sim |
-| /nao-existe-xyz/ | 200 text/html; charset=utf-8 3613b 807dd331d3871980 | 200 text/html; charset=utf-8 3613b 807dd331d3871980 | sim |
-| /nao-existe-xyz/outra | 200 text/html; charset=utf-8 3613b 807dd331d3871980 | 200 text/html; charset=utf-8 3613b 807dd331d3871980 | sim |
-| /nao-existe-xyz.png | 404  0b e3b0c44298fc1c14 | 404  0b e3b0c44298fc1c14 | sim |
-| /nao-existe-xyz.html | 200 text/html; charset=utf-8 3613b 807dd331d3871980 | 404  0b e3b0c44298fc1c14 | NAO |
-| /nao.existe/rota | 200 text/html; charset=utf-8 3613b 807dd331d3871980 | 200 text/html; charset=utf-8 3613b 807dd331d3871980 | sim |
-| /assets | 200 text/html; charset=utf-8 3613b 807dd331d3871980 | 200 text/html; charset=utf-8 3613b 807dd331d3871980 | sim |
-| /assets/ | 200 text/html; charset=utf-8 3613b 807dd331d3871980 | 200 text/html; charset=utf-8 3613b 807dd331d3871980 | sim |
-| /assets/nao-existe-xyz.js | 404  0b e3b0c44298fc1c14 | 404  0b e3b0c44298fc1c14 | sim |
-| /convite/nao-existe-xyz | 200 text/html; charset=utf-8 3613b 807dd331d3871980 | 200 text/html; charset=utf-8 3613b 807dd331d3871980 | sim |
-| /convite/nao-existe-xyz.png | 404  0b e3b0c44298fc1c14 | 404  0b e3b0c44298fc1c14 | sim |
-| /api/nao-existe-xyz | 500 text/html; charset=UTF-8 27291b 619dabfddc3540e2 | 200 text/html; charset=utf-8 3613b 807dd331d3871980 | NAO |
-| /__manus/nao-existe-xyz | 200 text/html; charset=utf-8 3613b 807dd331d3871980 | 200 text/html; charset=utf-8 3613b 807dd331d3871980 | sim |
-| /manus-storage/nao-existe-xyz.webp | 307→403 application/xml 111b a824bc7739e226e1 | 404  0b e3b0c44298fc1c14 | NAO |
+| caminho | original | copia | mesmo status | mesmo conteudo |
+|---|---|---|---|---|
+| / | 200 text/html; charset=utf-8 3613b 807dd331d3871980 | 200 text/html; charset=utf-8 3613b 807dd331d3871980 | sim | sim |
+| /index.html | 200 text/html; charset=utf-8 3613b 807dd331d3871980 | 200 text/html; charset=utf-8 3613b 807dd331d3871980 | sim | sim |
+| /convite | 200 text/html; charset=utf-8 5934b 5e876420dd7877f4 | 200 text/html; charset=utf-8 5934b 5e876420dd7877f4 | sim | sim |
+| /convite/ | 200 text/html; charset=utf-8 5934b 5e876420dd7877f4 | 200 text/html; charset=utf-8 5934b 5e876420dd7877f4 | sim | sim |
+| /convite/index.html | 200 text/html; charset=utf-8 5934b 5e876420dd7877f4 | 200 text/html; charset=utf-8 5934b 5e876420dd7877f4 | sim | sim |
+| /convite/?v=c14b569 | 200 text/html; charset=utf-8 5934b 5e876420dd7877f4 | 200 text/html; charset=utf-8 5934b 5e876420dd7877f4 | sim | sim |
+| /favicon.ico | 302→200 image/webp 244246b 6ba2906093fad36d | 200 image/webp 244246b 6ba2906093fad36d | sim | sim |
+| /fronteira-sul-logo.webp | 200 image/webp 244246b 6ba2906093fad36d | 200 image/webp 244246b 6ba2906093fad36d | sim | sim |
+| /manus-storage/fronteira-sul-logo_1b1b4c2d.webp | 307→200 image/webp 244246b 6ba2906093fad36d | 200 image/webp 244246b 6ba2906093fad36d | sim | sim |
+| /fronteira-sul-convite-preview.jpg | 200 image/jpeg 369138b 07584c62ac7cd814 | 200 image/jpeg 369138b 07584c62ac7cd814 | sim | sim |
+| /__manus/pwa/manifest.webmanifest | 200 application/manifest+json; charset=utf-8 345b 7c12b59d22e85683 | 200 application/manifest+json; charset=utf-8 345b 7c12b59d22e85683 | sim | sim |
+| /robots.txt | 200 text/plain 102b 753ab454d2bccaee | 200 text/plain 102b 753ab454d2bccaee | sim | sim |
+| /sitemap.xml | 200 application/xml 220b 8e402173f477ab4e | 200 application/xml 220b 759afcdbaf924b0d | sim | NAO |
+| /404 | 404 text/html; charset=utf-8 3613b 807dd331d3871980 | 200 text/html; charset=utf-8 3613b 807dd331d3871980 | NAO | sim |
+| /nao-existe-xyz | 200 text/html; charset=utf-8 3613b 807dd331d3871980 | 200 text/html; charset=utf-8 3613b 807dd331d3871980 | sim | sim |
+| /nao-existe-xyz/ | 200 text/html; charset=utf-8 3613b 807dd331d3871980 | 200 text/html; charset=utf-8 3613b 807dd331d3871980 | sim | sim |
+| /nao-existe-xyz/outra | 200 text/html; charset=utf-8 3613b 807dd331d3871980 | 200 text/html; charset=utf-8 3613b 807dd331d3871980 | sim | sim |
+| /nao-existe-xyz.png | 404  0b e3b0c44298fc1c14 | 404  0b e3b0c44298fc1c14 | sim | sim |
+| /nao-existe-xyz.html | 200 text/html; charset=utf-8 3613b 807dd331d3871980 | 200 text/html; charset=utf-8 3613b 807dd331d3871980 | sim | sim |
+| /nao.existe/rota | 200 text/html; charset=utf-8 3613b 807dd331d3871980 | 200 text/html; charset=utf-8 3613b 807dd331d3871980 | sim | sim |
+| /assets | 200 text/html; charset=utf-8 3613b 807dd331d3871980 | 200 text/html; charset=utf-8 3613b 807dd331d3871980 | sim | sim |
+| /assets/ | 200 text/html; charset=utf-8 3613b 807dd331d3871980 | 200 text/html; charset=utf-8 3613b 807dd331d3871980 | sim | sim |
+| /assets/nao-existe-xyz.js | 404  0b e3b0c44298fc1c14 | 404  0b e3b0c44298fc1c14 | sim | sim |
+| /convite/nao-existe-xyz | 200 text/html; charset=utf-8 3613b 807dd331d3871980 | 200 text/html; charset=utf-8 3613b 807dd331d3871980 | sim | sim |
+| /convite/nao-existe-xyz.png | 404  0b e3b0c44298fc1c14 | 404  0b e3b0c44298fc1c14 | sim | sim |
+| /api/platform/config.js | 500 text/html; charset=UTF-8 27291b 619dabfddc3540e2 | 500  0b e3b0c44298fc1c14 | sim | NAO |
+| /api/nao-existe-xyz | 500 text/html; charset=UTF-8 27291b 619dabfddc3540e2 | 500  0b e3b0c44298fc1c14 | sim | NAO |
+| /api/trpc/auth.me | 500 text/html; charset=UTF-8 27291b 619dabfddc3540e2 | 500  0b e3b0c44298fc1c14 | sim | NAO |
+| /__manus/nao-existe-xyz | 200 text/html; charset=utf-8 3613b 807dd331d3871980 | 200 text/html; charset=utf-8 3613b 807dd331d3871980 | sim | sim |
+| /manus-storage/nao-existe-xyz.webp | 307→403 application/xml 111b a824bc7739e226e1 | 404  0b e3b0c44298fc1c14 | NAO | NAO |
 
 ## Pedidos do navegador no original
 
@@ -141,102 +210,82 @@ Gerado em 2026-11-11T18:10:11.078Z
 
 - GET 200 document https://fronteirasul-fmudazpm.manus.space/convite/?v=c14b569 text/html; charset=utf-8 5934
 - GET 200 script https://plausible.io/js/script.file-downloads.hash.outbound-links.pageview-props.revenue.tagged-events.js application/javascript 5052
-- GET 200 script https://files.manuscdn.com/manus-space-dispatcher/spaceEditor-CDmbg89D.js application/javascript 736291
 - GET 200 script https://manus-analytics.com/script.js application/javascript; charset=UTF-8 2618
+- GET 200 script https://files.manuscdn.com/manus-space-dispatcher/spaceEditor-CDmbg89D.js application/javascript 736291
 - GET 200 image https://fronteirasul-fmudazpm.manus.space/fronteira-sul-convite-preview.jpg image/jpeg 369138
-- GET 403 fetch https://sr-client-cfg.amplitude.com/config?api_key=46ac3f9abb41dd2d17a5785e052bc6d3&config_keys=analyticsSDK.pageActions text/plain;charset=utf-8 15
 - GET 302 other https://fronteirasul-fmudazpm.manus.space/favicon.ico   -> https://files.manuscdn.com/user_upload_by_module/session_file/310519663938856543/ZRyVDfBpECjhaIYs.webp
-- GET 403 fetch https://sr-client-cfg.amplitude.com/config/46ac3f9abb41dd2d17a5785e052bc6d3?config_group=browser application/json 30
-- GET 403 fetch https://sr-client-cfg.amplitude.com/config/46ac3f9abb41dd2d17a5785e052bc6d3?config_group=browser application/json 30
-- POST 200 ping https://api.manus.im/api/user_behavior/batch_create_event_v2  0
 - GET 200 other https://files.manuscdn.com/user_upload_by_module/session_file/310519663938856543/ZRyVDfBpECjhaIYs.webp image/webp 244246
+- GET 403 fetch https://sr-client-cfg.amplitude.com/config?api_key=46ac3f9abb41dd2d17a5785e052bc6d3&config_keys=analyticsSDK.pageActions text/plain;charset=utf-8 15
 - GET 403 fetch https://sr-client-cfg.amplitude.com/config/46ac3f9abb41dd2d17a5785e052bc6d3?config_group=browser application/json 30
-
-Estatisticas barradas durante a captura:
-- OPTIONS https://manus-analytics.com/api/send 
-- POST https://api2.amplitude.com/2/httpapi {"api_key":"46ac3f9abb41dd2d17a5785e052bc6d3","events":[{"device_id":"94577f33-99c2-4cf1-9fc2-a41309ae79e0","session_id":1794420493236,"time":1794420493253,"platform":"Web","language":"en-US","ip":"$remote","insert_id":"5ca09f02-1ae4-442d-bf2c-383db0062202","event_type":"$identify","user_properties"
-
-Outros envios a terceiros:
-- POST https://api.manus.im/api/user_behavior/batch_create_event_v2 {"events":[{"event_name":"session_file_view","ext_data":{"type":"space","url":"https://fronteirasul-fmudazpm.manus.space/convite/?v=c14b569"},"event_at":"2026-11-11T18:08:12.402Z"},{"event_name":"manus_space_show","ext_data":{"url":"https://fronteirasul-fmudazpm.manus.space/convite/?v=c14b569"},"eve
+- GET 200 document https://fronteirasul-fmudazpm.manus.space/ text/html; charset=utf-8 3613
+- GET 500 script https://fronteirasul-fmudazpm.manus.space/api/platform/config.js text/html; charset=UTF-8 0
+- GET 200 stylesheet https://fronteirasul-fmudazpm.manus.space/assets/index-DMP8NyHf.css text/css; charset=utf-8 123524
+- GET 200 script https://fronteirasul-fmudazpm.manus.space/assets/index-FbaU4KfD.js text/javascript; charset=utf-8 473107
+- GET 307 image https://fronteirasul-fmudazpm.manus.space/manus-storage/fronteira-sul-logo_1b1b4c2d.webp   -> https://d36hbw14aib5lz.cloudfront.net/310519663938856543/FmUDAzpMr2fDkhG5Nf2vYF/fronteira-sul-logo_1b1b4c2d.webp?…
+- GET 200 image https://d36hbw14aib5lz.cloudfront.net/310519663938856543/FmUDAzpMr2fDkhG5Nf2vYF/fronteira-sul-logo_1b1b4c2d.webp?… image/webp 244246
 
 ### convite-movel
 
 - GET 200 document https://fronteirasul-fmudazpm.manus.space/convite/?v=c14b569 text/html; charset=utf-8 5934
 - GET 200 script https://plausible.io/js/script.file-downloads.hash.outbound-links.pageview-props.revenue.tagged-events.js application/javascript 5052
-- GET 200 script https://files.manuscdn.com/manus-space-dispatcher/spaceEditor-CDmbg89D.js application/javascript 736291
 - GET 200 script https://manus-analytics.com/script.js application/javascript; charset=UTF-8 2618
+- GET 200 script https://files.manuscdn.com/manus-space-dispatcher/spaceEditor-CDmbg89D.js application/javascript 736291
 - GET 200 image https://fronteirasul-fmudazpm.manus.space/fronteira-sul-convite-preview.jpg image/jpeg 369138
 - GET 302 other https://fronteirasul-fmudazpm.manus.space/favicon.ico   -> https://files.manuscdn.com/user_upload_by_module/session_file/310519663938856543/ZRyVDfBpECjhaIYs.webp
 - GET 200 other https://files.manuscdn.com/user_upload_by_module/session_file/310519663938856543/ZRyVDfBpECjhaIYs.webp image/webp 244246
 - GET 403 fetch https://sr-client-cfg.amplitude.com/config?api_key=46ac3f9abb41dd2d17a5785e052bc6d3&config_keys=analyticsSDK.pageActions text/plain;charset=utf-8 15
 - GET 403 fetch https://sr-client-cfg.amplitude.com/config/46ac3f9abb41dd2d17a5785e052bc6d3?config_group=browser application/json 30
-- POST 200 ping https://api.manus.im/api/user_behavior/batch_create_event_v2  0
-- GET 403 fetch https://sr-client-cfg.amplitude.com/config/46ac3f9abb41dd2d17a5785e052bc6d3?config_group=browser application/json 30
-- GET 403 fetch https://sr-client-cfg.amplitude.com/config/46ac3f9abb41dd2d17a5785e052bc6d3?config_group=browser application/json 30
-
-Estatisticas barradas durante a captura:
-- OPTIONS https://manus-analytics.com/api/send 
-- POST https://api2.amplitude.com/2/httpapi {"api_key":"46ac3f9abb41dd2d17a5785e052bc6d3","events":[{"device_id":"45e85195-4c27-47a1-8054-bb82026850e2","session_id":1794420502539,"time":1794420502546,"platform":"Web","language":"en-US","ip":"$remote","insert_id":"bed4b64c-20d3-4dbc-ad6c-60ff8b7d7e35","event_type":"$identify","user_properties"
-
-Outros envios a terceiros:
-- POST https://api.manus.im/api/user_behavior/batch_create_event_v2 {"events":[{"event_name":"session_file_view","ext_data":{"type":"space","url":"https://fronteirasul-fmudazpm.manus.space/convite/?v=c14b569"},"event_at":"2026-11-11T18:08:22.195Z"},{"event_name":"manus_space_show","ext_data":{"url":"https://fronteirasul-fmudazpm.manus.space/convite/?v=c14b569"},"eve
 
 ### regras-desktop
 
 - GET 200 document https://fronteirasul-fmudazpm.manus.space/ text/html; charset=utf-8 3613
 - GET 200 script https://plausible.io/js/script.file-downloads.hash.outbound-links.pageview-props.revenue.tagged-events.js application/javascript 5052
-- GET 500 script https://fronteirasul-fmudazpm.manus.space/api/platform/config.js text/html; charset=UTF-8 0
 - GET 200 script https://files.manuscdn.com/manus-space-dispatcher/spaceEditor-CDmbg89D.js application/javascript 736291
 - GET 200 script https://manus-analytics.com/script.js application/javascript; charset=UTF-8 2618
+- GET 500 script https://fronteirasul-fmudazpm.manus.space/api/platform/config.js text/html; charset=UTF-8 0
 - GET 200 stylesheet https://fronteirasul-fmudazpm.manus.space/assets/index-DMP8NyHf.css text/css; charset=utf-8 123524
 - GET 200 script https://fronteirasul-fmudazpm.manus.space/assets/index-FbaU4KfD.js text/javascript; charset=utf-8 473107
-- GET 302 other https://fronteirasul-fmudazpm.manus.space/favicon.ico   -> https://files.manuscdn.com/user_upload_by_module/session_file/310519663938856543/ZRyVDfBpECjhaIYs.webp
-- GET 200 other https://files.manuscdn.com/user_upload_by_module/session_file/310519663938856543/ZRyVDfBpECjhaIYs.webp image/webp 244246
 - GET 307 image https://fronteirasul-fmudazpm.manus.space/manus-storage/fronteira-sul-logo_1b1b4c2d.webp   -> https://d36hbw14aib5lz.cloudfront.net/310519663938856543/FmUDAzpMr2fDkhG5Nf2vYF/fronteira-sul-logo_1b1b4c2d.webp?…
 - GET 200 image https://d36hbw14aib5lz.cloudfront.net/310519663938856543/FmUDAzpMr2fDkhG5Nf2vYF/fronteira-sul-logo_1b1b4c2d.webp?… image/webp 244246
+- GET 302 other https://fronteirasul-fmudazpm.manus.space/favicon.ico   -> https://files.manuscdn.com/user_upload_by_module/session_file/310519663938856543/ZRyVDfBpECjhaIYs.webp
+- GET 200 other https://files.manuscdn.com/user_upload_by_module/session_file/310519663938856543/ZRyVDfBpECjhaIYs.webp image/webp 244246
 - GET 403 fetch https://sr-client-cfg.amplitude.com/config?api_key=46ac3f9abb41dd2d17a5785e052bc6d3&config_keys=analyticsSDK.pageActions text/plain;charset=utf-8 15
 - GET 403 fetch https://sr-client-cfg.amplitude.com/config/46ac3f9abb41dd2d17a5785e052bc6d3?config_group=browser application/json 30
-- POST 200 ping https://api.manus.im/api/user_behavior/batch_create_event_v2  0
-- GET 403 fetch https://sr-client-cfg.amplitude.com/config/46ac3f9abb41dd2d17a5785e052bc6d3?config_group=browser application/json 30
-- GET 403 fetch https://sr-client-cfg.amplitude.com/config/46ac3f9abb41dd2d17a5785e052bc6d3?config_group=browser application/json 30
-
-Estatisticas barradas durante a captura:
-- OPTIONS https://manus-analytics.com/api/send 
-- POST https://api2.amplitude.com/2/httpapi {"api_key":"46ac3f9abb41dd2d17a5785e052bc6d3","events":[{"device_id":"d376e5e7-8f45-41f9-8292-a80e38634e42","session_id":1794420510774,"time":1794420510786,"platform":"Web","language":"en-US","ip":"$remote","insert_id":"291596bd-76d2-4456-8d81-3e0080acfaa2","event_type":"$identify","user_properties"
-- POST https://api2.amplitude.com/2/httpapi {"api_key":"46ac3f9abb41dd2d17a5785e052bc6d3","events":[{"device_id":"d376e5e7-8f45-41f9-8292-a80e38634e42","session_id":1794420510774,"time":1794420523222,"platform":"Web","language":"en-US","ip":"$remote","insert_id":"740575cc-52f9-4ca0-94cb-edef573c9d3c","event_type":"[Amplitude] Form Started","e
-- POST https://api2.amplitude.com/2/httpapi {"api_key":"46ac3f9abb41dd2d17a5785e052bc6d3","events":[{"device_id":"d376e5e7-8f45-41f9-8292-a80e38634e42","session_id":1794420510774,"time":1794420525599,"platform":"Web","language":"en-US","ip":"$remote","insert_id":"7930bfad-7d52-4bda-a4fa-b216ab1e6bed","event_type":"[Amplitude] Element Clicked"
-- POST https://api2.amplitude.com/2/httpapi {"api_key":"46ac3f9abb41dd2d17a5785e052bc6d3","events":[{"device_id":"d376e5e7-8f45-41f9-8292-a80e38634e42","session_id":1794420510774,"time":1794420527293,"platform":"Web","language":"en-US","ip":"$remote","insert_id":"dc1ac090-bd8e-4ed2-b339-8e4a293702b2","event_type":"[Amplitude] Element Clicked"
-
-Outros envios a terceiros:
-- POST https://api.manus.im/api/user_behavior/batch_create_event_v2 {"events":[{"event_name":"session_file_view","ext_data":{"type":"space","url":"https://fronteirasul-fmudazpm.manus.space/"},"event_at":"2026-11-11T18:08:30.421Z"},{"event_name":"manus_space_show","ext_data":{"url":"https://fronteirasul-fmudazpm.manus.space/"},"event_at":"2026-11-11T18:08:30.421Z"}],
-
-Cliques: [0] Buscar · [1] Ir para ocorrência anterior · [2] Ir para próxima ocorrência · [3] Regulamento geral · [4] Regras da Polícia
 
 ### regras-movel
 
 - GET 200 document https://fronteirasul-fmudazpm.manus.space/ text/html; charset=utf-8 3613
 - GET 200 script https://plausible.io/js/script.file-downloads.hash.outbound-links.pageview-props.revenue.tagged-events.js application/javascript 5052
 - GET 500 script https://fronteirasul-fmudazpm.manus.space/api/platform/config.js text/html; charset=UTF-8 0
-- GET 200 script https://files.manuscdn.com/manus-space-dispatcher/spaceEditor-CDmbg89D.js application/javascript 736291
 - GET 200 script https://manus-analytics.com/script.js application/javascript; charset=UTF-8 2618
-- GET 200 stylesheet https://fronteirasul-fmudazpm.manus.space/assets/index-DMP8NyHf.css text/css; charset=utf-8 123524
+- GET 200 script https://files.manuscdn.com/manus-space-dispatcher/spaceEditor-CDmbg89D.js application/javascript 736291
 - GET 200 script https://fronteirasul-fmudazpm.manus.space/assets/index-FbaU4KfD.js text/javascript; charset=utf-8 473107
+- GET 200 stylesheet https://fronteirasul-fmudazpm.manus.space/assets/index-DMP8NyHf.css text/css; charset=utf-8 123524
 - GET 307 image https://fronteirasul-fmudazpm.manus.space/manus-storage/fronteira-sul-logo_1b1b4c2d.webp   -> https://d36hbw14aib5lz.cloudfront.net/310519663938856543/FmUDAzpMr2fDkhG5Nf2vYF/fronteira-sul-logo_1b1b4c2d.webp?…
 - GET 200 image https://d36hbw14aib5lz.cloudfront.net/310519663938856543/FmUDAzpMr2fDkhG5Nf2vYF/fronteira-sul-logo_1b1b4c2d.webp?… image/webp 244246
 - GET 302 other https://fronteirasul-fmudazpm.manus.space/favicon.ico   -> https://files.manuscdn.com/user_upload_by_module/session_file/310519663938856543/ZRyVDfBpECjhaIYs.webp
 - GET 200 other https://files.manuscdn.com/user_upload_by_module/session_file/310519663938856543/ZRyVDfBpECjhaIYs.webp image/webp 244246
 - GET 403 fetch https://sr-client-cfg.amplitude.com/config?api_key=46ac3f9abb41dd2d17a5785e052bc6d3&config_keys=analyticsSDK.pageActions text/plain;charset=utf-8 15
 - GET 403 fetch https://sr-client-cfg.amplitude.com/config/46ac3f9abb41dd2d17a5785e052bc6d3?config_group=browser application/json 30
-- POST 200 ping https://api.manus.im/api/user_behavior/batch_create_event_v2  0
-- GET 403 fetch https://sr-client-cfg.amplitude.com/config/46ac3f9abb41dd2d17a5785e052bc6d3?config_group=browser application/json 30
-- GET 403 fetch https://sr-client-cfg.amplitude.com/config/46ac3f9abb41dd2d17a5785e052bc6d3?config_group=browser application/json 30
 
-Estatisticas barradas durante a captura:
-- OPTIONS https://manus-analytics.com/api/send 
-- POST https://api2.amplitude.com/2/httpapi {"api_key":"46ac3f9abb41dd2d17a5785e052bc6d3","events":[{"device_id":"3d3b1917-fbd4-4b2e-ab1f-e655920d6418","session_id":1794420531185,"time":1794420531191,"platform":"Web","language":"en-US","ip":"$remote","insert_id":"376b25a4-7e25-432f-8b56-0e84e4514c55","event_type":"$identify","user_properties"
+### rota-inexistente-desktop
 
-Outros envios a terceiros:
-- POST https://api.manus.im/api/user_behavior/batch_create_event_v2 {"events":[{"event_name":"session_file_view","ext_data":{"type":"space","url":"https://fronteirasul-fmudazpm.manus.space/"},"event_at":"2026-11-11T18:08:50.847Z"},{"event_name":"manus_space_show","ext_data":{"url":"https://fronteirasul-fmudazpm.manus.space/"},"event_at":"2026-11-11T18:08:50.847Z"}],
+- GET 200 document https://fronteirasul-fmudazpm.manus.space/pagina-que-nao-existe text/html; charset=utf-8 3613
+- GET 200 script https://plausible.io/js/script.file-downloads.hash.outbound-links.pageview-props.revenue.tagged-events.js application/javascript 5052
+- GET 500 script https://fronteirasul-fmudazpm.manus.space/api/platform/config.js text/html; charset=UTF-8 0
+- GET 200 script https://manus-analytics.com/script.js application/javascript; charset=UTF-8 2618
+- GET 200 script https://files.manuscdn.com/manus-space-dispatcher/spaceEditor-CDmbg89D.js application/javascript 736291
+- GET 200 stylesheet https://fronteirasul-fmudazpm.manus.space/assets/index-DMP8NyHf.css text/css; charset=utf-8 123524
+- GET 200 script https://fronteirasul-fmudazpm.manus.space/assets/index-FbaU4KfD.js text/javascript; charset=utf-8 473107
+- GET 302 other https://fronteirasul-fmudazpm.manus.space/favicon.ico   -> https://files.manuscdn.com/user_upload_by_module/session_file/310519663938856543/ZRyVDfBpECjhaIYs.webp
+- GET 200 other https://files.manuscdn.com/user_upload_by_module/session_file/310519663938856543/ZRyVDfBpECjhaIYs.webp image/webp 
+- GET 403 fetch https://sr-client-cfg.amplitude.com/config?api_key=46ac3f9abb41dd2d17a5785e052bc6d3&config_keys=analyticsSDK.pageActions text/plain;charset=utf-8 
+- GET 404 document https://fronteirasul-fmudazpm.manus.space/404 text/html; charset=utf-8 3613
+- GET 200 other https://files.manuscdn.com/user_upload_by_module/session_file/310519663938856543/ZRyVDfBpECjhaIYs.webp image/webp 244246
+- GET 403 fetch https://sr-client-cfg.amplitude.com/config?api_key=46ac3f9abb41dd2d17a5785e052bc6d3&config_keys=analyticsSDK.pageActions text/plain;charset=utf-8 15
+- GET 403 fetch https://sr-client-cfg.amplitude.com/config/46ac3f9abb41dd2d17a5785e052bc6d3?config_group=browser application/json 30
+- GET 307 image https://fronteirasul-fmudazpm.manus.space/manus-storage/fronteira-sul-logo_1b1b4c2d.webp   -> https://d36hbw14aib5lz.cloudfront.net/310519663938856543/FmUDAzpMr2fDkhG5Nf2vYF/fronteira-sul-logo_1b1b4c2d.webp?…
+- GET 200 image https://d36hbw14aib5lz.cloudfront.net/310519663938856543/FmUDAzpMr2fDkhG5Nf2vYF/fronteira-sul-logo_1b1b4c2d.webp?… image/webp 244246
 
 ## Links para fora do site
 
@@ -255,38 +304,8 @@ Outros envios a terceiros:
 
 ## Recursos nao salvos
 
-- [descartado] https://fronteirasul-fmudazpm.manus.space/api/platform/config.js 500 HTTP 500
-- [referencia] https://files.manuscdn.com/manus-space-dispatcher/spaceEditor-CDmbg89D.js 200  (_copia/saida/externos/files.manuscdn.com/manus-space-dispatcher/spaceEditor-CDmbg89D.js)
-- [referencia] https://plausible.io/js/script.file-downloads.hash.outbound-links.pageview-props.revenue.tagged-events.js 200  (_copia/saida/externos/plausible.io/js/script.file-downloads.hash.outbound-links.pageview-props.revenue.tagged-events.js)
-- [referencia] https://manus-analytics.com/script.js 200  (_copia/saida/externos/manus-analytics.com/script.js)
-- [mesmo-arquivo] https://fronteirasul-fmudazpm.manus.space/convite/?v=c14b569 200  (site/convite/index.html)
-- [descartado] https://fronteirasul-fmudazpm.manus.space/favicon.png 404 HTTP 404
-- [descartado] https://fronteirasul-fmudazpm.manus.space/favicon.svg 404 HTTP 404
-- [descartado] https://fronteirasul-fmudazpm.manus.space/apple-touch-icon.png 404 HTTP 404
-- [descartado] https://fronteirasul-fmudazpm.manus.space/apple-touch-icon-precomposed.png 404 HTTP 404
-- [descartado] https://fronteirasul-fmudazpm.manus.space/manifest.json 404 HTTP 404
-- [descartado] https://fronteirasul-fmudazpm.manus.space/manifest.webmanifest 404 HTTP 404
-- [descartado] https://fronteirasul-fmudazpm.manus.space/site.webmanifest 404 HTTP 404
-- [descartado] https://fronteirasul-fmudazpm.manus.space/sw.js 404 HTTP 404
-- [descartado] https://fronteirasul-fmudazpm.manus.space/service-worker.js 404 HTTP 404
-- [descartado] https://fronteirasul-fmudazpm.manus.space/browserconfig.xml 404 HTTP 404
-- [descartado] https://fronteirasul-fmudazpm.manus.space/humans.txt 404 HTTP 404
-- [rota-do-app] https://fronteirasul-fmudazpm.manus.space/404.html 200 rota do aplicativo: o servidor devolve o index.html da raiz
-- [descartado] https://fronteirasul-fmudazpm.manus.space/.well-known/security.txt 404 HTTP 404
-- [descartado] https://fronteirasul-fmudazpm.manus.space/assets/index-DMP8NyHf.css.map 404 HTTP 404
-- [descartado] https://fronteirasul-fmudazpm.manus.space/node_modules/.pnpm/@oxc-project+runtime@0.72.2/node_modules/@oxc-project/runtime/src/helpers/typeof.js 404 HTTP 404
-- [descartado] https://fronteirasul-fmudazpm.manus.space/node_modules/.pnpm/@oxc-project+runtime@0.72.2/node_modules/@oxc-project/runtime/src/helpers/toPrimitive.js 404 HTTP 404
-- [descartado] https://fronteirasul-fmudazpm.manus.space/node_modules/.pnpm/@oxc-project+runtime@0.72.2/node_modules/@oxc-project/runtime/src/helpers/toPropertyKey.js 404 HTTP 404
-- [descartado] https://fronteirasul-fmudazpm.manus.space/node_modules/.pnpm/@oxc-project+runtime@0.72.2/node_modules/@oxc-project/runtime/src/helpers/defineProperty.js 404 HTTP 404
-- [descartado] https://fronteirasul-fmudazpm.manus.space/node_modules/.pnpm/@oxc-project+runtime@0.72.2/node_modules/@oxc-project/runtime/src/helpers/objectSpread2.js 404 HTTP 404
-- [descartado] https://fronteirasul-fmudazpm.manus.space/node_modules/.pnpm/@oxc-project+runtime@0.72.2/node_modules/@oxc-project/runtime/src/helpers/objectWithoutPropertie... 404 HTTP 404
-- [descartado] https://fronteirasul-fmudazpm.manus.space/node_modules/.pnpm/@oxc-project+runtime@0.72.2/node_modules/@oxc-project/runtime/src/helpers/objectWithoutPropertie... 404 HTTP 404
-- [descartado] https://fronteirasul-fmudazpm.manus.space/node_modules/.pnpm/@oxc-project+runtime@0.72.2/node_modules/@oxc-project/runtime/src/helpers/asyncIterator.js 404 HTTP 404
-- [descartado] https://fronteirasul-fmudazpm.manus.space/node_modules/.pnpm/@oxc-project+runtime@0.72.2/node_modules/@oxc-project/runtime/src/helpers/usingCtx.js 404 HTTP 404
-- [descartado] https://fronteirasul-fmudazpm.manus.space/node_modules/.pnpm/@oxc-project+runtime@0.72.2/node_modules/@oxc-project/runtime/src/helpers/OverloadYield.js 404 HTTP 404
-- [descartado] https://fronteirasul-fmudazpm.manus.space/node_modules/.pnpm/@oxc-project+runtime@0.72.2/node_modules/@oxc-project/runtime/src/helpers/awaitAsyncGenerator.js 404 HTTP 404
-- [descartado] https://fronteirasul-fmudazpm.manus.space/node_modules/.pnpm/@oxc-project+runtime@0.72.2/node_modules/@oxc-project/runtime/src/helpers/wrapAsyncGenerator.js 404 HTTP 404
-- [descartado] https://fronteirasul-fmudazpm.manus.space/assets/index-FbaU4KfD.js.map 404 HTTP 404
-- [referencia] https://files.manuscdn.com/user_upload_by_module/session_file/310519663938856543/ZRyVDfBpECjhaIYs.webp 200  (_copia/saida/externos/files.manuscdn.com/user_upload_by_module/session_file/310519663938856543/ZRyVDfBpECjhaIYs.webp)
-- [referencia] https://d36hbw14aib5lz.cloudfront.net/310519663938856543/FmUDAzpMr2fDkhG5Nf2vYF/fronteira-sul-logo_1b1b4c2d.webp?… 200  (_copia/saida/externos/d36hbw14aib5lz.cloudfront.net/310519663938856543/FmUDAzpMr2fDkhG5Nf2vYF/fronteira-sul-logo_1b1b4c2d__q6ae74e51.webp)
-- [referencia] https://d36hbw14aib5lz.cloudfront.net/310519663938856543/FmUDAzpMr2fDkhG5Nf2vYF/fronteira-sul-logo_1b1b4c2d.webp?… 200  (_copia/saida/externos/d36hbw14aib5lz.cloudfront.net/310519663938856543/FmUDAzpMr2fDkhG5Nf2vYF/fronteira-sul-logo_1b1b4c2d__q74a556a0.webp)
+- **descartado (HTTP 500)** — 1: /api/platform/config.js
+- **externo** — 3: https://files.manuscdn.com/manus-space-dispatcher/spaceEditor-CDmbg89D.js , https://plausible.io/js/script.file-downloads.hash.outbound-links.pageview-props.revenue.tagged-events.js , https://manus-analytics.com/script.js
+- **mesmo-arquivo** — 1: /convite/?v=c14b569
+- **descartado (HTTP 404)** — 27: /favicon.png , /favicon.svg , /apple-touch-icon.png , /apple-touch-icon-precomposed.png , /manifest.json , /manifest.webmanifest , /site.webmanifest , /sw.js , /service-worker.js , /browserconfig.xml , /humans.txt , /.well-known/security.txt , /assets/index-DMP8NyHf.css.map , /node_modules/.pnpm/@oxc-project+runtime@0.72.2/node_modules/@oxc-project/runtime/src/helpers/typeof.js , /node_modules/.pnpm/@oxc-project+runtime@0.72.2/node_modules/@oxc-project/runtime/src/helpers/toPrimitive.js , /node_modules/.pnpm/@oxc-project+runtime@0.72.2/node_modules/@oxc-project/runtime/src/helpers/toPropertyKey.js , /node_modules/.pnpm/@oxc-project+runtime@0.72.2/node_modules/@oxc-project/runtime/src/helpers/defineProperty.js , /node_modules/.pnpm/@oxc-project+runtime@0.72.2/node_modules/@oxc-project/runtime/src/helpers/objectSpread2.js , /node_modules/.pnpm/@oxc-project+runtime@0.72.2/node_modules/@oxc-project/runtime/src/helpers/objectWithoutPropertie... , /node_modules/.pnpm/@oxc-project+runtime@0.72.2/node_modules/@oxc-project/runtime/src/helpers/objectWithoutPropertie... , /node_modules/.pnpm/@oxc-project+runtime@0.72.2/node_modules/@oxc-project/runtime/src/helpers/asyncIterator.js , /node_modules/.pnpm/@oxc-project+runtime@0.72.2/node_modules/@oxc-project/runtime/src/helpers/usingCtx.js , /node_modules/.pnpm/@oxc-project+runtime@0.72.2/node_modules/@oxc-project/runtime/src/helpers/OverloadYield.js , /node_modules/.pnpm/@oxc-project+runtime@0.72.2/node_modules/@oxc-project/runtime/src/helpers/awaitAsyncGenerator.js , /node_modules/.pnpm/@oxc-project+runtime@0.72.2/node_modules/@oxc-project/runtime/src/helpers/wrapAsyncGenerator.js , /assets/index-FbaU4KfD.js.map , /404
+- **rota-do-app (rota do aplicativo: o servidor devolve o index.html da raiz)** — 54: /regras/ , /regra/ , /regulamento/ , /policia/ , /police/ , /pm/ , /pcpr/ , /prf/ , /convites/ , /invite/ , /convite-oficial/ , /convite2/ , /discord/ , /loja/ , /vip/ , /doacao/ , /staff/ , /equipe/ , /sobre/ , /whitelist/ , /allowlist/ , /wl/ , /inicio/ , /home/ , /cidade/ , /mapa/ , /eventos/ , /faccoes/ , /ilegal/ , /legal/ , /mecanica/ , /hospital/ , /samu/ , /bombeiros/ , /jornal/ , /noticias/ , /changelog/ , /faq/ , /ajuda/ , /suporte/ , /contato/ , /termos/ , /privacidade/ , /preview/ , /share/ , /card/ , /og/ , /embed/ , /link/ , /links/ , /banner/ , /poster/ , /painel/ , /pagina-que-nao-existe

@@ -1,24 +1,35 @@
 
-added 84 packages in 7s
+added 82 packages in 7s
 node v22.23.4 · chrome: /usr/bin/google-chrome
 [   0.0s] origem: https://fronteirasul-fmudazpm.manus.space
 [   0.0s] paginas pedidas: /convite/?v=c14b569  /
-[   1.6s] navegador: Chrome/156.0.8078.79 (/usr/bin/google-chrome)
-[   1.6s] 1) baixando as paginas e tudo que elas referenciam
-[   8.6s] AVISO: referencia sem arquivo (HTTP 500): https://fronteirasul-fmudazpm.manus.space/api/platform/config.js  <- https://fronteirasul-fmudazpm.manus.space/
-[   8.6s]    11 arquivo(s) do site ate aqui
-[   8.6s] 2) abrindo o site original no navegador
-[  18.2s]    convite-desktop: 12 pedidos, titulo "Fronteira do Sul RP — Convite oficial", altura 900px, 0 cliques
-[  26.5s]    convite-movel: 12 pedidos, titulo "Fronteira do Sul RP — Convite oficial", altura 844px, 0 cliques
-[  46.4s]    regras-desktop: 16 pedidos, titulo "Fronteira do Sul RP — Uma nova história começa aqui", altura 22608px, 5 cliques
-[  62.1s]    regras-movel: 16 pedidos, titulo "Fronteira do Sul RP — Uma nova história começa aqui", altura 30982px, 0 cliques
-[  62.2s]    11 arquivo(s) do site depois do navegador
-[  62.2s] AVISO: conteudo recebido pelo navegador difere do arquivo baixado: https://fronteirasul-fmudazpm.manus.space/api/platform/config.js
-[  62.2s] 3) sondando o comportamento do servidor original
-[  75.1s] 4) conferindo a copia em http://127.0.0.1:4173 (site original bloqueado)
-[  83.9s]    convite-desktop: igual (maior diferenca de imagem 0.000%)
-[  91.9s]    convite-movel: igual (maior diferenca de imagem 0.000%)
-[ 112.8s]    regras-desktop: PROBLEMAS: respostas diferentes: GET /api/platform/config.js: original 500, copia 404 | foto 2: 0.79% dos pixels diferentes | foto 3: 0.95% dos pixels diferentes (maior diferenca de imagem 0.949%)
-[ 127.9s]    regras-movel: PROBLEMAS: respostas diferentes: GET /api/platform/config.js: original 500, copia 404 (maior diferenca de imagem 0.000%)
-[ 128.0s] 5) escrevendo relatorios
-[ 128.1s] pronto: 11 arquivo(s) em site/, 2 aviso(s)
+[   1.5s] navegador: Chrome/156.0.8078.79 (/usr/bin/google-chrome)
+[   1.5s] 1) baixando as paginas e tudo que elas referenciam
+[   7.9s] AVISO: referencia sem arquivo (HTTP 500): https://fronteirasul-fmudazpm.manus.space/api/platform/config.js  <- https://fronteirasul-fmudazpm.manus.space/
+[   8.1s]    11 arquivo(s) do site ate aqui
+[   8.1s] 2) abrindo o site original no navegador
+[  21.4s]    convite-desktop: 26 pedidos, "Fronteira do Sul RP — Convite oficial", altura 900px, 2 passos, 13s
+[  29.0s]    convite-movel: 11 pedidos, "Fronteira do Sul RP — Convite oficial", altura 844px, 1 passos, 8s
+[  82.7s]    regras-desktop: 15 pedidos, "Fronteira do Sul RP — Uma nova história começa aqui", altura 22608px, 22 passos, 54s
+[ 116.8s]    regras-movel: 15 pedidos, "Fronteira do Sul RP — Uma nova história começa aqui", altura 30982px, 3 passos, 34s
+[ 187.7s]    rota-inexistente-desktop: 27 pedidos, "Fronteira do Sul RP — Uma nova história começa aqui", altura 900px, 2 passos, 71s
+[ 188.4s] AVISO: referencia sem arquivo (HTTP 404): https://fronteirasul-fmudazpm.manus.space/404  <- navegador (rota-inexistente-desktop)
+[ 188.4s]    11 arquivo(s) do site depois do navegador
+[ 194.8s] AVISO: referencia sem arquivo (HTTP 500): https://fronteirasul-fmudazpm.manus.space/api/platform/config.js  <- https://fronteirasul-fmudazpm.manus.space/, navegador (convite-desktop)
+[ 194.8s]    nova tentativa de https://fronteirasul-fmudazpm.manus.space/api/platform/config.js: 500 -> 500
+[ 194.8s] 3) sondando o comportamento do servidor original
+[ 202.2s] 4) conferindo a copia em http://127.0.0.1:4173 (site original bloqueado)
+[ 215.3s]    convite-desktop, carga 1: 2 passos; fotos resolvidas 2, pendentes 0; estrutura igual; 13s
+[ 215.3s]    => convite-desktop: igual ao original · 2 fotos: 2 identicas, 0 arredondamento, 0 variam, 0 diferentes · 1 carga(s)
+[ 222.9s]    convite-movel, carga 1: 1 passos; fotos resolvidas 1, pendentes 0; estrutura igual; 8s
+[ 222.9s]    => convite-movel: igual ao original · 1 fotos: 1 identicas, 0 arredondamento, 0 variam, 0 diferentes · 1 carga(s)
+[ 276.7s]    regras-desktop, carga 1: 22 passos; fotos resolvidas 49, pendentes 1 (busca › Enter y9303: 33 px); estrutura igual; 54s
+[ 383.6s]    regras-desktop, carga 2: 22 passos; fotos resolvidas 50, pendentes 0; estrutura igual; 54s
+[ 383.7s]    => regras-desktop: igual ao original · 50 fotos: 50 identicas, 0 arredondamento, 0 variam, 0 diferentes · 2 carga(s)
+[ 417.6s]    regras-movel, carga 1: 3 passos; fotos resolvidas 43, pendentes 0; estrutura igual; 34s
+[ 417.6s]    => regras-movel: igual ao original · 43 fotos: 43 identicas, 0 arredondamento, 0 variam, 0 diferentes · 1 carga(s)
+[ 427.8s]    rota-inexistente-desktop, carga 1: 2 passos; fotos resolvidas 2, pendentes 0; estrutura igual; 10s
+[ 427.8s]    => rota-inexistente-desktop: PROBLEMAS (1) · 2 fotos: 2 identicas, 0 arredondamento, 0 variam, 0 diferentes · 1 carga(s)
+[ 428.0s] 5) baixando tudo outra vez para conferir os arquivos gravados
+[ 430.5s] 6) escrevendo relatorios
+[ 430.5s] pronto: 11 arquivo(s) em site/, 3 aviso(s), 5 cenario(s) conferidos, 1 com problema
