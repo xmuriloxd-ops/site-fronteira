@@ -37,8 +37,6 @@ jobs:
 
       - name: Copiar o site
         timeout-minutes: 21
-        env:
-          CENARIOS: 'rota-inexistente|convite-desktop'
         run: |
           set -u
           bash fronteira-sul/_copia/executar.sh 2>&1 | tee "$RUNNER_TEMP/log.txt"
