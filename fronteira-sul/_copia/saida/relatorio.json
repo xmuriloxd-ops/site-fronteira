@@ -1,0 +1,3966 @@
+{
+  "geradoEm": "2026-11-11T18:10:11.078Z",
+  "origem": "https://fronteirasul-fmudazpm.manus.space",
+  "paginasPedidas": [
+    "/convite/?v=c14b569",
+    "/"
+  ],
+  "navegador": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36",
+  "avisos": [
+    "referencia sem arquivo (HTTP 500): https://fronteirasul-fmudazpm.manus.space/api/platform/config.js  <- https://fronteirasul-fmudazpm.manus.space/",
+    "conteudo recebido pelo navegador difere do arquivo baixado: https://fronteirasul-fmudazpm.manus.space/api/platform/config.js"
+  ],
+  "arquivosDoSite": [
+    {
+      "url": "https://fronteirasul-fmudazpm.manus.space/__manus/pwa/manifest.webmanifest",
+      "mesmoSite": true,
+      "estado": "salvo",
+      "destino": "site/__manus/pwa/manifest.webmanifest",
+      "status": 200,
+      "contentType": "application/manifest+json; charset=utf-8",
+      "tamanho": 345,
+      "sha256": "7c12b59d22e8568319dfc8195f1bbfe271e51185b3221c0ac906278f283bca90",
+      "cabecalhos": {
+        "content-type": "application/manifest+json; charset=utf-8",
+        "cache-control": "no-cache, no-store, must-revalidate"
+      },
+      "por": [
+        "https://fronteirasul-fmudazpm.manus.space/",
+        "https://fronteirasul-fmudazpm.manus.space/convite/"
+      ]
+    },
+    {
+      "url": "https://fronteirasul-fmudazpm.manus.space/assets/index-DMP8NyHf.css",
+      "mesmoSite": true,
+      "estado": "salvo",
+      "destino": "site/assets/index-DMP8NyHf.css",
+      "status": 200,
+      "contentType": "text/css; charset=utf-8",
+      "tamanho": 123524,
+      "sha256": "19d4496e133becebc2cc6e75a748674232e867e2cb0bda9dbc5882c59e7ab255",
+      "cabecalhos": {
+        "content-type": "text/css; charset=utf-8",
+        "cache-control": "max-age=7776000"
+      },
+      "confereComNavegador": true,
+      "por": [
+        "https://fronteirasul-fmudazpm.manus.space/",
+        "navegador (regras-desktop)",
+        "navegador (regras-movel)"
+      ]
+    },
+    {
+      "url": "https://fronteirasul-fmudazpm.manus.space/assets/index-FbaU4KfD.js",
+      "mesmoSite": true,
+      "estado": "salvo",
+      "destino": "site/assets/index-FbaU4KfD.js",
+      "status": 200,
+      "contentType": "text/javascript; charset=utf-8",
+      "tamanho": 473107,
+      "sha256": "de95a285ca5e0ac9a2beb86d26fd53e92b9fe18e72d02fd556b17ca4046e0e24",
+      "cabecalhos": {
+        "content-type": "text/javascript; charset=utf-8",
+        "cache-control": "max-age=7776000"
+      },
+      "confereComNavegador": true,
+      "por": [
+        "https://fronteirasul-fmudazpm.manus.space/",
+        "navegador (regras-desktop)",
+        "navegador (regras-movel)"
+      ]
+    },
+    {
+      "url": "https://fronteirasul-fmudazpm.manus.space/convite/",
+      "mesmoSite": true,
+      "estado": "salvo",
+      "destino": "site/convite/index.html",
+      "status": 200,
+      "contentType": "text/html; charset=utf-8",
+      "tamanho": 5934,
+      "sha256": "f25b25b75f1be01fb9a5722a8762355783223107bf6014c100642f86003d184c",
+      "cabecalhos": {
+        "content-type": "text/html; charset=utf-8",
+        "cache-control": "no-cache, no-store, must-revalidate"
+      },
+      "por": [
+        "pagina pedida",
+        "https://fronteirasul-fmudazpm.manus.space/convite/"
+      ]
+    },
+    {
+      "url": "https://fronteirasul-fmudazpm.manus.space/favicon.ico",
+      "mesmoSite": true,
+      "estado": "salvo",
+      "destino": "site/favicon.ico",
+      "status": 200,
+      "contentType": "image/webp",
+      "tamanho": 244246,
+      "sha256": "6ba2906093fad36d2ea6e877d9653757923c63adab47ec51be67ab4468234091",
+      "cabecalhos": {
+        "content-type": "image/webp",
+        "cache-control": "max-age=31536000",
+        "content-disposition": "attachment",
+        "etag": "\"74d5bd1496870ec974165017513f8486\"",
+        "last-modified": "Wed, 28 Oct 2026 21:21:50 GMT"
+      },
+      "redirecionamentos": [
+        {
+          "de": "https://fronteirasul-fmudazpm.manus.space/favicon.ico",
+          "status": 302,
+          "para": "https://files.manuscdn.com/user_upload_by_module/session_file/310519663938856543/ZRyVDfBpECjhaIYs.webp"
+        }
+      ],
+      "por": [
+        "caminho padrao",
+        "https://fronteirasul-fmudazpm.manus.space/__manus/pwa/manifest.webmanifest",
+        "navegador (convite-desktop)",
+        "navegador (convite-movel)"
+      ]
+    },
+    {
+      "url": "https://fronteirasul-fmudazpm.manus.space/fronteira-sul-convite-preview.jpg",
+      "mesmoSite": true,
+      "estado": "salvo",
+      "destino": "site/fronteira-sul-convite-preview.jpg",
+      "status": 200,
+      "contentType": "image/jpeg",
+      "tamanho": 369138,
+      "sha256": "07584c62ac7cd814c7903758838c6bd9792b79e84357e5134e2751601b52a2dc",
+      "cabecalhos": {
+        "content-type": "image/jpeg",
+        "cache-control": "max-age=7776000"
+      },
+      "confereComNavegador": true,
+      "por": [
+        "https://fronteirasul-fmudazpm.manus.space/",
+        "https://fronteirasul-fmudazpm.manus.space/convite/",
+        "navegador (convite-desktop)",
+        "navegador (convite-movel)"
+      ]
+    },
+    {
+      "url": "https://fronteirasul-fmudazpm.manus.space/fronteira-sul-logo.webp",
+      "mesmoSite": true,
+      "estado": "salvo",
+      "destino": "site/fronteira-sul-logo.webp",
+      "status": 200,
+      "contentType": "image/webp",
+      "tamanho": 244246,
+      "sha256": "6ba2906093fad36d2ea6e877d9653757923c63adab47ec51be67ab4468234091",
+      "cabecalhos": {
+        "content-type": "image/webp",
+        "cache-control": "max-age=7776000"
+      },
+      "candidato": true,
+      "por": [
+        "https://fronteirasul-fmudazpm.manus.space/assets/index-FbaU4KfD.js"
+      ]
+    },
+    {
+      "url": "https://fronteirasul-fmudazpm.manus.space/",
+      "mesmoSite": true,
+      "estado": "salvo",
+      "destino": "site/index.html",
+      "status": 200,
+      "contentType": "text/html; charset=utf-8",
+      "tamanho": 3613,
+      "sha256": "6d422389b72b9b05d4a6616c12405406e0d84e46dba3b85839695f283e55e675",
+      "cabecalhos": {
+        "content-type": "text/html; charset=utf-8",
+        "cache-control": "no-cache, no-store, must-revalidate"
+      },
+      "confereComNavegador": true,
+      "por": [
+        "pagina pedida",
+        "https://fronteirasul-fmudazpm.manus.space/",
+        "https://fronteirasul-fmudazpm.manus.space/convite/",
+        "https://fronteirasul-fmudazpm.manus.space/sitemap.xml"
+      ]
+    },
+    {
+      "url": "https://fronteirasul-fmudazpm.manus.space/manus-storage/fronteira-sul-logo_1b1b4c2d.webp",
+      "mesmoSite": true,
+      "estado": "salvo",
+      "destino": "site/manus-storage/fronteira-sul-logo_1b1b4c2d.webp",
+      "status": 200,
+      "contentType": "image/webp",
+      "tamanho": 244246,
+      "sha256": "6ba2906093fad36d2ea6e877d9653757923c63adab47ec51be67ab4468234091",
+      "cabecalhos": {
+        "content-type": "image/webp",
+        "cache-control": "max-age=31536000",
+        "etag": "\"74d5bd1496870ec974165017513f8486\"",
+        "last-modified": "Wed, 28 Oct 2026 21:21:50 GMT"
+      },
+      "redirecionamentos": [
+        {
+          "de": "https://fronteirasul-fmudazpm.manus.space/manus-storage/fronteira-sul-logo_1b1b4c2d.webp",
+          "status": 307,
+          "para": "https://d36hbw14aib5lz.cloudfront.net/310519663938856543/FmUDAzpMr2fDkhG5Nf2vYF/fronteira-sul-logo_1b1b4c2d.webp?…"
+        }
+      ],
+      "por": [
+        "https://fronteirasul-fmudazpm.manus.space/assets/index-FbaU4KfD.js",
+        "navegador (regras-desktop)",
+        "navegador (regras-movel)"
+      ]
+    },
+    {
+      "url": "https://fronteirasul-fmudazpm.manus.space/robots.txt",
+      "mesmoSite": true,
+      "estado": "salvo",
+      "destino": "site/robots.txt",
+      "status": 200,
+      "contentType": "text/plain",
+      "tamanho": 102,
+      "sha256": "753ab454d2bccaee6f81761e1b407ce6e0034d8377d3341ceddb502af87a871f",
+      "cabecalhos": {
+        "content-type": "text/plain",
+        "x-manus-seo-source": "generated"
+      },
+      "candidato": true,
+      "por": [
+        "caminho padrao"
+      ]
+    },
+    {
+      "url": "https://fronteirasul-fmudazpm.manus.space/sitemap.xml",
+      "mesmoSite": true,
+      "estado": "salvo",
+      "destino": "site/sitemap.xml",
+      "status": 200,
+      "contentType": "application/xml",
+      "tamanho": 220,
+      "sha256": "a0a2f07226984cf33b489a16c42f166f62f2c3098cf4cd97a7346d007a7fa32a",
+      "cabecalhos": {
+        "content-type": "application/xml",
+        "x-manus-seo-source": "generated"
+      },
+      "candidato": true,
+      "por": [
+        "caminho padrao",
+        "https://fronteirasul-fmudazpm.manus.space/robots.txt"
+      ]
+    }
+  ],
+  "sondas": {
+    "/": {
+      "original": {
+        "status": 200,
+        "primeiroStatus": 200,
+        "contentType": "text/html; charset=utf-8",
+        "cacheControl": "no-cache, no-store, must-revalidate",
+        "tamanho": 3613,
+        "sha": "807dd331d3871980"
+      },
+      "copia": {
+        "status": 200,
+        "primeiroStatus": 200,
+        "contentType": "text/html; charset=utf-8",
+        "cacheControl": "no-cache",
+        "tamanho": 3613,
+        "sha": "807dd331d3871980"
+      }
+    },
+    "/index.html": {
+      "original": {
+        "status": 200,
+        "primeiroStatus": 200,
+        "contentType": "text/html; charset=utf-8",
+        "cacheControl": "no-cache, no-store, must-revalidate",
+        "tamanho": 3613,
+        "sha": "807dd331d3871980"
+      },
+      "copia": {
+        "status": 200,
+        "primeiroStatus": 200,
+        "contentType": "text/html; charset=utf-8",
+        "cacheControl": "no-cache",
+        "tamanho": 3613,
+        "sha": "807dd331d3871980"
+      }
+    },
+    "/convite": {
+      "original": {
+        "status": 200,
+        "primeiroStatus": 200,
+        "contentType": "text/html; charset=utf-8",
+        "cacheControl": "no-cache, no-store, must-revalidate",
+        "tamanho": 5934,
+        "sha": "5e876420dd7877f4"
+      },
+      "copia": {
+        "status": 200,
+        "primeiroStatus": 200,
+        "contentType": "text/html; charset=utf-8",
+        "cacheControl": "no-cache",
+        "tamanho": 5934,
+        "sha": "5e876420dd7877f4"
+      }
+    },
+    "/convite/": {
+      "original": {
+        "status": 200,
+        "primeiroStatus": 200,
+        "contentType": "text/html; charset=utf-8",
+        "cacheControl": "no-cache, no-store, must-revalidate",
+        "tamanho": 5934,
+        "sha": "5e876420dd7877f4"
+      },
+      "copia": {
+        "status": 200,
+        "primeiroStatus": 200,
+        "contentType": "text/html; charset=utf-8",
+        "cacheControl": "no-cache",
+        "tamanho": 5934,
+        "sha": "5e876420dd7877f4"
+      }
+    },
+    "/convite/index.html": {
+      "original": {
+        "status": 200,
+        "primeiroStatus": 200,
+        "contentType": "text/html; charset=utf-8",
+        "cacheControl": "no-cache, no-store, must-revalidate",
+        "tamanho": 5934,
+        "sha": "5e876420dd7877f4"
+      },
+      "copia": {
+        "status": 200,
+        "primeiroStatus": 200,
+        "contentType": "text/html; charset=utf-8",
+        "cacheControl": "no-cache",
+        "tamanho": 5934,
+        "sha": "5e876420dd7877f4"
+      }
+    },
+    "/convite/?v=c14b569": {
+      "original": {
+        "status": 200,
+        "primeiroStatus": 200,
+        "contentType": "text/html; charset=utf-8",
+        "cacheControl": "no-cache, no-store, must-revalidate",
+        "tamanho": 5934,
+        "sha": "5e876420dd7877f4"
+      },
+      "copia": {
+        "status": 200,
+        "primeiroStatus": 200,
+        "contentType": "text/html; charset=utf-8",
+        "cacheControl": "no-cache",
+        "tamanho": 5934,
+        "sha": "5e876420dd7877f4"
+      }
+    },
+    "/favicon.ico": {
+      "original": {
+        "status": 200,
+        "primeiroStatus": 302,
+        "contentType": "image/webp",
+        "cacheControl": "max-age=31536000",
+        "tamanho": 244246,
+        "sha": "6ba2906093fad36d"
+      },
+      "copia": {
+        "status": 200,
+        "primeiroStatus": 200,
+        "contentType": "image/webp",
+        "cacheControl": "no-cache",
+        "tamanho": 244246,
+        "sha": "6ba2906093fad36d"
+      }
+    },
+    "/robots.txt": {
+      "original": {
+        "status": 200,
+        "primeiroStatus": 200,
+        "contentType": "text/plain",
+        "cacheControl": "",
+        "tamanho": 102,
+        "sha": "753ab454d2bccaee"
+      },
+      "copia": {
+        "status": 200,
+        "primeiroStatus": 200,
+        "contentType": "text/plain",
+        "cacheControl": "no-cache",
+        "tamanho": 102,
+        "sha": "753ab454d2bccaee"
+      }
+    },
+    "/sitemap.xml": {
+      "original": {
+        "status": 200,
+        "primeiroStatus": 200,
+        "contentType": "application/xml",
+        "cacheControl": "",
+        "tamanho": 220,
+        "sha": "9ff2fccd909ac863"
+      },
+      "copia": {
+        "status": 200,
+        "primeiroStatus": 200,
+        "contentType": "application/xml",
+        "cacheControl": "no-cache",
+        "tamanho": 220,
+        "sha": "a0a2f07226984cf3"
+      }
+    },
+    "/nao-existe-xyz": {
+      "original": {
+        "status": 200,
+        "primeiroStatus": 200,
+        "contentType": "text/html; charset=utf-8",
+        "cacheControl": "no-cache, no-store, must-revalidate",
+        "tamanho": 3613,
+        "sha": "807dd331d3871980"
+      },
+      "copia": {
+        "status": 200,
+        "primeiroStatus": 200,
+        "contentType": "text/html; charset=utf-8",
+        "cacheControl": "no-cache",
+        "tamanho": 3613,
+        "sha": "807dd331d3871980"
+      }
+    },
+    "/nao-existe-xyz/": {
+      "original": {
+        "status": 200,
+        "primeiroStatus": 200,
+        "contentType": "text/html; charset=utf-8",
+        "cacheControl": "no-cache, no-store, must-revalidate",
+        "tamanho": 3613,
+        "sha": "807dd331d3871980"
+      },
+      "copia": {
+        "status": 200,
+        "primeiroStatus": 200,
+        "contentType": "text/html; charset=utf-8",
+        "cacheControl": "no-cache",
+        "tamanho": 3613,
+        "sha": "807dd331d3871980"
+      }
+    },
+    "/nao-existe-xyz/outra": {
+      "original": {
+        "status": 200,
+        "primeiroStatus": 200,
+        "contentType": "text/html; charset=utf-8",
+        "cacheControl": "no-cache, no-store, must-revalidate",
+        "tamanho": 3613,
+        "sha": "807dd331d3871980"
+      },
+      "copia": {
+        "status": 200,
+        "primeiroStatus": 200,
+        "contentType": "text/html; charset=utf-8",
+        "cacheControl": "no-cache",
+        "tamanho": 3613,
+        "sha": "807dd331d3871980"
+      }
+    },
+    "/nao-existe-xyz.png": {
+      "original": {
+        "status": 404,
+        "primeiroStatus": 404,
+        "contentType": "",
+        "cacheControl": "",
+        "tamanho": 0,
+        "sha": "e3b0c44298fc1c14"
+      },
+      "copia": {
+        "status": 404,
+        "primeiroStatus": 404,
+        "contentType": "",
+        "cacheControl": "no-cache",
+        "tamanho": 0,
+        "sha": "e3b0c44298fc1c14"
+      }
+    },
+    "/nao-existe-xyz.html": {
+      "original": {
+        "status": 200,
+        "primeiroStatus": 200,
+        "contentType": "text/html; charset=utf-8",
+        "cacheControl": "no-cache, no-store, must-revalidate",
+        "tamanho": 3613,
+        "sha": "807dd331d3871980"
+      },
+      "copia": {
+        "status": 404,
+        "primeiroStatus": 404,
+        "contentType": "",
+        "cacheControl": "no-cache",
+        "tamanho": 0,
+        "sha": "e3b0c44298fc1c14"
+      }
+    },
+    "/nao.existe/rota": {
+      "original": {
+        "status": 200,
+        "primeiroStatus": 200,
+        "contentType": "text/html; charset=utf-8",
+        "cacheControl": "no-cache, no-store, must-revalidate",
+        "tamanho": 3613,
+        "sha": "807dd331d3871980"
+      },
+      "copia": {
+        "status": 200,
+        "primeiroStatus": 200,
+        "contentType": "text/html; charset=utf-8",
+        "cacheControl": "no-cache",
+        "tamanho": 3613,
+        "sha": "807dd331d3871980"
+      }
+    },
+    "/assets": {
+      "original": {
+        "status": 200,
+        "primeiroStatus": 200,
+        "contentType": "text/html; charset=utf-8",
+        "cacheControl": "no-cache, no-store, must-revalidate",
+        "tamanho": 3613,
+        "sha": "807dd331d3871980"
+      },
+      "copia": {
+        "status": 200,
+        "primeiroStatus": 200,
+        "contentType": "text/html; charset=utf-8",
+        "cacheControl": "no-cache",
+        "tamanho": 3613,
+        "sha": "807dd331d3871980"
+      }
+    },
+    "/assets/": {
+      "original": {
+        "status": 200,
+        "primeiroStatus": 200,
+        "contentType": "text/html; charset=utf-8",
+        "cacheControl": "no-cache, no-store, must-revalidate",
+        "tamanho": 3613,
+        "sha": "807dd331d3871980"
+      },
+      "copia": {
+        "status": 200,
+        "primeiroStatus": 200,
+        "contentType": "text/html; charset=utf-8",
+        "cacheControl": "no-cache",
+        "tamanho": 3613,
+        "sha": "807dd331d3871980"
+      }
+    },
+    "/assets/nao-existe-xyz.js": {
+      "original": {
+        "status": 404,
+        "primeiroStatus": 404,
+        "contentType": "",
+        "cacheControl": "",
+        "tamanho": 0,
+        "sha": "e3b0c44298fc1c14"
+      },
+      "copia": {
+        "status": 404,
+        "primeiroStatus": 404,
+        "contentType": "",
+        "cacheControl": "no-cache",
+        "tamanho": 0,
+        "sha": "e3b0c44298fc1c14"
+      }
+    },
+    "/convite/nao-existe-xyz": {
+      "original": {
+        "status": 200,
+        "primeiroStatus": 200,
+        "contentType": "text/html; charset=utf-8",
+        "cacheControl": "no-cache, no-store, must-revalidate",
+        "tamanho": 3613,
+        "sha": "807dd331d3871980"
+      },
+      "copia": {
+        "status": 200,
+        "primeiroStatus": 200,
+        "contentType": "text/html; charset=utf-8",
+        "cacheControl": "no-cache",
+        "tamanho": 3613,
+        "sha": "807dd331d3871980"
+      }
+    },
+    "/convite/nao-existe-xyz.png": {
+      "original": {
+        "status": 404,
+        "primeiroStatus": 404,
+        "contentType": "",
+        "cacheControl": "",
+        "tamanho": 0,
+        "sha": "e3b0c44298fc1c14"
+      },
+      "copia": {
+        "status": 404,
+        "primeiroStatus": 404,
+        "contentType": "",
+        "cacheControl": "no-cache",
+        "tamanho": 0,
+        "sha": "e3b0c44298fc1c14"
+      }
+    },
+    "/api/nao-existe-xyz": {
+      "original": {
+        "status": 500,
+        "primeiroStatus": 500,
+        "contentType": "text/html; charset=UTF-8",
+        "cacheControl": "no-cache, no-store, must-revalidate",
+        "tamanho": 27291,
+        "sha": "619dabfddc3540e2"
+      },
+      "copia": {
+        "status": 200,
+        "primeiroStatus": 200,
+        "contentType": "text/html; charset=utf-8",
+        "cacheControl": "no-cache",
+        "tamanho": 3613,
+        "sha": "807dd331d3871980"
+      }
+    },
+    "/__manus/nao-existe-xyz": {
+      "original": {
+        "status": 200,
+        "primeiroStatus": 200,
+        "contentType": "text/html; charset=utf-8",
+        "cacheControl": "no-cache, no-store, must-revalidate",
+        "tamanho": 3613,
+        "sha": "807dd331d3871980"
+      },
+      "copia": {
+        "status": 200,
+        "primeiroStatus": 200,
+        "contentType": "text/html; charset=utf-8",
+        "cacheControl": "no-cache",
+        "tamanho": 3613,
+        "sha": "807dd331d3871980"
+      }
+    },
+    "/manus-storage/nao-existe-xyz.webp": {
+      "original": {
+        "status": 403,
+        "primeiroStatus": 307,
+        "contentType": "application/xml",
+        "cacheControl": "max-age=31536000",
+        "tamanho": 111,
+        "sha": "a824bc7739e226e1"
+      },
+      "copia": {
+        "status": 404,
+        "primeiroStatus": 404,
+        "contentType": "",
+        "cacheControl": "no-cache",
+        "tamanho": 0,
+        "sha": "e3b0c44298fc1c14"
+      }
+    }
+  },
+  "comparacoes": [
+    {
+      "nome": "convite-desktop",
+      "caminho": "/convite/?v=c14b569",
+      "tela": "desktop",
+      "fotos": [
+        {
+          "posicao": 1,
+          "y": 0,
+          "comparavel": true,
+          "identicas": true,
+          "pixelsDiferentes": 0,
+          "fracao": 0
+        }
+      ],
+      "cliques": [],
+      "problemas": [],
+      "pedidosOriginal": [
+        "GET /convite/?v=c14b569 -> 200",
+        "GET /favicon.ico -> 302",
+        "GET /fronteira-sul-convite-preview.jpg -> 200"
+      ],
+      "pedidosCopia": [
+        "GET /convite/?v=c14b569 -> 200",
+        "GET /favicon.ico -> 200",
+        "GET /fronteira-sul-convite-preview.jpg -> 200"
+      ],
+      "soNoOriginal": [],
+      "soNaCopia": [],
+      "redirecionavaNoOriginal": [
+        "GET /favicon.ico"
+      ],
+      "statusDiferente": [],
+      "conteudoDiferente": [],
+      "igual": {
+        "titulo": true,
+        "texto": true,
+        "altura": true,
+        "elementos": true
+      },
+      "original": {
+        "nome": "convite-desktop",
+        "url": "https://fronteirasul-fmudazpm.manus.space/convite/?v=c14b569",
+        "status": 200,
+        "titulo": "Fronteira do Sul RP — Convite oficial",
+        "urlFinal": "https://fronteirasul-fmudazpm.manus.space/convite/?v=c14b569",
+        "altura": 900,
+        "largura": 1440,
+        "elementos": 42,
+        "caracteresDeTexto": 149,
+        "imagens": [
+          {
+            "src": "https://fronteirasul-fmudazpm.manus.space/fronteira-sul-convite-preview.jpg",
+            "ok": true,
+            "w": 1200,
+            "h": 675
+          }
+        ],
+        "fontes": [],
+        "emblema": {
+          "filhos": 0,
+          "sombra": true,
+          "caixa": [
+            720,
+            845,
+            0,
+            0
+          ]
+        },
+        "medidas": {
+          "total": 900,
+          "visivel": 900
+        },
+        "pedidos": 12,
+        "falhas": [
+          {
+            "url": "https://manus-analytics.com/api/send",
+            "tipo": "other",
+            "metodo": "OPTIONS",
+            "erro": "net::ERR_BLOCKED_BY_CLIENT"
+          },
+          {
+            "url": "https://api2.amplitude.com/2/httpapi",
+            "tipo": "ping",
+            "metodo": "POST",
+            "erro": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          }
+        ],
+        "console": [
+          {
+            "tipo": "warn",
+            "texto": "[]Automatic fallback to software WebGL has been deprecated. Please use the --enable-unsafe-swiftshader flag to opt in to lower security guarantees for trusted content."
+          },
+          {
+            "tipo": "warn",
+            "texto": "[]Automatic fallback to software WebGL has been deprecated. Please use the --enable-unsafe-swiftshader flag to opt in to lower security guarantees for trusted content."
+          },
+          {
+            "tipo": "warn",
+            "texto": "[.WebGL-0x352c007d0e00]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels"
+          },
+          {
+            "tipo": "error",
+            "texto": "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT"
+          },
+          {
+            "tipo": "error",
+            "texto": "Failed to load resource: the server responded with a status of 403 ()"
+          },
+          {
+            "tipo": "error",
+            "texto": "Amplitude Logger [Error]: Failed to fetch remote config: Error: Network error occurred, remote config fetch failed"
+          },
+          {
+            "tipo": "error",
+            "texto": "Failed to load resource: the server responded with a status of 403 ()"
+          },
+          {
+            "tipo": "error",
+            "texto": "Failed to load resource: the server responded with a status of 403 ()"
+          },
+          {
+            "tipo": "error",
+            "texto": "Failed to load resource: the server responded with a status of 403 ()"
+          },
+          {
+            "tipo": "error",
+            "texto": "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          }
+        ],
+        "erros": [],
+        "enviosBloqueados": [
+          {
+            "url": "https://manus-analytics.com/api/send",
+            "metodo": "OPTIONS",
+            "corpo": ""
+          },
+          {
+            "url": "https://api2.amplitude.com/2/httpapi",
+            "metodo": "POST",
+            "corpo": "{\"api_key\":\"46ac3f9abb41dd2d17a5785e052bc6d3\",\"events\":[{\"device_id\":\"94577f33-99c2-4cf1-9fc2-a41309ae79e0\",\"session_id\":1794420493236,\"time\":1794420493253,\"platform\":\"Web\",\"language\":\"en-US\",\"ip\":\"$remote\",\"insert_id\":\"5ca09f02-1ae4-442d-bf2c-383db0062202\",\"event_type\":\"$identify\",\"user_properties\""
+          }
+        ],
+        "enviosATerceiros": [
+          {
+            "url": "https://api.manus.im/api/user_behavior/batch_create_event_v2",
+            "metodo": "POST",
+            "corpo": "{\"events\":[{\"event_name\":\"session_file_view\",\"ext_data\":{\"type\":\"space\",\"url\":\"https://fronteirasul-fmudazpm.manus.space/convite/?v=c14b569\"},\"event_at\":\"2026-11-11T18:08:12.402Z\"},{\"event_name\":\"manus_space_show\",\"ext_data\":{\"url\":\"https://fronteirasul-fmudazpm.manus.space/convite/?v=c14b569\"},\"eve"
+          }
+        ],
+        "janelas": [],
+        "navegacoesBarradas": [],
+        "avisos": [],
+        "urlDepoisDosCliques": "https://fronteirasul-fmudazpm.manus.space/convite/?v=c14b569",
+        "totalCliques": 0
+      },
+      "copia": {
+        "nome": "convite-desktop",
+        "url": "http://127.0.0.1:4173/convite/?v=c14b569",
+        "status": 200,
+        "titulo": "Fronteira do Sul RP — Convite oficial",
+        "urlFinal": "http://127.0.0.1:4173/convite/?v=c14b569",
+        "altura": 900,
+        "largura": 1440,
+        "elementos": 42,
+        "caracteresDeTexto": 149,
+        "imagens": [
+          {
+            "src": "http://127.0.0.1:4173/fronteira-sul-convite-preview.jpg",
+            "ok": true,
+            "w": 1200,
+            "h": 675
+          }
+        ],
+        "fontes": [],
+        "emblema": {
+          "filhos": 0,
+          "sombra": true,
+          "caixa": [
+            720,
+            845,
+            0,
+            0
+          ]
+        },
+        "medidas": {
+          "total": 900,
+          "visivel": 900
+        },
+        "pedidos": 11,
+        "falhas": [
+          {
+            "url": "https://manus-analytics.com/api/send",
+            "tipo": "other",
+            "metodo": "OPTIONS",
+            "erro": "net::ERR_BLOCKED_BY_CLIENT"
+          },
+          {
+            "url": "https://api2.amplitude.com/2/httpapi",
+            "tipo": "ping",
+            "metodo": "POST",
+            "erro": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          }
+        ],
+        "console": [
+          {
+            "tipo": "warn",
+            "texto": "Ignoring Event: localhost"
+          },
+          {
+            "tipo": "warn",
+            "texto": "Ignoring Event: localhost"
+          },
+          {
+            "tipo": "error",
+            "texto": "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT"
+          },
+          {
+            "tipo": "warn",
+            "texto": "[]Automatic fallback to software WebGL has been deprecated. Please use the --enable-unsafe-swiftshader flag to opt in to lower security guarantees for trusted content."
+          },
+          {
+            "tipo": "warn",
+            "texto": "[]Automatic fallback to software WebGL has been deprecated. Please use the --enable-unsafe-swiftshader flag to opt in to lower security guarantees for trusted content."
+          },
+          {
+            "tipo": "error",
+            "texto": "Failed to load resource: the server responded with a status of 403 ()"
+          },
+          {
+            "tipo": "error",
+            "texto": "Amplitude Logger [Error]: Failed to fetch remote config: Error: Network error occurred, remote config fetch failed"
+          },
+          {
+            "tipo": "error",
+            "texto": "Failed to load resource: the server responded with a status of 403 ()"
+          },
+          {
+            "tipo": "error",
+            "texto": "Failed to load resource: the server responded with a status of 403 ()"
+          },
+          {
+            "tipo": "error",
+            "texto": "Failed to load resource: the server responded with a status of 403 ()"
+          },
+          {
+            "tipo": "error",
+            "texto": "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          }
+        ],
+        "erros": [],
+        "enviosBloqueados": [
+          {
+            "url": "https://manus-analytics.com/api/send",
+            "metodo": "OPTIONS",
+            "corpo": ""
+          },
+          {
+            "url": "https://api2.amplitude.com/2/httpapi",
+            "metodo": "POST",
+            "corpo": "{\"api_key\":\"46ac3f9abb41dd2d17a5785e052bc6d3\",\"events\":[{\"device_id\":\"70fb0c42-05f9-4039-8a9c-c750ec379773\",\"session_id\":1794420559035,\"time\":1794420559042,\"platform\":\"Web\",\"language\":\"en-US\",\"ip\":\"$remote\",\"insert_id\":\"aada37e0-ab70-493c-a826-52a5a029970b\",\"event_type\":\"$identify\",\"user_properties\""
+          }
+        ],
+        "enviosATerceiros": [
+          {
+            "url": "https://api.manus.im/api/user_behavior/batch_create_event_v2",
+            "metodo": "POST",
+            "corpo": "{\"events\":[{\"event_name\":\"session_file_view\",\"ext_data\":{\"type\":\"space\",\"url\":\"http://127.0.0.1:4173/convite/?v=c14b569\"},\"event_at\":\"2026-11-11T18:09:18.703Z\"},{\"event_name\":\"manus_space_show\",\"ext_data\":{\"url\":\"http://127.0.0.1:4173/convite/?v=c14b569\"},\"event_at\":\"2026-11-11T18:09:18.706Z\"}],\"cli"
+          }
+        ],
+        "janelas": [],
+        "navegacoesBarradas": [],
+        "avisos": [],
+        "urlDepoisDosCliques": "http://127.0.0.1:4173/convite/?v=c14b569",
+        "totalCliques": 0
+      },
+      "vazamentos": []
+    },
+    {
+      "nome": "convite-movel",
+      "caminho": "/convite/?v=c14b569",
+      "tela": "movel",
+      "fotos": [
+        {
+          "posicao": 1,
+          "y": 0,
+          "comparavel": true,
+          "identicas": true,
+          "pixelsDiferentes": 0,
+          "fracao": 0
+        }
+      ],
+      "cliques": [],
+      "problemas": [],
+      "pedidosOriginal": [
+        "GET /convite/?v=c14b569 -> 200",
+        "GET /favicon.ico -> 302",
+        "GET /fronteira-sul-convite-preview.jpg -> 200"
+      ],
+      "pedidosCopia": [
+        "GET /convite/?v=c14b569 -> 200",
+        "GET /favicon.ico -> 200",
+        "GET /fronteira-sul-convite-preview.jpg -> 200"
+      ],
+      "soNoOriginal": [],
+      "soNaCopia": [],
+      "redirecionavaNoOriginal": [
+        "GET /favicon.ico"
+      ],
+      "statusDiferente": [],
+      "conteudoDiferente": [],
+      "igual": {
+        "titulo": true,
+        "texto": true,
+        "altura": true,
+        "elementos": true
+      },
+      "original": {
+        "nome": "convite-movel",
+        "url": "https://fronteirasul-fmudazpm.manus.space/convite/?v=c14b569",
+        "status": 200,
+        "titulo": "Fronteira do Sul RP — Convite oficial",
+        "urlFinal": "https://fronteirasul-fmudazpm.manus.space/convite/?v=c14b569",
+        "altura": 844,
+        "largura": 390,
+        "elementos": 42,
+        "caracteresDeTexto": 149,
+        "imagens": [
+          {
+            "src": "https://fronteirasul-fmudazpm.manus.space/fronteira-sul-convite-preview.jpg",
+            "ok": true,
+            "w": 1200,
+            "h": 675
+          }
+        ],
+        "fontes": [],
+        "emblema": {
+          "filhos": 0,
+          "sombra": true,
+          "caixa": [
+            195,
+            739,
+            0,
+            0
+          ]
+        },
+        "medidas": {
+          "total": 844,
+          "visivel": 844
+        },
+        "pedidos": 12,
+        "falhas": [
+          {
+            "url": "https://manus-analytics.com/api/send",
+            "tipo": "other",
+            "metodo": "OPTIONS",
+            "erro": "net::ERR_BLOCKED_BY_CLIENT"
+          },
+          {
+            "url": "https://api2.amplitude.com/2/httpapi",
+            "tipo": "ping",
+            "metodo": "POST",
+            "erro": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          }
+        ],
+        "console": [
+          {
+            "tipo": "error",
+            "texto": "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT"
+          },
+          {
+            "tipo": "warn",
+            "texto": "[]Automatic fallback to software WebGL has been deprecated. Please use the --enable-unsafe-swiftshader flag to opt in to lower security guarantees for trusted content."
+          },
+          {
+            "tipo": "warn",
+            "texto": "[]Automatic fallback to software WebGL has been deprecated. Please use the --enable-unsafe-swiftshader flag to opt in to lower security guarantees for trusted content."
+          },
+          {
+            "tipo": "warn",
+            "texto": "[.WebGL-0x352c0288c000]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels"
+          },
+          {
+            "tipo": "error",
+            "texto": "Failed to load resource: the server responded with a status of 403 ()"
+          },
+          {
+            "tipo": "error",
+            "texto": "Amplitude Logger [Error]: Failed to fetch remote config: Error: Network error occurred, remote config fetch failed"
+          },
+          {
+            "tipo": "error",
+            "texto": "Failed to load resource: the server responded with a status of 403 ()"
+          },
+          {
+            "tipo": "error",
+            "texto": "Failed to load resource: the server responded with a status of 403 ()"
+          },
+          {
+            "tipo": "error",
+            "texto": "Failed to load resource: the server responded with a status of 403 ()"
+          },
+          {
+            "tipo": "error",
+            "texto": "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          }
+        ],
+        "erros": [],
+        "enviosBloqueados": [
+          {
+            "url": "https://manus-analytics.com/api/send",
+            "metodo": "OPTIONS",
+            "corpo": ""
+          },
+          {
+            "url": "https://api2.amplitude.com/2/httpapi",
+            "metodo": "POST",
+            "corpo": "{\"api_key\":\"46ac3f9abb41dd2d17a5785e052bc6d3\",\"events\":[{\"device_id\":\"45e85195-4c27-47a1-8054-bb82026850e2\",\"session_id\":1794420502539,\"time\":1794420502546,\"platform\":\"Web\",\"language\":\"en-US\",\"ip\":\"$remote\",\"insert_id\":\"bed4b64c-20d3-4dbc-ad6c-60ff8b7d7e35\",\"event_type\":\"$identify\",\"user_properties\""
+          }
+        ],
+        "enviosATerceiros": [
+          {
+            "url": "https://api.manus.im/api/user_behavior/batch_create_event_v2",
+            "metodo": "POST",
+            "corpo": "{\"events\":[{\"event_name\":\"session_file_view\",\"ext_data\":{\"type\":\"space\",\"url\":\"https://fronteirasul-fmudazpm.manus.space/convite/?v=c14b569\"},\"event_at\":\"2026-11-11T18:08:22.195Z\"},{\"event_name\":\"manus_space_show\",\"ext_data\":{\"url\":\"https://fronteirasul-fmudazpm.manus.space/convite/?v=c14b569\"},\"eve"
+          }
+        ],
+        "janelas": [],
+        "navegacoesBarradas": [],
+        "avisos": [],
+        "totalCliques": 0
+      },
+      "copia": {
+        "nome": "convite-movel",
+        "url": "http://127.0.0.1:4173/convite/?v=c14b569",
+        "status": 200,
+        "titulo": "Fronteira do Sul RP — Convite oficial",
+        "urlFinal": "http://127.0.0.1:4173/convite/?v=c14b569",
+        "altura": 844,
+        "largura": 390,
+        "elementos": 42,
+        "caracteresDeTexto": 149,
+        "imagens": [
+          {
+            "src": "http://127.0.0.1:4173/fronteira-sul-convite-preview.jpg",
+            "ok": true,
+            "w": 1200,
+            "h": 675
+          }
+        ],
+        "fontes": [],
+        "emblema": {
+          "filhos": 0,
+          "sombra": true,
+          "caixa": [
+            195,
+            739,
+            0,
+            0
+          ]
+        },
+        "medidas": {
+          "total": 844,
+          "visivel": 844
+        },
+        "pedidos": 11,
+        "falhas": [
+          {
+            "url": "https://manus-analytics.com/api/send",
+            "tipo": "other",
+            "metodo": "OPTIONS",
+            "erro": "net::ERR_BLOCKED_BY_CLIENT"
+          },
+          {
+            "url": "https://api2.amplitude.com/2/httpapi",
+            "tipo": "ping",
+            "metodo": "POST",
+            "erro": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          }
+        ],
+        "console": [
+          {
+            "tipo": "warn",
+            "texto": "Ignoring Event: localhost"
+          },
+          {
+            "tipo": "warn",
+            "texto": "Ignoring Event: localhost"
+          },
+          {
+            "tipo": "error",
+            "texto": "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT"
+          },
+          {
+            "tipo": "warn",
+            "texto": "[]Automatic fallback to software WebGL has been deprecated. Please use the --enable-unsafe-swiftshader flag to opt in to lower security guarantees for trusted content."
+          },
+          {
+            "tipo": "warn",
+            "texto": "[]Automatic fallback to software WebGL has been deprecated. Please use the --enable-unsafe-swiftshader flag to opt in to lower security guarantees for trusted content."
+          },
+          {
+            "tipo": "error",
+            "texto": "Failed to load resource: the server responded with a status of 403 ()"
+          },
+          {
+            "tipo": "error",
+            "texto": "Amplitude Logger [Error]: Failed to fetch remote config: Error: Network error occurred, remote config fetch failed"
+          },
+          {
+            "tipo": "error",
+            "texto": "Failed to load resource: the server responded with a status of 403 ()"
+          },
+          {
+            "tipo": "error",
+            "texto": "Failed to load resource: the server responded with a status of 403 ()"
+          },
+          {
+            "tipo": "error",
+            "texto": "Failed to load resource: the server responded with a status of 403 ()"
+          },
+          {
+            "tipo": "error",
+            "texto": "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          }
+        ],
+        "erros": [],
+        "enviosBloqueados": [
+          {
+            "url": "https://manus-analytics.com/api/send",
+            "metodo": "OPTIONS",
+            "corpo": ""
+          },
+          {
+            "url": "https://api2.amplitude.com/2/httpapi",
+            "metodo": "POST",
+            "corpo": "{\"api_key\":\"46ac3f9abb41dd2d17a5785e052bc6d3\",\"events\":[{\"device_id\":\"9c0a2838-11bf-44c3-be4e-7f7b434b78f1\",\"session_id\":1794420567894,\"time\":1794420567899,\"platform\":\"Web\",\"language\":\"en-US\",\"ip\":\"$remote\",\"insert_id\":\"35196ce4-7bbc-4fab-a0e0-dd0e26e81426\",\"event_type\":\"$identify\",\"user_properties\""
+          }
+        ],
+        "enviosATerceiros": [
+          {
+            "url": "https://api.manus.im/api/user_behavior/batch_create_event_v2",
+            "metodo": "POST",
+            "corpo": "{\"events\":[{\"event_name\":\"session_file_view\",\"ext_data\":{\"type\":\"space\",\"url\":\"http://127.0.0.1:4173/convite/?v=c14b569\"},\"event_at\":\"2026-11-11T18:09:27.568Z\"},{\"event_name\":\"manus_space_show\",\"ext_data\":{\"url\":\"http://127.0.0.1:4173/convite/?v=c14b569\"},\"event_at\":\"2026-11-11T18:09:27.568Z\"}],\"cli"
+          }
+        ],
+        "janelas": [],
+        "navegacoesBarradas": [],
+        "avisos": [],
+        "totalCliques": 0
+      },
+      "vazamentos": []
+    },
+    {
+      "nome": "regras-desktop",
+      "caminho": "/",
+      "tela": "desktop",
+      "fotos": [
+        {
+          "posicao": 1,
+          "y": 0,
+          "comparavel": true,
+          "identicas": false,
+          "pixelsDiferentes": 8,
+          "fracao": 0.000006172839506172839
+        },
+        {
+          "posicao": 2,
+          "y": 10854,
+          "comparavel": true,
+          "identicas": false,
+          "pixelsDiferentes": 10181,
+          "fracao": 0.00785570987654321
+        },
+        {
+          "posicao": 3,
+          "y": 21708,
+          "comparavel": true,
+          "identicas": false,
+          "pixelsDiferentes": 12293,
+          "fracao": 0.00948533950617284
+        }
+      ],
+      "cliques": [
+        {
+          "n": 1,
+          "rotuloOriginal": "Buscar",
+          "rotuloCopia": "Buscar",
+          "comparavel": true,
+          "pixelsDiferentes": 8,
+          "fracao": 0.000006172839506172839
+        },
+        {
+          "n": 2,
+          "rotuloOriginal": "Ir para ocorrência anterior",
+          "rotuloCopia": "Ir para ocorrência anterior",
+          "comparavel": true,
+          "pixelsDiferentes": 8,
+          "fracao": 0.000006172839506172839
+        },
+        {
+          "n": 3,
+          "rotuloOriginal": "Ir para próxima ocorrência",
+          "rotuloCopia": "Ir para próxima ocorrência",
+          "comparavel": true,
+          "pixelsDiferentes": 8,
+          "fracao": 0.000006172839506172839
+        },
+        {
+          "n": 4,
+          "rotuloOriginal": "Regulamento geral",
+          "rotuloCopia": "Regulamento geral",
+          "comparavel": true,
+          "pixelsDiferentes": 8,
+          "fracao": 0.000006172839506172839
+        },
+        {
+          "n": 5,
+          "rotuloOriginal": "Regras da Polícia",
+          "rotuloCopia": "Regras da Polícia",
+          "comparavel": true,
+          "pixelsDiferentes": 0,
+          "fracao": 0
+        }
+      ],
+      "problemas": [
+        "respostas diferentes: GET /api/platform/config.js: original 500, copia 404",
+        "foto 2: 0.79% dos pixels diferentes",
+        "foto 3: 0.95% dos pixels diferentes"
+      ],
+      "busca": {
+        "comparavel": true,
+        "pixelsDiferentes": 0,
+        "fracao": 0,
+        "textoOriginal": 2664,
+        "textoCopia": 2664
+      },
+      "pedidosOriginal": [
+        "GET / -> 200",
+        "GET /api/platform/config.js -> 500",
+        "GET /assets/index-DMP8NyHf.css -> 200",
+        "GET /assets/index-FbaU4KfD.js -> 200",
+        "GET /favicon.ico -> 302",
+        "GET /manus-storage/fronteira-sul-logo_1b1b4c2d.webp -> 307"
+      ],
+      "pedidosCopia": [
+        "GET / -> 200",
+        "GET /api/platform/config.js -> 404",
+        "GET /assets/index-DMP8NyHf.css -> 200",
+        "GET /assets/index-FbaU4KfD.js -> 200",
+        "GET /favicon.ico -> 200",
+        "GET /manus-storage/fronteira-sul-logo_1b1b4c2d.webp -> 200"
+      ],
+      "soNoOriginal": [],
+      "soNaCopia": [],
+      "redirecionavaNoOriginal": [
+        "GET /favicon.ico",
+        "GET /manus-storage/fronteira-sul-logo_1b1b4c2d.webp"
+      ],
+      "statusDiferente": [
+        "GET /api/platform/config.js: original 500, copia 404"
+      ],
+      "conteudoDiferente": [],
+      "igual": {
+        "titulo": true,
+        "texto": true,
+        "altura": true,
+        "elementos": true
+      },
+      "original": {
+        "nome": "regras-desktop",
+        "url": "https://fronteirasul-fmudazpm.manus.space/",
+        "status": 200,
+        "titulo": "Fronteira do Sul RP — Uma nova história começa aqui",
+        "urlFinal": "https://fronteirasul-fmudazpm.manus.space/",
+        "altura": 22608,
+        "largura": 1440,
+        "elementos": 789,
+        "caracteresDeTexto": 38047,
+        "imagens": [
+          {
+            "src": "https://fronteirasul-fmudazpm.manus.space/manus-storage/fronteira-sul-logo_1b1b4c2d.webp",
+            "ok": true,
+            "w": 1200,
+            "h": 676
+          },
+          {
+            "src": "https://fronteirasul-fmudazpm.manus.space/manus-storage/fronteira-sul-logo_1b1b4c2d.webp",
+            "ok": true,
+            "w": 1200,
+            "h": 676
+          }
+        ],
+        "fontes": [],
+        "emblema": {
+          "filhos": 0,
+          "sombra": true,
+          "caixa": [
+            0,
+            22608,
+            0,
+            0
+          ]
+        },
+        "medidas": {
+          "total": 22608,
+          "visivel": 900
+        },
+        "pedidos": 16,
+        "falhas": [
+          {
+            "url": "https://fronteirasul-fmudazpm.manus.space/api/platform/config.js",
+            "tipo": "script",
+            "metodo": "GET",
+            "erro": "net::ERR_ABORTED"
+          },
+          {
+            "url": "https://manus-analytics.com/api/send",
+            "tipo": "other",
+            "metodo": "OPTIONS",
+            "erro": "net::ERR_BLOCKED_BY_CLIENT"
+          },
+          {
+            "url": "https://api2.amplitude.com/2/httpapi",
+            "tipo": "ping",
+            "metodo": "POST",
+            "erro": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "url": "https://api2.amplitude.com/2/httpapi",
+            "tipo": "ping",
+            "metodo": "POST",
+            "erro": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "url": "https://api2.amplitude.com/2/httpapi",
+            "tipo": "ping",
+            "metodo": "POST",
+            "erro": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "url": "https://api2.amplitude.com/2/httpapi",
+            "tipo": "ping",
+            "metodo": "POST",
+            "erro": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          }
+        ],
+        "console": [
+          {
+            "tipo": "error",
+            "texto": "Failed to load resource: the server responded with a status of 500 ()"
+          },
+          {
+            "tipo": "error",
+            "texto": "Refused to execute script from 'https://fronteirasul-fmudazpm.manus.space/api/platform/config.js' because its MIME type ('text/html') is not executable, and strict MIME type checking is enabled."
+          },
+          {
+            "tipo": "error",
+            "texto": "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT"
+          },
+          {
+            "tipo": "warn",
+            "texto": "[]Automatic fallback to software WebGL has been deprecated. Please use the --enable-unsafe-swiftshader flag to opt in to lower security guarantees for trusted content."
+          },
+          {
+            "tipo": "warn",
+            "texto": "[]Automatic fallback to software WebGL has been deprecated. Please use the --enable-unsafe-swiftshader flag to opt in to lower security guarantees for trusted content."
+          },
+          {
+            "tipo": "warn",
+            "texto": "[.WebGL-0x352c01cb7400]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels"
+          },
+          {
+            "tipo": "error",
+            "texto": "Failed to load resource: the server responded with a status of 403 ()"
+          },
+          {
+            "tipo": "error",
+            "texto": "Amplitude Logger [Error]: Failed to fetch remote config: Error: Network error occurred, remote config fetch failed"
+          },
+          {
+            "tipo": "error",
+            "texto": "Failed to load resource: the server responded with a status of 403 ()"
+          },
+          {
+            "tipo": "error",
+            "texto": "Failed to load resource: the server responded with a status of 403 ()"
+          },
+          {
+            "tipo": "error",
+            "texto": "Failed to load resource: the server responded with a status of 403 ()"
+          },
+          {
+            "tipo": "error",
+            "texto": "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "tipo": "error",
+            "texto": "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "tipo": "error",
+            "texto": "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "tipo": "error",
+            "texto": "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          }
+        ],
+        "erros": [],
+        "enviosBloqueados": [
+          {
+            "url": "https://manus-analytics.com/api/send",
+            "metodo": "OPTIONS",
+            "corpo": ""
+          },
+          {
+            "url": "https://api2.amplitude.com/2/httpapi",
+            "metodo": "POST",
+            "corpo": "{\"api_key\":\"46ac3f9abb41dd2d17a5785e052bc6d3\",\"events\":[{\"device_id\":\"d376e5e7-8f45-41f9-8292-a80e38634e42\",\"session_id\":1794420510774,\"time\":1794420510786,\"platform\":\"Web\",\"language\":\"en-US\",\"ip\":\"$remote\",\"insert_id\":\"291596bd-76d2-4456-8d81-3e0080acfaa2\",\"event_type\":\"$identify\",\"user_properties\""
+          },
+          {
+            "url": "https://api2.amplitude.com/2/httpapi",
+            "metodo": "POST",
+            "corpo": "{\"api_key\":\"46ac3f9abb41dd2d17a5785e052bc6d3\",\"events\":[{\"device_id\":\"d376e5e7-8f45-41f9-8292-a80e38634e42\",\"session_id\":1794420510774,\"time\":1794420523222,\"platform\":\"Web\",\"language\":\"en-US\",\"ip\":\"$remote\",\"insert_id\":\"740575cc-52f9-4ca0-94cb-edef573c9d3c\",\"event_type\":\"[Amplitude] Form Started\",\"e"
+          },
+          {
+            "url": "https://api2.amplitude.com/2/httpapi",
+            "metodo": "POST",
+            "corpo": "{\"api_key\":\"46ac3f9abb41dd2d17a5785e052bc6d3\",\"events\":[{\"device_id\":\"d376e5e7-8f45-41f9-8292-a80e38634e42\",\"session_id\":1794420510774,\"time\":1794420525599,\"platform\":\"Web\",\"language\":\"en-US\",\"ip\":\"$remote\",\"insert_id\":\"7930bfad-7d52-4bda-a4fa-b216ab1e6bed\",\"event_type\":\"[Amplitude] Element Clicked\""
+          },
+          {
+            "url": "https://api2.amplitude.com/2/httpapi",
+            "metodo": "POST",
+            "corpo": "{\"api_key\":\"46ac3f9abb41dd2d17a5785e052bc6d3\",\"events\":[{\"device_id\":\"d376e5e7-8f45-41f9-8292-a80e38634e42\",\"session_id\":1794420510774,\"time\":1794420527293,\"platform\":\"Web\",\"language\":\"en-US\",\"ip\":\"$remote\",\"insert_id\":\"dc1ac090-bd8e-4ed2-b339-8e4a293702b2\",\"event_type\":\"[Amplitude] Element Clicked\""
+          }
+        ],
+        "enviosATerceiros": [
+          {
+            "url": "https://api.manus.im/api/user_behavior/batch_create_event_v2",
+            "metodo": "POST",
+            "corpo": "{\"events\":[{\"event_name\":\"session_file_view\",\"ext_data\":{\"type\":\"space\",\"url\":\"https://fronteirasul-fmudazpm.manus.space/\"},\"event_at\":\"2026-11-11T18:08:30.421Z\"},{\"event_name\":\"manus_space_show\",\"ext_data\":{\"url\":\"https://fronteirasul-fmudazpm.manus.space/\"},\"event_at\":\"2026-11-11T18:08:30.421Z\"}],"
+          }
+        ],
+        "janelas": [],
+        "navegacoesBarradas": [],
+        "avisos": [],
+        "urlDepoisDosCliques": "https://fronteirasul-fmudazpm.manus.space/",
+        "totalCliques": 5
+      },
+      "copia": {
+        "nome": "regras-desktop",
+        "url": "http://127.0.0.1:4173/",
+        "status": 200,
+        "titulo": "Fronteira do Sul RP — Uma nova história começa aqui",
+        "urlFinal": "http://127.0.0.1:4173/",
+        "altura": 22608,
+        "largura": 1440,
+        "elementos": 789,
+        "caracteresDeTexto": 38047,
+        "imagens": [
+          {
+            "src": "http://127.0.0.1:4173/manus-storage/fronteira-sul-logo_1b1b4c2d.webp",
+            "ok": true,
+            "w": 1200,
+            "h": 676
+          },
+          {
+            "src": "http://127.0.0.1:4173/manus-storage/fronteira-sul-logo_1b1b4c2d.webp",
+            "ok": true,
+            "w": 1200,
+            "h": 676
+          }
+        ],
+        "fontes": [],
+        "emblema": {
+          "filhos": 0,
+          "sombra": true,
+          "caixa": [
+            0,
+            22608,
+            0,
+            0
+          ]
+        },
+        "medidas": {
+          "total": 22608,
+          "visivel": 900
+        },
+        "pedidos": 14,
+        "falhas": [
+          {
+            "url": "http://127.0.0.1:4173/api/platform/config.js",
+            "tipo": "script",
+            "metodo": "GET",
+            "erro": "net::ERR_ABORTED"
+          },
+          {
+            "url": "https://manus-analytics.com/api/send",
+            "tipo": "other",
+            "metodo": "OPTIONS",
+            "erro": "net::ERR_BLOCKED_BY_CLIENT"
+          },
+          {
+            "url": "https://api2.amplitude.com/2/httpapi",
+            "tipo": "ping",
+            "metodo": "POST",
+            "erro": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "url": "https://api2.amplitude.com/2/httpapi",
+            "tipo": "ping",
+            "metodo": "POST",
+            "erro": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "url": "https://api2.amplitude.com/2/httpapi",
+            "tipo": "ping",
+            "metodo": "POST",
+            "erro": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "url": "https://api2.amplitude.com/2/httpapi",
+            "tipo": "ping",
+            "metodo": "POST",
+            "erro": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          }
+        ],
+        "console": [
+          {
+            "tipo": "error",
+            "texto": "Failed to load resource: the server responded with a status of 404 (Not Found)"
+          },
+          {
+            "tipo": "error",
+            "texto": "Refused to execute script from 'http://127.0.0.1:4173/api/platform/config.js' because its MIME type ('') is not executable, and strict MIME type checking is enabled."
+          },
+          {
+            "tipo": "warn",
+            "texto": "Ignoring Event: localhost"
+          },
+          {
+            "tipo": "warn",
+            "texto": "Ignoring Event: localhost"
+          },
+          {
+            "tipo": "error",
+            "texto": "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT"
+          },
+          {
+            "tipo": "warn",
+            "texto": "[]Automatic fallback to software WebGL has been deprecated. Please use the --enable-unsafe-swiftshader flag to opt in to lower security guarantees for trusted content."
+          },
+          {
+            "tipo": "warn",
+            "texto": "[]Automatic fallback to software WebGL has been deprecated. Please use the --enable-unsafe-swiftshader flag to opt in to lower security guarantees for trusted content."
+          },
+          {
+            "tipo": "error",
+            "texto": "Failed to load resource: the server responded with a status of 403 ()"
+          },
+          {
+            "tipo": "error",
+            "texto": "Amplitude Logger [Error]: Failed to fetch remote config: Error: Network error occurred, remote config fetch failed"
+          },
+          {
+            "tipo": "error",
+            "texto": "Failed to load resource: the server responded with a status of 403 ()"
+          },
+          {
+            "tipo": "error",
+            "texto": "Failed to load resource: the server responded with a status of 403 ()"
+          },
+          {
+            "tipo": "error",
+            "texto": "Failed to load resource: the server responded with a status of 403 ()"
+          },
+          {
+            "tipo": "error",
+            "texto": "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "tipo": "error",
+            "texto": "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "tipo": "error",
+            "texto": "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "tipo": "error",
+            "texto": "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          }
+        ],
+        "erros": [],
+        "enviosBloqueados": [
+          {
+            "url": "https://manus-analytics.com/api/send",
+            "metodo": "OPTIONS",
+            "corpo": ""
+          },
+          {
+            "url": "https://api2.amplitude.com/2/httpapi",
+            "metodo": "POST",
+            "corpo": "{\"api_key\":\"46ac3f9abb41dd2d17a5785e052bc6d3\",\"events\":[{\"device_id\":\"7dd00ce2-4b08-45db-a354-47e10e697802\",\"session_id\":1794420575892,\"time\":1794420575900,\"platform\":\"Web\",\"language\":\"en-US\",\"ip\":\"$remote\",\"insert_id\":\"75d8d803-de05-4fab-a037-202d82e95f09\",\"event_type\":\"$identify\",\"user_properties\""
+          },
+          {
+            "url": "https://api2.amplitude.com/2/httpapi",
+            "metodo": "POST",
+            "corpo": "{\"api_key\":\"46ac3f9abb41dd2d17a5785e052bc6d3\",\"events\":[{\"device_id\":\"7dd00ce2-4b08-45db-a354-47e10e697802\",\"session_id\":1794420575892,\"time\":1794420588283,\"platform\":\"Web\",\"language\":\"en-US\",\"ip\":\"$remote\",\"insert_id\":\"1b233f91-6234-42e4-9ebf-6e6233bfbdfc\",\"event_type\":\"[Amplitude] Form Started\",\"e"
+          },
+          {
+            "url": "https://api2.amplitude.com/2/httpapi",
+            "metodo": "POST",
+            "corpo": "{\"api_key\":\"46ac3f9abb41dd2d17a5785e052bc6d3\",\"events\":[{\"device_id\":\"7dd00ce2-4b08-45db-a354-47e10e697802\",\"session_id\":1794420575892,\"time\":1794420590655,\"platform\":\"Web\",\"language\":\"en-US\",\"ip\":\"$remote\",\"insert_id\":\"d08cc820-03d9-44e4-911e-75fec53d5b8a\",\"event_type\":\"[Amplitude] Element Clicked\""
+          },
+          {
+            "url": "https://api2.amplitude.com/2/httpapi",
+            "metodo": "POST",
+            "corpo": "{\"api_key\":\"46ac3f9abb41dd2d17a5785e052bc6d3\",\"events\":[{\"device_id\":\"7dd00ce2-4b08-45db-a354-47e10e697802\",\"session_id\":1794420575892,\"time\":1794420592107,\"platform\":\"Web\",\"language\":\"en-US\",\"ip\":\"$remote\",\"insert_id\":\"cb3e89fb-7dbb-4cdf-8cba-4cf892686da5\",\"event_type\":\"[Amplitude] Element Clicked\""
+          }
+        ],
+        "enviosATerceiros": [
+          {
+            "url": "https://api.manus.im/api/user_behavior/batch_create_event_v2",
+            "metodo": "POST",
+            "corpo": "{\"events\":[{\"event_name\":\"session_file_view\",\"ext_data\":{\"type\":\"space\",\"url\":\"http://127.0.0.1:4173/\"},\"event_at\":\"2026-11-11T18:09:35.501Z\"},{\"event_name\":\"manus_space_show\",\"ext_data\":{\"url\":\"http://127.0.0.1:4173/\"},\"event_at\":\"2026-11-11T18:09:35.502Z\"}],\"client_info\":{\"client_type\":\"web\",\"clie"
+          }
+        ],
+        "janelas": [],
+        "navegacoesBarradas": [],
+        "avisos": [],
+        "urlDepoisDosCliques": "http://127.0.0.1:4173/",
+        "totalCliques": 5
+      },
+      "vazamentos": []
+    },
+    {
+      "nome": "regras-movel",
+      "caminho": "/",
+      "tela": "movel",
+      "fotos": [
+        {
+          "posicao": 1,
+          "y": 0,
+          "comparavel": true,
+          "identicas": true,
+          "pixelsDiferentes": 0,
+          "fracao": 0
+        },
+        {
+          "posicao": 2,
+          "y": 15069,
+          "comparavel": true,
+          "identicas": true,
+          "pixelsDiferentes": 0,
+          "fracao": 0
+        },
+        {
+          "posicao": 3,
+          "y": 30138,
+          "comparavel": true,
+          "identicas": true,
+          "pixelsDiferentes": 0,
+          "fracao": 0
+        }
+      ],
+      "cliques": [],
+      "problemas": [
+        "respostas diferentes: GET /api/platform/config.js: original 500, copia 404"
+      ],
+      "pedidosOriginal": [
+        "GET / -> 200",
+        "GET /api/platform/config.js -> 500",
+        "GET /assets/index-DMP8NyHf.css -> 200",
+        "GET /assets/index-FbaU4KfD.js -> 200",
+        "GET /favicon.ico -> 302",
+        "GET /manus-storage/fronteira-sul-logo_1b1b4c2d.webp -> 307"
+      ],
+      "pedidosCopia": [
+        "GET / -> 200",
+        "GET /api/platform/config.js -> 404",
+        "GET /assets/index-DMP8NyHf.css -> 200",
+        "GET /assets/index-FbaU4KfD.js -> 200",
+        "GET /favicon.ico -> 200",
+        "GET /manus-storage/fronteira-sul-logo_1b1b4c2d.webp -> 200"
+      ],
+      "soNoOriginal": [],
+      "soNaCopia": [],
+      "redirecionavaNoOriginal": [
+        "GET /manus-storage/fronteira-sul-logo_1b1b4c2d.webp",
+        "GET /favicon.ico"
+      ],
+      "statusDiferente": [
+        "GET /api/platform/config.js: original 500, copia 404"
+      ],
+      "conteudoDiferente": [],
+      "igual": {
+        "titulo": true,
+        "texto": true,
+        "altura": true,
+        "elementos": true
+      },
+      "original": {
+        "nome": "regras-movel",
+        "url": "https://fronteirasul-fmudazpm.manus.space/",
+        "status": 200,
+        "titulo": "Fronteira do Sul RP — Uma nova história começa aqui",
+        "urlFinal": "https://fronteirasul-fmudazpm.manus.space/",
+        "altura": 30982,
+        "largura": 390,
+        "elementos": 789,
+        "caracteresDeTexto": 37581,
+        "imagens": [
+          {
+            "src": "https://fronteirasul-fmudazpm.manus.space/manus-storage/fronteira-sul-logo_1b1b4c2d.webp",
+            "ok": true,
+            "w": 1200,
+            "h": 676
+          },
+          {
+            "src": "https://fronteirasul-fmudazpm.manus.space/manus-storage/fronteira-sul-logo_1b1b4c2d.webp",
+            "ok": true,
+            "w": 1200,
+            "h": 676
+          }
+        ],
+        "fontes": [],
+        "emblema": {
+          "filhos": 0,
+          "sombra": true,
+          "caixa": [
+            0,
+            30982,
+            0,
+            0
+          ]
+        },
+        "medidas": {
+          "total": 30982,
+          "visivel": 844
+        },
+        "pedidos": 16,
+        "falhas": [
+          {
+            "url": "https://fronteirasul-fmudazpm.manus.space/api/platform/config.js",
+            "tipo": "script",
+            "metodo": "GET",
+            "erro": "net::ERR_ABORTED"
+          },
+          {
+            "url": "https://manus-analytics.com/api/send",
+            "tipo": "other",
+            "metodo": "OPTIONS",
+            "erro": "net::ERR_BLOCKED_BY_CLIENT"
+          },
+          {
+            "url": "https://api2.amplitude.com/2/httpapi",
+            "tipo": "ping",
+            "metodo": "POST",
+            "erro": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          }
+        ],
+        "console": [
+          {
+            "tipo": "error",
+            "texto": "Failed to load resource: the server responded with a status of 500 ()"
+          },
+          {
+            "tipo": "error",
+            "texto": "Refused to execute script from 'https://fronteirasul-fmudazpm.manus.space/api/platform/config.js' because its MIME type ('text/html') is not executable, and strict MIME type checking is enabled."
+          },
+          {
+            "tipo": "error",
+            "texto": "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT"
+          },
+          {
+            "tipo": "warn",
+            "texto": "[]Automatic fallback to software WebGL has been deprecated. Please use the --enable-unsafe-swiftshader flag to opt in to lower security guarantees for trusted content."
+          },
+          {
+            "tipo": "warn",
+            "texto": "[]Automatic fallback to software WebGL has been deprecated. Please use the --enable-unsafe-swiftshader flag to opt in to lower security guarantees for trusted content."
+          },
+          {
+            "tipo": "warn",
+            "texto": "[.WebGL-0x352c012afa00]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels (this message will no longer repeat)"
+          },
+          {
+            "tipo": "error",
+            "texto": "Failed to load resource: the server responded with a status of 403 ()"
+          },
+          {
+            "tipo": "error",
+            "texto": "Amplitude Logger [Error]: Failed to fetch remote config: Error: Network error occurred, remote config fetch failed"
+          },
+          {
+            "tipo": "error",
+            "texto": "Failed to load resource: the server responded with a status of 403 ()"
+          },
+          {
+            "tipo": "error",
+            "texto": "Failed to load resource: the server responded with a status of 403 ()"
+          },
+          {
+            "tipo": "error",
+            "texto": "Failed to load resource: the server responded with a status of 403 ()"
+          },
+          {
+            "tipo": "error",
+            "texto": "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          }
+        ],
+        "erros": [],
+        "enviosBloqueados": [
+          {
+            "url": "https://manus-analytics.com/api/send",
+            "metodo": "OPTIONS",
+            "corpo": ""
+          },
+          {
+            "url": "https://api2.amplitude.com/2/httpapi",
+            "metodo": "POST",
+            "corpo": "{\"api_key\":\"46ac3f9abb41dd2d17a5785e052bc6d3\",\"events\":[{\"device_id\":\"3d3b1917-fbd4-4b2e-ab1f-e655920d6418\",\"session_id\":1794420531185,\"time\":1794420531191,\"platform\":\"Web\",\"language\":\"en-US\",\"ip\":\"$remote\",\"insert_id\":\"376b25a4-7e25-432f-8b56-0e84e4514c55\",\"event_type\":\"$identify\",\"user_properties\""
+          }
+        ],
+        "enviosATerceiros": [
+          {
+            "url": "https://api.manus.im/api/user_behavior/batch_create_event_v2",
+            "metodo": "POST",
+            "corpo": "{\"events\":[{\"event_name\":\"session_file_view\",\"ext_data\":{\"type\":\"space\",\"url\":\"https://fronteirasul-fmudazpm.manus.space/\"},\"event_at\":\"2026-11-11T18:08:50.847Z\"},{\"event_name\":\"manus_space_show\",\"ext_data\":{\"url\":\"https://fronteirasul-fmudazpm.manus.space/\"},\"event_at\":\"2026-11-11T18:08:50.847Z\"}],"
+          }
+        ],
+        "janelas": [],
+        "navegacoesBarradas": [],
+        "avisos": [],
+        "totalCliques": 0
+      },
+      "copia": {
+        "nome": "regras-movel",
+        "url": "http://127.0.0.1:4173/",
+        "status": 200,
+        "titulo": "Fronteira do Sul RP — Uma nova história começa aqui",
+        "urlFinal": "http://127.0.0.1:4173/",
+        "altura": 30982,
+        "largura": 390,
+        "elementos": 789,
+        "caracteresDeTexto": 37581,
+        "imagens": [
+          {
+            "src": "http://127.0.0.1:4173/manus-storage/fronteira-sul-logo_1b1b4c2d.webp",
+            "ok": true,
+            "w": 1200,
+            "h": 676
+          },
+          {
+            "src": "http://127.0.0.1:4173/manus-storage/fronteira-sul-logo_1b1b4c2d.webp",
+            "ok": true,
+            "w": 1200,
+            "h": 676
+          }
+        ],
+        "fontes": [],
+        "emblema": {
+          "filhos": 0,
+          "sombra": true,
+          "caixa": [
+            0,
+            30982,
+            0,
+            0
+          ]
+        },
+        "medidas": {
+          "total": 30982,
+          "visivel": 844
+        },
+        "pedidos": 14,
+        "falhas": [
+          {
+            "url": "http://127.0.0.1:4173/api/platform/config.js",
+            "tipo": "script",
+            "metodo": "GET",
+            "erro": "net::ERR_ABORTED"
+          },
+          {
+            "url": "https://manus-analytics.com/api/send",
+            "tipo": "other",
+            "metodo": "OPTIONS",
+            "erro": "net::ERR_BLOCKED_BY_CLIENT"
+          },
+          {
+            "url": "https://api2.amplitude.com/2/httpapi",
+            "tipo": "ping",
+            "metodo": "POST",
+            "erro": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          }
+        ],
+        "console": [
+          {
+            "tipo": "error",
+            "texto": "Failed to load resource: the server responded with a status of 404 (Not Found)"
+          },
+          {
+            "tipo": "error",
+            "texto": "Refused to execute script from 'http://127.0.0.1:4173/api/platform/config.js' because its MIME type ('') is not executable, and strict MIME type checking is enabled."
+          },
+          {
+            "tipo": "warn",
+            "texto": "Ignoring Event: localhost"
+          },
+          {
+            "tipo": "warn",
+            "texto": "Ignoring Event: localhost"
+          },
+          {
+            "tipo": "error",
+            "texto": "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT"
+          },
+          {
+            "tipo": "warn",
+            "texto": "[]Automatic fallback to software WebGL has been deprecated. Please use the --enable-unsafe-swiftshader flag to opt in to lower security guarantees for trusted content."
+          },
+          {
+            "tipo": "warn",
+            "texto": "[]Automatic fallback to software WebGL has been deprecated. Please use the --enable-unsafe-swiftshader flag to opt in to lower security guarantees for trusted content."
+          },
+          {
+            "tipo": "error",
+            "texto": "Failed to load resource: the server responded with a status of 403 ()"
+          },
+          {
+            "tipo": "error",
+            "texto": "Amplitude Logger [Error]: Failed to fetch remote config: Error: Network error occurred, remote config fetch failed"
+          },
+          {
+            "tipo": "error",
+            "texto": "Failed to load resource: the server responded with a status of 403 ()"
+          },
+          {
+            "tipo": "error",
+            "texto": "Failed to load resource: the server responded with a status of 403 ()"
+          },
+          {
+            "tipo": "error",
+            "texto": "Failed to load resource: the server responded with a status of 403 ()"
+          },
+          {
+            "tipo": "error",
+            "texto": "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          }
+        ],
+        "erros": [],
+        "enviosBloqueados": [
+          {
+            "url": "https://manus-analytics.com/api/send",
+            "metodo": "OPTIONS",
+            "corpo": ""
+          },
+          {
+            "url": "https://api2.amplitude.com/2/httpapi",
+            "metodo": "POST",
+            "corpo": "{\"api_key\":\"46ac3f9abb41dd2d17a5785e052bc6d3\",\"events\":[{\"device_id\":\"02ff8315-974a-478a-84a6-7b509fb7c65b\",\"session_id\":1794420596907,\"time\":1794420596914,\"platform\":\"Web\",\"language\":\"en-US\",\"ip\":\"$remote\",\"insert_id\":\"a9cd191f-b190-40ca-a669-d200901b135d\",\"event_type\":\"$identify\",\"user_properties\""
+          }
+        ],
+        "enviosATerceiros": [
+          {
+            "url": "https://api.manus.im/api/user_behavior/batch_create_event_v2",
+            "metodo": "POST",
+            "corpo": "{\"events\":[{\"event_name\":\"session_file_view\",\"ext_data\":{\"type\":\"space\",\"url\":\"http://127.0.0.1:4173/\"},\"event_at\":\"2026-11-11T18:09:56.570Z\"},{\"event_name\":\"manus_space_show\",\"ext_data\":{\"url\":\"http://127.0.0.1:4173/\"},\"event_at\":\"2026-11-11T18:09:56.570Z\"}],\"client_info\":{\"client_type\":\"web\",\"clie"
+          }
+        ],
+        "janelas": [],
+        "navegacoesBarradas": [],
+        "avisos": [],
+        "totalCliques": 0
+      },
+      "vazamentos": []
+    }
+  ],
+  "divergenciasNavegador": [
+    {
+      "url": "https://fronteirasul-fmudazpm.manus.space/api/platform/config.js",
+      "problema": "conteudo recebido pelo navegador difere do arquivo baixado",
+      "navegador": "e3b0c44298fc1c14",
+      "baixado": "619dabfddc3540e2"
+    }
+  ],
+  "linksExternos": [],
+  "outrosLinks": [],
+  "urlsNoCodigo": [
+    "http://www.w3.org/1998/Math/MathML",
+    "http://www.w3.org/1999/xlink",
+    "http://www.w3.org/2000/svg",
+    "http://www.w3.org/XML/1998/namespace",
+    "https://api.manus.im",
+    "https://github.com/blitz-js/superjson/issues/116#issuecomment-773996564",
+    "https://github.com/trpc/trpc/issues/new",
+    "https://manus.im",
+    "https://react.dev/errors/"
+  ],
+  "capturasOriginais": [
+    {
+      "nome": "convite-desktop",
+      "url": "https://fronteirasul-fmudazpm.manus.space/convite/?v=c14b569",
+      "status": 200,
+      "titulo": "Fronteira do Sul RP — Convite oficial",
+      "urlFinal": "https://fronteirasul-fmudazpm.manus.space/convite/?v=c14b569",
+      "altura": 900,
+      "largura": 1440,
+      "elementos": 42,
+      "caracteresDeTexto": 149,
+      "imagens": [
+        {
+          "src": "https://fronteirasul-fmudazpm.manus.space/fronteira-sul-convite-preview.jpg",
+          "ok": true,
+          "w": 1200,
+          "h": 675
+        }
+      ],
+      "fontes": [],
+      "emblema": {
+        "filhos": 0,
+        "sombra": true,
+        "caixa": [
+          720,
+          845,
+          0,
+          0
+        ]
+      },
+      "medidas": {
+        "total": 900,
+        "visivel": 900
+      },
+      "pedidos": 12,
+      "falhas": [
+        {
+          "url": "https://manus-analytics.com/api/send",
+          "tipo": "other",
+          "metodo": "OPTIONS",
+          "erro": "net::ERR_BLOCKED_BY_CLIENT"
+        },
+        {
+          "url": "https://api2.amplitude.com/2/httpapi",
+          "tipo": "ping",
+          "metodo": "POST",
+          "erro": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+        }
+      ],
+      "console": [
+        {
+          "tipo": "warn",
+          "texto": "[]Automatic fallback to software WebGL has been deprecated. Please use the --enable-unsafe-swiftshader flag to opt in to lower security guarantees for trusted content."
+        },
+        {
+          "tipo": "warn",
+          "texto": "[]Automatic fallback to software WebGL has been deprecated. Please use the --enable-unsafe-swiftshader flag to opt in to lower security guarantees for trusted content."
+        },
+        {
+          "tipo": "warn",
+          "texto": "[.WebGL-0x352c007d0e00]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels"
+        },
+        {
+          "tipo": "error",
+          "texto": "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT"
+        },
+        {
+          "tipo": "error",
+          "texto": "Failed to load resource: the server responded with a status of 403 ()"
+        },
+        {
+          "tipo": "error",
+          "texto": "Amplitude Logger [Error]: Failed to fetch remote config: Error: Network error occurred, remote config fetch failed"
+        },
+        {
+          "tipo": "error",
+          "texto": "Failed to load resource: the server responded with a status of 403 ()"
+        },
+        {
+          "tipo": "error",
+          "texto": "Failed to load resource: the server responded with a status of 403 ()"
+        },
+        {
+          "tipo": "error",
+          "texto": "Failed to load resource: the server responded with a status of 403 ()"
+        },
+        {
+          "tipo": "error",
+          "texto": "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector"
+        }
+      ],
+      "erros": [],
+      "enviosBloqueados": [
+        {
+          "url": "https://manus-analytics.com/api/send",
+          "metodo": "OPTIONS",
+          "corpo": ""
+        },
+        {
+          "url": "https://api2.amplitude.com/2/httpapi",
+          "metodo": "POST",
+          "corpo": "{\"api_key\":\"46ac3f9abb41dd2d17a5785e052bc6d3\",\"events\":[{\"device_id\":\"94577f33-99c2-4cf1-9fc2-a41309ae79e0\",\"session_id\":1794420493236,\"time\":1794420493253,\"platform\":\"Web\",\"language\":\"en-US\",\"ip\":\"$remote\",\"insert_id\":\"5ca09f02-1ae4-442d-bf2c-383db0062202\",\"event_type\":\"$identify\",\"user_properties\""
+        }
+      ],
+      "enviosATerceiros": [
+        {
+          "url": "https://api.manus.im/api/user_behavior/batch_create_event_v2",
+          "metodo": "POST",
+          "corpo": "{\"events\":[{\"event_name\":\"session_file_view\",\"ext_data\":{\"type\":\"space\",\"url\":\"https://fronteirasul-fmudazpm.manus.space/convite/?v=c14b569\"},\"event_at\":\"2026-11-11T18:08:12.402Z\"},{\"event_name\":\"manus_space_show\",\"ext_data\":{\"url\":\"https://fronteirasul-fmudazpm.manus.space/convite/?v=c14b569\"},\"eve"
+        }
+      ],
+      "janelas": [],
+      "navegacoesBarradas": [],
+      "avisos": [],
+      "urlDepoisDosCliques": "https://fronteirasul-fmudazpm.manus.space/convite/?v=c14b569",
+      "totalCliques": 0,
+      "rede": [
+        {
+          "url": "https://fronteirasul-fmudazpm.manus.space/convite/?v=c14b569",
+          "metodo": "GET",
+          "tipo": "document",
+          "status": 200,
+          "contentType": "text/html; charset=utf-8",
+          "tamanho": 5934,
+          "sha256": "0bbad5f7ba93ceec4acfe3465c103154f9b43a44a8497e91202f6b5d2ca9f257"
+        },
+        {
+          "url": "https://plausible.io/js/script.file-downloads.hash.outbound-links.pageview-props.revenue.tagged-events.js",
+          "metodo": "GET",
+          "tipo": "script",
+          "status": 200,
+          "contentType": "application/javascript",
+          "tamanho": 5052,
+          "sha256": "11a728321cfeacecdbf76afa55ec545dcf2bd1411e1579e3aa003029c236ca5b"
+        },
+        {
+          "url": "https://files.manuscdn.com/manus-space-dispatcher/spaceEditor-CDmbg89D.js",
+          "metodo": "GET",
+          "tipo": "script",
+          "status": 200,
+          "contentType": "application/javascript",
+          "tamanho": 736291,
+          "sha256": "cb0e5a06b30c099fc50f037cd3094da6fa7fa4e02da70b1bc4248a4554e230a6"
+        },
+        {
+          "url": "https://manus-analytics.com/script.js",
+          "metodo": "GET",
+          "tipo": "script",
+          "status": 200,
+          "contentType": "application/javascript; charset=UTF-8",
+          "tamanho": 2618,
+          "sha256": "7eba89b02651cb67beefeb8aed5d39402f7994b226114c2c639ae354dc1a94f2"
+        },
+        {
+          "url": "https://fronteirasul-fmudazpm.manus.space/fronteira-sul-convite-preview.jpg",
+          "metodo": "GET",
+          "tipo": "image",
+          "status": 200,
+          "contentType": "image/jpeg",
+          "tamanho": 369138,
+          "sha256": "07584c62ac7cd814c7903758838c6bd9792b79e84357e5134e2751601b52a2dc"
+        },
+        {
+          "url": "https://sr-client-cfg.amplitude.com/config?api_key=46ac3f9abb41dd2d17a5785e052bc6d3&config_keys=analyticsSDK.pageActions",
+          "metodo": "GET",
+          "tipo": "fetch",
+          "status": 403,
+          "contentType": "text/plain;charset=utf-8",
+          "tamanho": 15,
+          "sha256": "95e93a58a8936d5557620c36bddcf4379d290998b6313a38d15112b37fd2f003"
+        },
+        {
+          "url": "https://fronteirasul-fmudazpm.manus.space/favicon.ico",
+          "metodo": "GET",
+          "tipo": "other",
+          "status": 302,
+          "contentType": "",
+          "para": "https://files.manuscdn.com/user_upload_by_module/session_file/310519663938856543/ZRyVDfBpECjhaIYs.webp"
+        },
+        {
+          "url": "https://sr-client-cfg.amplitude.com/config/46ac3f9abb41dd2d17a5785e052bc6d3?config_group=browser",
+          "metodo": "GET",
+          "tipo": "fetch",
+          "status": 403,
+          "contentType": "application/json",
+          "tamanho": 30,
+          "sha256": "997d54a047c1b5bd675d5cbd183cf95cfcfe3ef71d75d14e7fd75888eb9588bd"
+        },
+        {
+          "url": "https://sr-client-cfg.amplitude.com/config/46ac3f9abb41dd2d17a5785e052bc6d3?config_group=browser",
+          "metodo": "GET",
+          "tipo": "fetch",
+          "status": 403,
+          "contentType": "application/json",
+          "tamanho": 30,
+          "sha256": "997d54a047c1b5bd675d5cbd183cf95cfcfe3ef71d75d14e7fd75888eb9588bd"
+        },
+        {
+          "url": "https://api.manus.im/api/user_behavior/batch_create_event_v2",
+          "metodo": "POST",
+          "tipo": "ping",
+          "status": 200,
+          "contentType": "",
+          "envio": "{\"events\":[{\"event_name\":\"session_file_view\",\"ext_data\":{\"type\":\"space\",\"url\":\"https://fronteirasul-fmudazpm.manus.space/convite/?v=c14b569\"},\"event_at\":\"2026-11-11T18:08:12.402Z\"},{\"event_name\":\"manus_space_show\",\"ext_data\":{\"url\":\"https://fronteirasul-fmudazpm.manus.space/convite/?v=c14b569\"},\"eve",
+          "tamanho": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "url": "https://files.manuscdn.com/user_upload_by_module/session_file/310519663938856543/ZRyVDfBpECjhaIYs.webp",
+          "metodo": "GET",
+          "tipo": "other",
+          "status": 200,
+          "contentType": "image/webp",
+          "tamanho": 244246,
+          "sha256": "6ba2906093fad36d2ea6e877d9653757923c63adab47ec51be67ab4468234091"
+        },
+        {
+          "url": "https://sr-client-cfg.amplitude.com/config/46ac3f9abb41dd2d17a5785e052bc6d3?config_group=browser",
+          "metodo": "GET",
+          "tipo": "fetch",
+          "status": 403,
+          "contentType": "application/json",
+          "tamanho": 30,
+          "sha256": "997d54a047c1b5bd675d5cbd183cf95cfcfe3ef71d75d14e7fd75888eb9588bd"
+        }
+      ],
+      "cliques": []
+    },
+    {
+      "nome": "convite-movel",
+      "url": "https://fronteirasul-fmudazpm.manus.space/convite/?v=c14b569",
+      "status": 200,
+      "titulo": "Fronteira do Sul RP — Convite oficial",
+      "urlFinal": "https://fronteirasul-fmudazpm.manus.space/convite/?v=c14b569",
+      "altura": 844,
+      "largura": 390,
+      "elementos": 42,
+      "caracteresDeTexto": 149,
+      "imagens": [
+        {
+          "src": "https://fronteirasul-fmudazpm.manus.space/fronteira-sul-convite-preview.jpg",
+          "ok": true,
+          "w": 1200,
+          "h": 675
+        }
+      ],
+      "fontes": [],
+      "emblema": {
+        "filhos": 0,
+        "sombra": true,
+        "caixa": [
+          195,
+          739,
+          0,
+          0
+        ]
+      },
+      "medidas": {
+        "total": 844,
+        "visivel": 844
+      },
+      "pedidos": 12,
+      "falhas": [
+        {
+          "url": "https://manus-analytics.com/api/send",
+          "tipo": "other",
+          "metodo": "OPTIONS",
+          "erro": "net::ERR_BLOCKED_BY_CLIENT"
+        },
+        {
+          "url": "https://api2.amplitude.com/2/httpapi",
+          "tipo": "ping",
+          "metodo": "POST",
+          "erro": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+        }
+      ],
+      "console": [
+        {
+          "tipo": "error",
+          "texto": "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT"
+        },
+        {
+          "tipo": "warn",
+          "texto": "[]Automatic fallback to software WebGL has been deprecated. Please use the --enable-unsafe-swiftshader flag to opt in to lower security guarantees for trusted content."
+        },
+        {
+          "tipo": "warn",
+          "texto": "[]Automatic fallback to software WebGL has been deprecated. Please use the --enable-unsafe-swiftshader flag to opt in to lower security guarantees for trusted content."
+        },
+        {
+          "tipo": "warn",
+          "texto": "[.WebGL-0x352c0288c000]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels"
+        },
+        {
+          "tipo": "error",
+          "texto": "Failed to load resource: the server responded with a status of 403 ()"
+        },
+        {
+          "tipo": "error",
+          "texto": "Amplitude Logger [Error]: Failed to fetch remote config: Error: Network error occurred, remote config fetch failed"
+        },
+        {
+          "tipo": "error",
+          "texto": "Failed to load resource: the server responded with a status of 403 ()"
+        },
+        {
+          "tipo": "error",
+          "texto": "Failed to load resource: the server responded with a status of 403 ()"
+        },
+        {
+          "tipo": "error",
+          "texto": "Failed to load resource: the server responded with a status of 403 ()"
+        },
+        {
+          "tipo": "error",
+          "texto": "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector"
+        }
+      ],
+      "erros": [],
+      "enviosBloqueados": [
+        {
+          "url": "https://manus-analytics.com/api/send",
+          "metodo": "OPTIONS",
+          "corpo": ""
+        },
+        {
+          "url": "https://api2.amplitude.com/2/httpapi",
+          "metodo": "POST",
+          "corpo": "{\"api_key\":\"46ac3f9abb41dd2d17a5785e052bc6d3\",\"events\":[{\"device_id\":\"45e85195-4c27-47a1-8054-bb82026850e2\",\"session_id\":1794420502539,\"time\":1794420502546,\"platform\":\"Web\",\"language\":\"en-US\",\"ip\":\"$remote\",\"insert_id\":\"bed4b64c-20d3-4dbc-ad6c-60ff8b7d7e35\",\"event_type\":\"$identify\",\"user_properties\""
+        }
+      ],
+      "enviosATerceiros": [
+        {
+          "url": "https://api.manus.im/api/user_behavior/batch_create_event_v2",
+          "metodo": "POST",
+          "corpo": "{\"events\":[{\"event_name\":\"session_file_view\",\"ext_data\":{\"type\":\"space\",\"url\":\"https://fronteirasul-fmudazpm.manus.space/convite/?v=c14b569\"},\"event_at\":\"2026-11-11T18:08:22.195Z\"},{\"event_name\":\"manus_space_show\",\"ext_data\":{\"url\":\"https://fronteirasul-fmudazpm.manus.space/convite/?v=c14b569\"},\"eve"
+        }
+      ],
+      "janelas": [],
+      "navegacoesBarradas": [],
+      "avisos": [],
+      "totalCliques": 0,
+      "rede": [
+        {
+          "url": "https://fronteirasul-fmudazpm.manus.space/convite/?v=c14b569",
+          "metodo": "GET",
+          "tipo": "document",
+          "status": 200,
+          "contentType": "text/html; charset=utf-8",
+          "tamanho": 5934,
+          "sha256": "de61f35400c88a3f195c99f1e67615bf914227b5331139cc0ae7e25bcab383bd"
+        },
+        {
+          "url": "https://plausible.io/js/script.file-downloads.hash.outbound-links.pageview-props.revenue.tagged-events.js",
+          "metodo": "GET",
+          "tipo": "script",
+          "status": 200,
+          "contentType": "application/javascript",
+          "tamanho": 5052,
+          "sha256": "11a728321cfeacecdbf76afa55ec545dcf2bd1411e1579e3aa003029c236ca5b"
+        },
+        {
+          "url": "https://files.manuscdn.com/manus-space-dispatcher/spaceEditor-CDmbg89D.js",
+          "metodo": "GET",
+          "tipo": "script",
+          "status": 200,
+          "contentType": "application/javascript",
+          "tamanho": 736291,
+          "sha256": "cb0e5a06b30c099fc50f037cd3094da6fa7fa4e02da70b1bc4248a4554e230a6"
+        },
+        {
+          "url": "https://manus-analytics.com/script.js",
+          "metodo": "GET",
+          "tipo": "script",
+          "status": 200,
+          "contentType": "application/javascript; charset=UTF-8",
+          "tamanho": 2618,
+          "sha256": "7eba89b02651cb67beefeb8aed5d39402f7994b226114c2c639ae354dc1a94f2"
+        },
+        {
+          "url": "https://fronteirasul-fmudazpm.manus.space/fronteira-sul-convite-preview.jpg",
+          "metodo": "GET",
+          "tipo": "image",
+          "status": 200,
+          "contentType": "image/jpeg",
+          "tamanho": 369138,
+          "sha256": "07584c62ac7cd814c7903758838c6bd9792b79e84357e5134e2751601b52a2dc"
+        },
+        {
+          "url": "https://fronteirasul-fmudazpm.manus.space/favicon.ico",
+          "metodo": "GET",
+          "tipo": "other",
+          "status": 302,
+          "contentType": "",
+          "para": "https://files.manuscdn.com/user_upload_by_module/session_file/310519663938856543/ZRyVDfBpECjhaIYs.webp"
+        },
+        {
+          "url": "https://files.manuscdn.com/user_upload_by_module/session_file/310519663938856543/ZRyVDfBpECjhaIYs.webp",
+          "metodo": "GET",
+          "tipo": "other",
+          "status": 200,
+          "contentType": "image/webp",
+          "tamanho": 244246,
+          "sha256": "6ba2906093fad36d2ea6e877d9653757923c63adab47ec51be67ab4468234091"
+        },
+        {
+          "url": "https://sr-client-cfg.amplitude.com/config?api_key=46ac3f9abb41dd2d17a5785e052bc6d3&config_keys=analyticsSDK.pageActions",
+          "metodo": "GET",
+          "tipo": "fetch",
+          "status": 403,
+          "contentType": "text/plain;charset=utf-8",
+          "tamanho": 15,
+          "sha256": "95e93a58a8936d5557620c36bddcf4379d290998b6313a38d15112b37fd2f003"
+        },
+        {
+          "url": "https://sr-client-cfg.amplitude.com/config/46ac3f9abb41dd2d17a5785e052bc6d3?config_group=browser",
+          "metodo": "GET",
+          "tipo": "fetch",
+          "status": 403,
+          "contentType": "application/json",
+          "tamanho": 30,
+          "sha256": "997d54a047c1b5bd675d5cbd183cf95cfcfe3ef71d75d14e7fd75888eb9588bd"
+        },
+        {
+          "url": "https://api.manus.im/api/user_behavior/batch_create_event_v2",
+          "metodo": "POST",
+          "tipo": "ping",
+          "status": 200,
+          "contentType": "",
+          "envio": "{\"events\":[{\"event_name\":\"session_file_view\",\"ext_data\":{\"type\":\"space\",\"url\":\"https://fronteirasul-fmudazpm.manus.space/convite/?v=c14b569\"},\"event_at\":\"2026-11-11T18:08:22.195Z\"},{\"event_name\":\"manus_space_show\",\"ext_data\":{\"url\":\"https://fronteirasul-fmudazpm.manus.space/convite/?v=c14b569\"},\"eve",
+          "tamanho": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "url": "https://sr-client-cfg.amplitude.com/config/46ac3f9abb41dd2d17a5785e052bc6d3?config_group=browser",
+          "metodo": "GET",
+          "tipo": "fetch",
+          "status": 403,
+          "contentType": "application/json",
+          "tamanho": 30,
+          "sha256": "997d54a047c1b5bd675d5cbd183cf95cfcfe3ef71d75d14e7fd75888eb9588bd"
+        },
+        {
+          "url": "https://sr-client-cfg.amplitude.com/config/46ac3f9abb41dd2d17a5785e052bc6d3?config_group=browser",
+          "metodo": "GET",
+          "tipo": "fetch",
+          "status": 403,
+          "contentType": "application/json",
+          "tamanho": 30,
+          "sha256": "997d54a047c1b5bd675d5cbd183cf95cfcfe3ef71d75d14e7fd75888eb9588bd"
+        }
+      ],
+      "cliques": []
+    },
+    {
+      "nome": "regras-desktop",
+      "url": "https://fronteirasul-fmudazpm.manus.space/",
+      "status": 200,
+      "titulo": "Fronteira do Sul RP — Uma nova história começa aqui",
+      "urlFinal": "https://fronteirasul-fmudazpm.manus.space/",
+      "altura": 22608,
+      "largura": 1440,
+      "elementos": 789,
+      "caracteresDeTexto": 38047,
+      "imagens": [
+        {
+          "src": "https://fronteirasul-fmudazpm.manus.space/manus-storage/fronteira-sul-logo_1b1b4c2d.webp",
+          "ok": true,
+          "w": 1200,
+          "h": 676
+        },
+        {
+          "src": "https://fronteirasul-fmudazpm.manus.space/manus-storage/fronteira-sul-logo_1b1b4c2d.webp",
+          "ok": true,
+          "w": 1200,
+          "h": 676
+        }
+      ],
+      "fontes": [],
+      "emblema": {
+        "filhos": 0,
+        "sombra": true,
+        "caixa": [
+          0,
+          22608,
+          0,
+          0
+        ]
+      },
+      "medidas": {
+        "total": 22608,
+        "visivel": 900
+      },
+      "pedidos": 16,
+      "falhas": [
+        {
+          "url": "https://fronteirasul-fmudazpm.manus.space/api/platform/config.js",
+          "tipo": "script",
+          "metodo": "GET",
+          "erro": "net::ERR_ABORTED"
+        },
+        {
+          "url": "https://manus-analytics.com/api/send",
+          "tipo": "other",
+          "metodo": "OPTIONS",
+          "erro": "net::ERR_BLOCKED_BY_CLIENT"
+        },
+        {
+          "url": "https://api2.amplitude.com/2/httpapi",
+          "tipo": "ping",
+          "metodo": "POST",
+          "erro": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+        },
+        {
+          "url": "https://api2.amplitude.com/2/httpapi",
+          "tipo": "ping",
+          "metodo": "POST",
+          "erro": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+        },
+        {
+          "url": "https://api2.amplitude.com/2/httpapi",
+          "tipo": "ping",
+          "metodo": "POST",
+          "erro": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+        },
+        {
+          "url": "https://api2.amplitude.com/2/httpapi",
+          "tipo": "ping",
+          "metodo": "POST",
+          "erro": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+        }
+      ],
+      "console": [
+        {
+          "tipo": "error",
+          "texto": "Failed to load resource: the server responded with a status of 500 ()"
+        },
+        {
+          "tipo": "error",
+          "texto": "Refused to execute script from 'https://fronteirasul-fmudazpm.manus.space/api/platform/config.js' because its MIME type ('text/html') is not executable, and strict MIME type checking is enabled."
+        },
+        {
+          "tipo": "error",
+          "texto": "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT"
+        },
+        {
+          "tipo": "warn",
+          "texto": "[]Automatic fallback to software WebGL has been deprecated. Please use the --enable-unsafe-swiftshader flag to opt in to lower security guarantees for trusted content."
+        },
+        {
+          "tipo": "warn",
+          "texto": "[]Automatic fallback to software WebGL has been deprecated. Please use the --enable-unsafe-swiftshader flag to opt in to lower security guarantees for trusted content."
+        },
+        {
+          "tipo": "warn",
+          "texto": "[.WebGL-0x352c01cb7400]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels"
+        },
+        {
+          "tipo": "error",
+          "texto": "Failed to load resource: the server responded with a status of 403 ()"
+        },
+        {
+          "tipo": "error",
+          "texto": "Amplitude Logger [Error]: Failed to fetch remote config: Error: Network error occurred, remote config fetch failed"
+        },
+        {
+          "tipo": "error",
+          "texto": "Failed to load resource: the server responded with a status of 403 ()"
+        },
+        {
+          "tipo": "error",
+          "texto": "Failed to load resource: the server responded with a status of 403 ()"
+        },
+        {
+          "tipo": "error",
+          "texto": "Failed to load resource: the server responded with a status of 403 ()"
+        },
+        {
+          "tipo": "error",
+          "texto": "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector"
+        },
+        {
+          "tipo": "error",
+          "texto": "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector"
+        },
+        {
+          "tipo": "error",
+          "texto": "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector"
+        },
+        {
+          "tipo": "error",
+          "texto": "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector"
+        }
+      ],
+      "erros": [],
+      "enviosBloqueados": [
+        {
+          "url": "https://manus-analytics.com/api/send",
+          "metodo": "OPTIONS",
+          "corpo": ""
+        },
+        {
+          "url": "https://api2.amplitude.com/2/httpapi",
+          "metodo": "POST",
+          "corpo": "{\"api_key\":\"46ac3f9abb41dd2d17a5785e052bc6d3\",\"events\":[{\"device_id\":\"d376e5e7-8f45-41f9-8292-a80e38634e42\",\"session_id\":1794420510774,\"time\":1794420510786,\"platform\":\"Web\",\"language\":\"en-US\",\"ip\":\"$remote\",\"insert_id\":\"291596bd-76d2-4456-8d81-3e0080acfaa2\",\"event_type\":\"$identify\",\"user_properties\""
+        },
+        {
+          "url": "https://api2.amplitude.com/2/httpapi",
+          "metodo": "POST",
+          "corpo": "{\"api_key\":\"46ac3f9abb41dd2d17a5785e052bc6d3\",\"events\":[{\"device_id\":\"d376e5e7-8f45-41f9-8292-a80e38634e42\",\"session_id\":1794420510774,\"time\":1794420523222,\"platform\":\"Web\",\"language\":\"en-US\",\"ip\":\"$remote\",\"insert_id\":\"740575cc-52f9-4ca0-94cb-edef573c9d3c\",\"event_type\":\"[Amplitude] Form Started\",\"e"
+        },
+        {
+          "url": "https://api2.amplitude.com/2/httpapi",
+          "metodo": "POST",
+          "corpo": "{\"api_key\":\"46ac3f9abb41dd2d17a5785e052bc6d3\",\"events\":[{\"device_id\":\"d376e5e7-8f45-41f9-8292-a80e38634e42\",\"session_id\":1794420510774,\"time\":1794420525599,\"platform\":\"Web\",\"language\":\"en-US\",\"ip\":\"$remote\",\"insert_id\":\"7930bfad-7d52-4bda-a4fa-b216ab1e6bed\",\"event_type\":\"[Amplitude] Element Clicked\""
+        },
+        {
+          "url": "https://api2.amplitude.com/2/httpapi",
+          "metodo": "POST",
+          "corpo": "{\"api_key\":\"46ac3f9abb41dd2d17a5785e052bc6d3\",\"events\":[{\"device_id\":\"d376e5e7-8f45-41f9-8292-a80e38634e42\",\"session_id\":1794420510774,\"time\":1794420527293,\"platform\":\"Web\",\"language\":\"en-US\",\"ip\":\"$remote\",\"insert_id\":\"dc1ac090-bd8e-4ed2-b339-8e4a293702b2\",\"event_type\":\"[Amplitude] Element Clicked\""
+        }
+      ],
+      "enviosATerceiros": [
+        {
+          "url": "https://api.manus.im/api/user_behavior/batch_create_event_v2",
+          "metodo": "POST",
+          "corpo": "{\"events\":[{\"event_name\":\"session_file_view\",\"ext_data\":{\"type\":\"space\",\"url\":\"https://fronteirasul-fmudazpm.manus.space/\"},\"event_at\":\"2026-11-11T18:08:30.421Z\"},{\"event_name\":\"manus_space_show\",\"ext_data\":{\"url\":\"https://fronteirasul-fmudazpm.manus.space/\"},\"event_at\":\"2026-11-11T18:08:30.421Z\"}],"
+        }
+      ],
+      "janelas": [],
+      "navegacoesBarradas": [],
+      "avisos": [],
+      "urlDepoisDosCliques": "https://fronteirasul-fmudazpm.manus.space/",
+      "totalCliques": 5,
+      "rede": [
+        {
+          "url": "https://fronteirasul-fmudazpm.manus.space/",
+          "metodo": "GET",
+          "tipo": "document",
+          "status": 200,
+          "contentType": "text/html; charset=utf-8",
+          "tamanho": 3613,
+          "sha256": "695bc7ec581a729b09c6afd2c587ccff7609dd39605a79e049adc0a9398b0237"
+        },
+        {
+          "url": "https://plausible.io/js/script.file-downloads.hash.outbound-links.pageview-props.revenue.tagged-events.js",
+          "metodo": "GET",
+          "tipo": "script",
+          "status": 200,
+          "contentType": "application/javascript",
+          "tamanho": 5052,
+          "sha256": "11a728321cfeacecdbf76afa55ec545dcf2bd1411e1579e3aa003029c236ca5b"
+        },
+        {
+          "url": "https://fronteirasul-fmudazpm.manus.space/api/platform/config.js",
+          "metodo": "GET",
+          "tipo": "script",
+          "status": 500,
+          "contentType": "text/html; charset=UTF-8",
+          "tamanho": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "url": "https://files.manuscdn.com/manus-space-dispatcher/spaceEditor-CDmbg89D.js",
+          "metodo": "GET",
+          "tipo": "script",
+          "status": 200,
+          "contentType": "application/javascript",
+          "tamanho": 736291,
+          "sha256": "cb0e5a06b30c099fc50f037cd3094da6fa7fa4e02da70b1bc4248a4554e230a6"
+        },
+        {
+          "url": "https://manus-analytics.com/script.js",
+          "metodo": "GET",
+          "tipo": "script",
+          "status": 200,
+          "contentType": "application/javascript; charset=UTF-8",
+          "tamanho": 2618,
+          "sha256": "7eba89b02651cb67beefeb8aed5d39402f7994b226114c2c639ae354dc1a94f2"
+        },
+        {
+          "url": "https://fronteirasul-fmudazpm.manus.space/assets/index-DMP8NyHf.css",
+          "metodo": "GET",
+          "tipo": "stylesheet",
+          "status": 200,
+          "contentType": "text/css; charset=utf-8",
+          "tamanho": 123524,
+          "sha256": "19d4496e133becebc2cc6e75a748674232e867e2cb0bda9dbc5882c59e7ab255"
+        },
+        {
+          "url": "https://fronteirasul-fmudazpm.manus.space/assets/index-FbaU4KfD.js",
+          "metodo": "GET",
+          "tipo": "script",
+          "status": 200,
+          "contentType": "text/javascript; charset=utf-8",
+          "tamanho": 473107,
+          "sha256": "de95a285ca5e0ac9a2beb86d26fd53e92b9fe18e72d02fd556b17ca4046e0e24"
+        },
+        {
+          "url": "https://fronteirasul-fmudazpm.manus.space/favicon.ico",
+          "metodo": "GET",
+          "tipo": "other",
+          "status": 302,
+          "contentType": "",
+          "para": "https://files.manuscdn.com/user_upload_by_module/session_file/310519663938856543/ZRyVDfBpECjhaIYs.webp"
+        },
+        {
+          "url": "https://files.manuscdn.com/user_upload_by_module/session_file/310519663938856543/ZRyVDfBpECjhaIYs.webp",
+          "metodo": "GET",
+          "tipo": "other",
+          "status": 200,
+          "contentType": "image/webp",
+          "tamanho": 244246,
+          "sha256": "6ba2906093fad36d2ea6e877d9653757923c63adab47ec51be67ab4468234091"
+        },
+        {
+          "url": "https://fronteirasul-fmudazpm.manus.space/manus-storage/fronteira-sul-logo_1b1b4c2d.webp",
+          "metodo": "GET",
+          "tipo": "image",
+          "status": 307,
+          "contentType": "",
+          "para": "https://d36hbw14aib5lz.cloudfront.net/310519663938856543/FmUDAzpMr2fDkhG5Nf2vYF/fronteira-sul-logo_1b1b4c2d.webp?…"
+        },
+        {
+          "url": "https://d36hbw14aib5lz.cloudfront.net/310519663938856543/FmUDAzpMr2fDkhG5Nf2vYF/fronteira-sul-logo_1b1b4c2d.webp?Expires=1794424110&Signature=pxn1pwyqhjoLkXMAw67dYCbSJ8AW80Oyw~bqQeMZ5EY4qV-5zytDze1tJ-lok3Vvh6MLd8-tUrni-BRKRmHxAyPqMbkTV3obJlRpbVxmm6z6M-6uabLf4L61UmfMOviMudtaLYGfbvhmAn2u0ildCe5D0srhezfLxe997plkyYwmq1E6BxA4RDA2ktiCaoRLb5eG90vGD9aGHyp9lhqSsJUiaq1NO~tMTgl5hZnOujB7al4Gc7Cu8y-oFiVu-0gpGCyt3~pui1Rg61m2-QwLR4nko7lB7XAFGvBZrnRYBCCUFTi4KaPjzxtfVV5L9Bo73QJEAsZtKjf8fNCLt2JmQg__&Key-Pair-Id=K321XI5W1LNKUL",
+          "metodo": "GET",
+          "tipo": "image",
+          "status": 200,
+          "contentType": "image/webp",
+          "tamanho": 244246,
+          "sha256": "6ba2906093fad36d2ea6e877d9653757923c63adab47ec51be67ab4468234091"
+        },
+        {
+          "url": "https://sr-client-cfg.amplitude.com/config?api_key=46ac3f9abb41dd2d17a5785e052bc6d3&config_keys=analyticsSDK.pageActions",
+          "metodo": "GET",
+          "tipo": "fetch",
+          "status": 403,
+          "contentType": "text/plain;charset=utf-8",
+          "tamanho": 15,
+          "sha256": "95e93a58a8936d5557620c36bddcf4379d290998b6313a38d15112b37fd2f003"
+        },
+        {
+          "url": "https://sr-client-cfg.amplitude.com/config/46ac3f9abb41dd2d17a5785e052bc6d3?config_group=browser",
+          "metodo": "GET",
+          "tipo": "fetch",
+          "status": 403,
+          "contentType": "application/json",
+          "tamanho": 30,
+          "sha256": "997d54a047c1b5bd675d5cbd183cf95cfcfe3ef71d75d14e7fd75888eb9588bd"
+        },
+        {
+          "url": "https://api.manus.im/api/user_behavior/batch_create_event_v2",
+          "metodo": "POST",
+          "tipo": "ping",
+          "status": 200,
+          "contentType": "",
+          "envio": "{\"events\":[{\"event_name\":\"session_file_view\",\"ext_data\":{\"type\":\"space\",\"url\":\"https://fronteirasul-fmudazpm.manus.space/\"},\"event_at\":\"2026-11-11T18:08:30.421Z\"},{\"event_name\":\"manus_space_show\",\"ext_data\":{\"url\":\"https://fronteirasul-fmudazpm.manus.space/\"},\"event_at\":\"2026-11-11T18:08:30.421Z\"}],",
+          "tamanho": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "url": "https://sr-client-cfg.amplitude.com/config/46ac3f9abb41dd2d17a5785e052bc6d3?config_group=browser",
+          "metodo": "GET",
+          "tipo": "fetch",
+          "status": 403,
+          "contentType": "application/json",
+          "tamanho": 30,
+          "sha256": "997d54a047c1b5bd675d5cbd183cf95cfcfe3ef71d75d14e7fd75888eb9588bd"
+        },
+        {
+          "url": "https://sr-client-cfg.amplitude.com/config/46ac3f9abb41dd2d17a5785e052bc6d3?config_group=browser",
+          "metodo": "GET",
+          "tipo": "fetch",
+          "status": 403,
+          "contentType": "application/json",
+          "tamanho": 30,
+          "sha256": "997d54a047c1b5bd675d5cbd183cf95cfcfe3ef71d75d14e7fd75888eb9588bd"
+        }
+      ],
+      "cliques": [
+        {
+          "indice": 0,
+          "rotulo": "Buscar",
+          "url": "https://fronteirasul-fmudazpm.manus.space/",
+          "foto": 0
+        },
+        {
+          "indice": 1,
+          "rotulo": "Ir para ocorrência anterior",
+          "url": "https://fronteirasul-fmudazpm.manus.space/",
+          "foto": 1
+        },
+        {
+          "indice": 2,
+          "rotulo": "Ir para próxima ocorrência",
+          "url": "https://fronteirasul-fmudazpm.manus.space/",
+          "foto": 2
+        },
+        {
+          "indice": 3,
+          "rotulo": "Regulamento geral",
+          "url": "https://fronteirasul-fmudazpm.manus.space/",
+          "foto": 3
+        },
+        {
+          "indice": 4,
+          "rotulo": "Regras da Polícia",
+          "url": "https://fronteirasul-fmudazpm.manus.space/",
+          "foto": 4
+        }
+      ]
+    },
+    {
+      "nome": "regras-movel",
+      "url": "https://fronteirasul-fmudazpm.manus.space/",
+      "status": 200,
+      "titulo": "Fronteira do Sul RP — Uma nova história começa aqui",
+      "urlFinal": "https://fronteirasul-fmudazpm.manus.space/",
+      "altura": 30982,
+      "largura": 390,
+      "elementos": 789,
+      "caracteresDeTexto": 37581,
+      "imagens": [
+        {
+          "src": "https://fronteirasul-fmudazpm.manus.space/manus-storage/fronteira-sul-logo_1b1b4c2d.webp",
+          "ok": true,
+          "w": 1200,
+          "h": 676
+        },
+        {
+          "src": "https://fronteirasul-fmudazpm.manus.space/manus-storage/fronteira-sul-logo_1b1b4c2d.webp",
+          "ok": true,
+          "w": 1200,
+          "h": 676
+        }
+      ],
+      "fontes": [],
+      "emblema": {
+        "filhos": 0,
+        "sombra": true,
+        "caixa": [
+          0,
+          30982,
+          0,
+          0
+        ]
+      },
+      "medidas": {
+        "total": 30982,
+        "visivel": 844
+      },
+      "pedidos": 16,
+      "falhas": [
+        {
+          "url": "https://fronteirasul-fmudazpm.manus.space/api/platform/config.js",
+          "tipo": "script",
+          "metodo": "GET",
+          "erro": "net::ERR_ABORTED"
+        },
+        {
+          "url": "https://manus-analytics.com/api/send",
+          "tipo": "other",
+          "metodo": "OPTIONS",
+          "erro": "net::ERR_BLOCKED_BY_CLIENT"
+        },
+        {
+          "url": "https://api2.amplitude.com/2/httpapi",
+          "tipo": "ping",
+          "metodo": "POST",
+          "erro": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+        }
+      ],
+      "console": [
+        {
+          "tipo": "error",
+          "texto": "Failed to load resource: the server responded with a status of 500 ()"
+        },
+        {
+          "tipo": "error",
+          "texto": "Refused to execute script from 'https://fronteirasul-fmudazpm.manus.space/api/platform/config.js' because its MIME type ('text/html') is not executable, and strict MIME type checking is enabled."
+        },
+        {
+          "tipo": "error",
+          "texto": "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT"
+        },
+        {
+          "tipo": "warn",
+          "texto": "[]Automatic fallback to software WebGL has been deprecated. Please use the --enable-unsafe-swiftshader flag to opt in to lower security guarantees for trusted content."
+        },
+        {
+          "tipo": "warn",
+          "texto": "[]Automatic fallback to software WebGL has been deprecated. Please use the --enable-unsafe-swiftshader flag to opt in to lower security guarantees for trusted content."
+        },
+        {
+          "tipo": "warn",
+          "texto": "[.WebGL-0x352c012afa00]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels (this message will no longer repeat)"
+        },
+        {
+          "tipo": "error",
+          "texto": "Failed to load resource: the server responded with a status of 403 ()"
+        },
+        {
+          "tipo": "error",
+          "texto": "Amplitude Logger [Error]: Failed to fetch remote config: Error: Network error occurred, remote config fetch failed"
+        },
+        {
+          "tipo": "error",
+          "texto": "Failed to load resource: the server responded with a status of 403 ()"
+        },
+        {
+          "tipo": "error",
+          "texto": "Failed to load resource: the server responded with a status of 403 ()"
+        },
+        {
+          "tipo": "error",
+          "texto": "Failed to load resource: the server responded with a status of 403 ()"
+        },
+        {
+          "tipo": "error",
+          "texto": "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector"
+        }
+      ],
+      "erros": [],
+      "enviosBloqueados": [
+        {
+          "url": "https://manus-analytics.com/api/send",
+          "metodo": "OPTIONS",
+          "corpo": ""
+        },
+        {
+          "url": "https://api2.amplitude.com/2/httpapi",
+          "metodo": "POST",
+          "corpo": "{\"api_key\":\"46ac3f9abb41dd2d17a5785e052bc6d3\",\"events\":[{\"device_id\":\"3d3b1917-fbd4-4b2e-ab1f-e655920d6418\",\"session_id\":1794420531185,\"time\":1794420531191,\"platform\":\"Web\",\"language\":\"en-US\",\"ip\":\"$remote\",\"insert_id\":\"376b25a4-7e25-432f-8b56-0e84e4514c55\",\"event_type\":\"$identify\",\"user_properties\""
+        }
+      ],
+      "enviosATerceiros": [
+        {
+          "url": "https://api.manus.im/api/user_behavior/batch_create_event_v2",
+          "metodo": "POST",
+          "corpo": "{\"events\":[{\"event_name\":\"session_file_view\",\"ext_data\":{\"type\":\"space\",\"url\":\"https://fronteirasul-fmudazpm.manus.space/\"},\"event_at\":\"2026-11-11T18:08:50.847Z\"},{\"event_name\":\"manus_space_show\",\"ext_data\":{\"url\":\"https://fronteirasul-fmudazpm.manus.space/\"},\"event_at\":\"2026-11-11T18:08:50.847Z\"}],"
+        }
+      ],
+      "janelas": [],
+      "navegacoesBarradas": [],
+      "avisos": [],
+      "totalCliques": 0,
+      "rede": [
+        {
+          "url": "https://fronteirasul-fmudazpm.manus.space/",
+          "metodo": "GET",
+          "tipo": "document",
+          "status": 200,
+          "contentType": "text/html; charset=utf-8",
+          "tamanho": 3613,
+          "sha256": "5f905b25f5483b9a54e7313b55700d72115a9fd5b41c781dcd327424a1ad94f3"
+        },
+        {
+          "url": "https://plausible.io/js/script.file-downloads.hash.outbound-links.pageview-props.revenue.tagged-events.js",
+          "metodo": "GET",
+          "tipo": "script",
+          "status": 200,
+          "contentType": "application/javascript",
+          "tamanho": 5052,
+          "sha256": "11a728321cfeacecdbf76afa55ec545dcf2bd1411e1579e3aa003029c236ca5b"
+        },
+        {
+          "url": "https://fronteirasul-fmudazpm.manus.space/api/platform/config.js",
+          "metodo": "GET",
+          "tipo": "script",
+          "status": 500,
+          "contentType": "text/html; charset=UTF-8",
+          "tamanho": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "url": "https://files.manuscdn.com/manus-space-dispatcher/spaceEditor-CDmbg89D.js",
+          "metodo": "GET",
+          "tipo": "script",
+          "status": 200,
+          "contentType": "application/javascript",
+          "tamanho": 736291,
+          "sha256": "cb0e5a06b30c099fc50f037cd3094da6fa7fa4e02da70b1bc4248a4554e230a6"
+        },
+        {
+          "url": "https://manus-analytics.com/script.js",
+          "metodo": "GET",
+          "tipo": "script",
+          "status": 200,
+          "contentType": "application/javascript; charset=UTF-8",
+          "tamanho": 2618,
+          "sha256": "7eba89b02651cb67beefeb8aed5d39402f7994b226114c2c639ae354dc1a94f2"
+        },
+        {
+          "url": "https://fronteirasul-fmudazpm.manus.space/assets/index-DMP8NyHf.css",
+          "metodo": "GET",
+          "tipo": "stylesheet",
+          "status": 200,
+          "contentType": "text/css; charset=utf-8",
+          "tamanho": 123524,
+          "sha256": "19d4496e133becebc2cc6e75a748674232e867e2cb0bda9dbc5882c59e7ab255"
+        },
+        {
+          "url": "https://fronteirasul-fmudazpm.manus.space/assets/index-FbaU4KfD.js",
+          "metodo": "GET",
+          "tipo": "script",
+          "status": 200,
+          "contentType": "text/javascript; charset=utf-8",
+          "tamanho": 473107,
+          "sha256": "de95a285ca5e0ac9a2beb86d26fd53e92b9fe18e72d02fd556b17ca4046e0e24"
+        },
+        {
+          "url": "https://fronteirasul-fmudazpm.manus.space/manus-storage/fronteira-sul-logo_1b1b4c2d.webp",
+          "metodo": "GET",
+          "tipo": "image",
+          "status": 307,
+          "contentType": "",
+          "para": "https://d36hbw14aib5lz.cloudfront.net/310519663938856543/FmUDAzpMr2fDkhG5Nf2vYF/fronteira-sul-logo_1b1b4c2d.webp?…"
+        },
+        {
+          "url": "https://d36hbw14aib5lz.cloudfront.net/310519663938856543/FmUDAzpMr2fDkhG5Nf2vYF/fronteira-sul-logo_1b1b4c2d.webp?Expires=1794424130&Signature=PeuZHGWbiYcDEQFllmCRSclJs9OSitBtPQFnnwHOANQBBmb3t6ScYaJbhKd4e5sl1WUzZKwq-RG2kbhhUDnITvvGCubIUgWgn~4QF2VBj33w1Sx41AAEi8zs76c2pg~uW-9aDaSgfcY~QfXmBIU9fRziEp6gNQrId17VJFRt8jGGhX7xz~6KuoTo2Wwp7ldcLUrMPanEt9tWaJoZO6Ry6ZSubhizm4DnpLyLtsp8HhulojgPY8xnsm1rGjXu1qywrRhkKcgqbrGxP8Dp12NbG5kpnn-9LqmNdC7Boy6bihWtdGQTZdtt7lkrupConBhLJ7YalsbhYo8WB52EB~AIxg__&Key-Pair-Id=K321XI5W1LNKUL",
+          "metodo": "GET",
+          "tipo": "image",
+          "status": 200,
+          "contentType": "image/webp",
+          "tamanho": 244246,
+          "sha256": "6ba2906093fad36d2ea6e877d9653757923c63adab47ec51be67ab4468234091"
+        },
+        {
+          "url": "https://fronteirasul-fmudazpm.manus.space/favicon.ico",
+          "metodo": "GET",
+          "tipo": "other",
+          "status": 302,
+          "contentType": "",
+          "para": "https://files.manuscdn.com/user_upload_by_module/session_file/310519663938856543/ZRyVDfBpECjhaIYs.webp"
+        },
+        {
+          "url": "https://files.manuscdn.com/user_upload_by_module/session_file/310519663938856543/ZRyVDfBpECjhaIYs.webp",
+          "metodo": "GET",
+          "tipo": "other",
+          "status": 200,
+          "contentType": "image/webp",
+          "tamanho": 244246,
+          "sha256": "6ba2906093fad36d2ea6e877d9653757923c63adab47ec51be67ab4468234091"
+        },
+        {
+          "url": "https://sr-client-cfg.amplitude.com/config?api_key=46ac3f9abb41dd2d17a5785e052bc6d3&config_keys=analyticsSDK.pageActions",
+          "metodo": "GET",
+          "tipo": "fetch",
+          "status": 403,
+          "contentType": "text/plain;charset=utf-8",
+          "tamanho": 15,
+          "sha256": "95e93a58a8936d5557620c36bddcf4379d290998b6313a38d15112b37fd2f003"
+        },
+        {
+          "url": "https://sr-client-cfg.amplitude.com/config/46ac3f9abb41dd2d17a5785e052bc6d3?config_group=browser",
+          "metodo": "GET",
+          "tipo": "fetch",
+          "status": 403,
+          "contentType": "application/json",
+          "tamanho": 30,
+          "sha256": "997d54a047c1b5bd675d5cbd183cf95cfcfe3ef71d75d14e7fd75888eb9588bd"
+        },
+        {
+          "url": "https://api.manus.im/api/user_behavior/batch_create_event_v2",
+          "metodo": "POST",
+          "tipo": "ping",
+          "status": 200,
+          "contentType": "",
+          "envio": "{\"events\":[{\"event_name\":\"session_file_view\",\"ext_data\":{\"type\":\"space\",\"url\":\"https://fronteirasul-fmudazpm.manus.space/\"},\"event_at\":\"2026-11-11T18:08:50.847Z\"},{\"event_name\":\"manus_space_show\",\"ext_data\":{\"url\":\"https://fronteirasul-fmudazpm.manus.space/\"},\"event_at\":\"2026-11-11T18:08:50.847Z\"}],",
+          "tamanho": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "url": "https://sr-client-cfg.amplitude.com/config/46ac3f9abb41dd2d17a5785e052bc6d3?config_group=browser",
+          "metodo": "GET",
+          "tipo": "fetch",
+          "status": 403,
+          "contentType": "application/json",
+          "tamanho": 30,
+          "sha256": "997d54a047c1b5bd675d5cbd183cf95cfcfe3ef71d75d14e7fd75888eb9588bd"
+        },
+        {
+          "url": "https://sr-client-cfg.amplitude.com/config/46ac3f9abb41dd2d17a5785e052bc6d3?config_group=browser",
+          "metodo": "GET",
+          "tipo": "fetch",
+          "status": 403,
+          "contentType": "application/json",
+          "tamanho": 30,
+          "sha256": "997d54a047c1b5bd675d5cbd183cf95cfcfe3ef71d75d14e7fd75888eb9588bd"
+        }
+      ],
+      "cliques": []
+    }
+  ],
+  "todosOsRecursos": [
+    {
+      "url": "https://fronteirasul-fmudazpm.manus.space/",
+      "mesmoSite": true,
+      "estado": "salvo",
+      "destino": "site/index.html",
+      "status": 200,
+      "contentType": "text/html; charset=utf-8",
+      "tamanho": 3613,
+      "sha256": "6d422389b72b9b05d4a6616c12405406e0d84e46dba3b85839695f283e55e675",
+      "cabecalhos": {
+        "content-type": "text/html; charset=utf-8",
+        "cache-control": "no-cache, no-store, must-revalidate"
+      },
+      "confereComNavegador": true,
+      "por": [
+        "pagina pedida",
+        "https://fronteirasul-fmudazpm.manus.space/",
+        "https://fronteirasul-fmudazpm.manus.space/convite/",
+        "https://fronteirasul-fmudazpm.manus.space/sitemap.xml"
+      ]
+    },
+    {
+      "url": "https://fronteirasul-fmudazpm.manus.space/fronteira-sul-convite-preview.jpg",
+      "mesmoSite": true,
+      "estado": "salvo",
+      "destino": "site/fronteira-sul-convite-preview.jpg",
+      "status": 200,
+      "contentType": "image/jpeg",
+      "tamanho": 369138,
+      "sha256": "07584c62ac7cd814c7903758838c6bd9792b79e84357e5134e2751601b52a2dc",
+      "cabecalhos": {
+        "content-type": "image/jpeg",
+        "cache-control": "max-age=7776000"
+      },
+      "confereComNavegador": true,
+      "por": [
+        "https://fronteirasul-fmudazpm.manus.space/",
+        "https://fronteirasul-fmudazpm.manus.space/convite/",
+        "navegador (convite-desktop)",
+        "navegador (convite-movel)"
+      ]
+    },
+    {
+      "url": "https://fronteirasul-fmudazpm.manus.space/assets/index-FbaU4KfD.js",
+      "mesmoSite": true,
+      "estado": "salvo",
+      "destino": "site/assets/index-FbaU4KfD.js",
+      "status": 200,
+      "contentType": "text/javascript; charset=utf-8",
+      "tamanho": 473107,
+      "sha256": "de95a285ca5e0ac9a2beb86d26fd53e92b9fe18e72d02fd556b17ca4046e0e24",
+      "cabecalhos": {
+        "content-type": "text/javascript; charset=utf-8",
+        "cache-control": "max-age=7776000"
+      },
+      "confereComNavegador": true,
+      "por": [
+        "https://fronteirasul-fmudazpm.manus.space/",
+        "navegador (regras-desktop)",
+        "navegador (regras-movel)"
+      ]
+    },
+    {
+      "url": "https://fronteirasul-fmudazpm.manus.space/assets/index-DMP8NyHf.css",
+      "mesmoSite": true,
+      "estado": "salvo",
+      "destino": "site/assets/index-DMP8NyHf.css",
+      "status": 200,
+      "contentType": "text/css; charset=utf-8",
+      "tamanho": 123524,
+      "sha256": "19d4496e133becebc2cc6e75a748674232e867e2cb0bda9dbc5882c59e7ab255",
+      "cabecalhos": {
+        "content-type": "text/css; charset=utf-8",
+        "cache-control": "max-age=7776000"
+      },
+      "confereComNavegador": true,
+      "por": [
+        "https://fronteirasul-fmudazpm.manus.space/",
+        "navegador (regras-desktop)",
+        "navegador (regras-movel)"
+      ]
+    },
+    {
+      "url": "https://fronteirasul-fmudazpm.manus.space/__manus/pwa/manifest.webmanifest",
+      "mesmoSite": true,
+      "estado": "salvo",
+      "destino": "site/__manus/pwa/manifest.webmanifest",
+      "status": 200,
+      "contentType": "application/manifest+json; charset=utf-8",
+      "tamanho": 345,
+      "sha256": "7c12b59d22e8568319dfc8195f1bbfe271e51185b3221c0ac906278f283bca90",
+      "cabecalhos": {
+        "content-type": "application/manifest+json; charset=utf-8",
+        "cache-control": "no-cache, no-store, must-revalidate"
+      },
+      "por": [
+        "https://fronteirasul-fmudazpm.manus.space/",
+        "https://fronteirasul-fmudazpm.manus.space/convite/"
+      ]
+    },
+    {
+      "url": "https://fronteirasul-fmudazpm.manus.space/api/platform/config.js",
+      "mesmoSite": true,
+      "estado": "descartado",
+      "motivo": "HTTP 500",
+      "status": 500,
+      "contentType": "text/html; charset=UTF-8",
+      "tamanho": 27291,
+      "sha256": "619dabfddc3540e2f45e63375a838ae19d3ddf075fc5e9428f93cdf428c8c4be",
+      "cabecalhos": {
+        "content-type": "text/html; charset=UTF-8",
+        "cache-control": "no-cache, no-store, must-revalidate"
+      },
+      "confereComNavegador": false,
+      "por": [
+        "https://fronteirasul-fmudazpm.manus.space/",
+        "navegador (regras-desktop)",
+        "navegador (regras-movel)"
+      ]
+    },
+    {
+      "url": "https://files.manuscdn.com/manus-space-dispatcher/spaceEditor-CDmbg89D.js",
+      "mesmoSite": false,
+      "estado": "referencia",
+      "destino": "_copia/saida/externos/files.manuscdn.com/manus-space-dispatcher/spaceEditor-CDmbg89D.js",
+      "status": 200,
+      "contentType": "application/javascript",
+      "tamanho": 736291,
+      "sha256": "cb0e5a06b30c099fc50f037cd3094da6fa7fa4e02da70b1bc4248a4554e230a6",
+      "cabecalhos": {
+        "content-type": "application/javascript",
+        "cache-control": "public,max-age=31536000,immutable",
+        "etag": "W/\"b3c0a2a420e46be1d308c86f56e7d410\"",
+        "last-modified": "Wed, 04 Nov 2026 06:57:33 GMT"
+      },
+      "por": [
+        "https://fronteirasul-fmudazpm.manus.space/",
+        "https://fronteirasul-fmudazpm.manus.space/convite/",
+        "navegador (convite-desktop)",
+        "navegador (convite-movel)"
+      ]
+    },
+    {
+      "url": "https://plausible.io/js/script.file-downloads.hash.outbound-links.pageview-props.revenue.tagged-events.js",
+      "mesmoSite": false,
+      "estado": "referencia",
+      "destino": "_copia/saida/externos/plausible.io/js/script.file-downloads.hash.outbound-links.pageview-props.revenue.tagged-events.js",
+      "status": 200,
+      "contentType": "application/javascript",
+      "tamanho": 5052,
+      "sha256": "11a728321cfeacecdbf76afa55ec545dcf2bd1411e1579e3aa003029c236ca5b",
+      "cabecalhos": {
+        "content-type": "application/javascript",
+        "cache-control": "public, max-age=86400, must-revalidate",
+        "access-control-allow-origin": "*"
+      },
+      "por": [
+        "https://fronteirasul-fmudazpm.manus.space/",
+        "https://fronteirasul-fmudazpm.manus.space/convite/",
+        "navegador (convite-desktop)",
+        "navegador (convite-movel)"
+      ]
+    },
+    {
+      "url": "https://manus-analytics.com/script.js",
+      "mesmoSite": false,
+      "estado": "referencia",
+      "destino": "_copia/saida/externos/manus-analytics.com/script.js",
+      "status": 200,
+      "contentType": "application/javascript; charset=UTF-8",
+      "tamanho": 2618,
+      "sha256": "7eba89b02651cb67beefeb8aed5d39402f7994b226114c2c639ae354dc1a94f2",
+      "cabecalhos": {
+        "content-type": "application/javascript; charset=UTF-8",
+        "cache-control": "public, max-age=86400, must-revalidate",
+        "etag": "W/\"a3a-1a1c5998ca8\"",
+        "last-modified": "Tue, 10 Nov 2026 13:15:37 GMT",
+        "access-control-allow-origin": "*"
+      },
+      "por": [
+        "https://fronteirasul-fmudazpm.manus.space/",
+        "https://fronteirasul-fmudazpm.manus.space/convite/",
+        "navegador (convite-desktop)",
+        "navegador (convite-movel)"
+      ]
+    },
+    {
+      "url": "https://fronteirasul-fmudazpm.manus.space/convite/",
+      "mesmoSite": true,
+      "estado": "salvo",
+      "destino": "site/convite/index.html",
+      "status": 200,
+      "contentType": "text/html; charset=utf-8",
+      "tamanho": 5934,
+      "sha256": "f25b25b75f1be01fb9a5722a8762355783223107bf6014c100642f86003d184c",
+      "cabecalhos": {
+        "content-type": "text/html; charset=utf-8",
+        "cache-control": "no-cache, no-store, must-revalidate"
+      },
+      "por": [
+        "pagina pedida",
+        "https://fronteirasul-fmudazpm.manus.space/convite/"
+      ]
+    },
+    {
+      "url": "https://fronteirasul-fmudazpm.manus.space/convite/?v=c14b569",
+      "mesmoSite": true,
+      "estado": "mesmo-arquivo",
+      "destino": "site/convite/index.html",
+      "status": 200,
+      "contentType": "text/html; charset=utf-8",
+      "tamanho": 5934,
+      "sha256": "dac0c7e79363b8b49a73cf0f46fb1eaee0930bc7166d948ef04d8b8f5fd1046c",
+      "cabecalhos": {
+        "content-type": "text/html; charset=utf-8",
+        "cache-control": "no-cache, no-store, must-revalidate"
+      },
+      "igualA": "https://fronteirasul-fmudazpm.manus.space/convite/",
+      "confereComNavegador": true,
+      "por": [
+        "pagina pedida",
+        "navegador (convite-desktop)",
+        "navegador (convite-movel)"
+      ]
+    },
+    {
+      "url": "https://fronteirasul-fmudazpm.manus.space/favicon.ico",
+      "mesmoSite": true,
+      "estado": "salvo",
+      "destino": "site/favicon.ico",
+      "status": 200,
+      "contentType": "image/webp",
+      "tamanho": 244246,
+      "sha256": "6ba2906093fad36d2ea6e877d9653757923c63adab47ec51be67ab4468234091",
+      "cabecalhos": {
+        "content-type": "image/webp",
+        "cache-control": "max-age=31536000",
+        "content-disposition": "attachment",
+        "etag": "\"74d5bd1496870ec974165017513f8486\"",
+        "last-modified": "Wed, 28 Oct 2026 21:21:50 GMT"
+      },
+      "redirecionamentos": [
+        {
+          "de": "https://fronteirasul-fmudazpm.manus.space/favicon.ico",
+          "status": 302,
+          "para": "https://files.manuscdn.com/user_upload_by_module/session_file/310519663938856543/ZRyVDfBpECjhaIYs.webp"
+        }
+      ],
+      "por": [
+        "caminho padrao",
+        "https://fronteirasul-fmudazpm.manus.space/__manus/pwa/manifest.webmanifest",
+        "navegador (convite-desktop)",
+        "navegador (convite-movel)"
+      ]
+    },
+    {
+      "url": "https://fronteirasul-fmudazpm.manus.space/robots.txt",
+      "mesmoSite": true,
+      "estado": "salvo",
+      "destino": "site/robots.txt",
+      "status": 200,
+      "contentType": "text/plain",
+      "tamanho": 102,
+      "sha256": "753ab454d2bccaee6f81761e1b407ce6e0034d8377d3341ceddb502af87a871f",
+      "cabecalhos": {
+        "content-type": "text/plain",
+        "x-manus-seo-source": "generated"
+      },
+      "candidato": true,
+      "por": [
+        "caminho padrao"
+      ]
+    },
+    {
+      "url": "https://fronteirasul-fmudazpm.manus.space/sitemap.xml",
+      "mesmoSite": true,
+      "estado": "salvo",
+      "destino": "site/sitemap.xml",
+      "status": 200,
+      "contentType": "application/xml",
+      "tamanho": 220,
+      "sha256": "a0a2f07226984cf33b489a16c42f166f62f2c3098cf4cd97a7346d007a7fa32a",
+      "cabecalhos": {
+        "content-type": "application/xml",
+        "x-manus-seo-source": "generated"
+      },
+      "candidato": true,
+      "por": [
+        "caminho padrao",
+        "https://fronteirasul-fmudazpm.manus.space/robots.txt"
+      ]
+    },
+    {
+      "url": "https://fronteirasul-fmudazpm.manus.space/favicon.png",
+      "mesmoSite": true,
+      "estado": "descartado",
+      "motivo": "HTTP 404",
+      "status": 404,
+      "contentType": "",
+      "tamanho": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "cabecalhos": {},
+      "candidato": true,
+      "por": [
+        "caminho padrao"
+      ]
+    },
+    {
+      "url": "https://fronteirasul-fmudazpm.manus.space/favicon.svg",
+      "mesmoSite": true,
+      "estado": "descartado",
+      "motivo": "HTTP 404",
+      "status": 404,
+      "contentType": "",
+      "tamanho": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "cabecalhos": {},
+      "candidato": true,
+      "por": [
+        "caminho padrao"
+      ]
+    },
+    {
+      "url": "https://fronteirasul-fmudazpm.manus.space/apple-touch-icon.png",
+      "mesmoSite": true,
+      "estado": "descartado",
+      "motivo": "HTTP 404",
+      "status": 404,
+      "contentType": "",
+      "tamanho": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "cabecalhos": {},
+      "candidato": true,
+      "por": [
+        "caminho padrao"
+      ]
+    },
+    {
+      "url": "https://fronteirasul-fmudazpm.manus.space/apple-touch-icon-precomposed.png",
+      "mesmoSite": true,
+      "estado": "descartado",
+      "motivo": "HTTP 404",
+      "status": 404,
+      "contentType": "",
+      "tamanho": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "cabecalhos": {},
+      "candidato": true,
+      "por": [
+        "caminho padrao"
+      ]
+    },
+    {
+      "url": "https://fronteirasul-fmudazpm.manus.space/manifest.json",
+      "mesmoSite": true,
+      "estado": "descartado",
+      "motivo": "HTTP 404",
+      "status": 404,
+      "contentType": "",
+      "tamanho": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "cabecalhos": {},
+      "candidato": true,
+      "por": [
+        "caminho padrao"
+      ]
+    },
+    {
+      "url": "https://fronteirasul-fmudazpm.manus.space/manifest.webmanifest",
+      "mesmoSite": true,
+      "estado": "descartado",
+      "motivo": "HTTP 404",
+      "status": 404,
+      "contentType": "",
+      "tamanho": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "cabecalhos": {},
+      "candidato": true,
+      "por": [
+        "caminho padrao"
+      ]
+    },
+    {
+      "url": "https://fronteirasul-fmudazpm.manus.space/site.webmanifest",
+      "mesmoSite": true,
+      "estado": "descartado",
+      "motivo": "HTTP 404",
+      "status": 404,
+      "contentType": "",
+      "tamanho": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "cabecalhos": {},
+      "candidato": true,
+      "por": [
+        "caminho padrao"
+      ]
+    },
+    {
+      "url": "https://fronteirasul-fmudazpm.manus.space/sw.js",
+      "mesmoSite": true,
+      "estado": "descartado",
+      "motivo": "HTTP 404",
+      "status": 404,
+      "contentType": "",
+      "tamanho": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "cabecalhos": {},
+      "candidato": true,
+      "por": [
+        "caminho padrao"
+      ]
+    },
+    {
+      "url": "https://fronteirasul-fmudazpm.manus.space/service-worker.js",
+      "mesmoSite": true,
+      "estado": "descartado",
+      "motivo": "HTTP 404",
+      "status": 404,
+      "contentType": "",
+      "tamanho": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "cabecalhos": {},
+      "candidato": true,
+      "por": [
+        "caminho padrao"
+      ]
+    },
+    {
+      "url": "https://fronteirasul-fmudazpm.manus.space/browserconfig.xml",
+      "mesmoSite": true,
+      "estado": "descartado",
+      "motivo": "HTTP 404",
+      "status": 404,
+      "contentType": "",
+      "tamanho": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "cabecalhos": {},
+      "candidato": true,
+      "por": [
+        "caminho padrao"
+      ]
+    },
+    {
+      "url": "https://fronteirasul-fmudazpm.manus.space/humans.txt",
+      "mesmoSite": true,
+      "estado": "descartado",
+      "motivo": "HTTP 404",
+      "status": 404,
+      "contentType": "",
+      "tamanho": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "cabecalhos": {},
+      "candidato": true,
+      "por": [
+        "caminho padrao"
+      ]
+    },
+    {
+      "url": "https://fronteirasul-fmudazpm.manus.space/404.html",
+      "mesmoSite": true,
+      "estado": "rota-do-app",
+      "motivo": "rota do aplicativo: o servidor devolve o index.html da raiz",
+      "status": 200,
+      "contentType": "text/html; charset=utf-8",
+      "tamanho": 3613,
+      "sha256": "02ba6788533bb0dde19307b496a2d9214c9922d15366769a578bb28dc3e4242c",
+      "cabecalhos": {
+        "content-type": "text/html; charset=utf-8",
+        "cache-control": "no-cache, no-store, must-revalidate"
+      },
+      "candidato": true,
+      "por": [
+        "caminho padrao"
+      ]
+    },
+    {
+      "url": "https://fronteirasul-fmudazpm.manus.space/.well-known/security.txt",
+      "mesmoSite": true,
+      "estado": "descartado",
+      "motivo": "HTTP 404",
+      "status": 404,
+      "contentType": "",
+      "tamanho": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "cabecalhos": {},
+      "candidato": true,
+      "por": [
+        "caminho padrao"
+      ]
+    },
+    {
+      "url": "https://fronteirasul-fmudazpm.manus.space/assets/index-DMP8NyHf.css.map",
+      "mesmoSite": true,
+      "estado": "descartado",
+      "motivo": "HTTP 404",
+      "status": 404,
+      "contentType": "",
+      "tamanho": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "cabecalhos": {},
+      "candidato": true,
+      "por": [
+        "https://fronteirasul-fmudazpm.manus.space/assets/index-DMP8NyHf.css"
+      ]
+    },
+    {
+      "url": "https://fronteirasul-fmudazpm.manus.space/node_modules/.pnpm/@oxc-project+runtime@0.72.2/node_modules/@oxc-project/runtime/src/helpers/typeof.js",
+      "mesmoSite": true,
+      "estado": "descartado",
+      "motivo": "HTTP 404",
+      "status": 404,
+      "contentType": "",
+      "tamanho": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "cabecalhos": {},
+      "candidato": true,
+      "por": [
+        "https://fronteirasul-fmudazpm.manus.space/assets/index-FbaU4KfD.js"
+      ]
+    },
+    {
+      "url": "https://fronteirasul-fmudazpm.manus.space/node_modules/.pnpm/@oxc-project+runtime@0.72.2/node_modules/@oxc-project/runtime/src/helpers/toPrimitive.js",
+      "mesmoSite": true,
+      "estado": "descartado",
+      "motivo": "HTTP 404",
+      "status": 404,
+      "contentType": "",
+      "tamanho": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "cabecalhos": {},
+      "candidato": true,
+      "por": [
+        "https://fronteirasul-fmudazpm.manus.space/assets/index-FbaU4KfD.js"
+      ]
+    },
+    {
+      "url": "https://fronteirasul-fmudazpm.manus.space/node_modules/.pnpm/@oxc-project+runtime@0.72.2/node_modules/@oxc-project/runtime/src/helpers/toPropertyKey.js",
+      "mesmoSite": true,
+      "estado": "descartado",
+      "motivo": "HTTP 404",
+      "status": 404,
+      "contentType": "",
+      "tamanho": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "cabecalhos": {},
+      "candidato": true,
+      "por": [
+        "https://fronteirasul-fmudazpm.manus.space/assets/index-FbaU4KfD.js"
+      ]
+    },
+    {
+      "url": "https://fronteirasul-fmudazpm.manus.space/node_modules/.pnpm/@oxc-project+runtime@0.72.2/node_modules/@oxc-project/runtime/src/helpers/defineProperty.js",
+      "mesmoSite": true,
+      "estado": "descartado",
+      "motivo": "HTTP 404",
+      "status": 404,
+      "contentType": "",
+      "tamanho": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "cabecalhos": {},
+      "candidato": true,
+      "por": [
+        "https://fronteirasul-fmudazpm.manus.space/assets/index-FbaU4KfD.js"
+      ]
+    },
+    {
+      "url": "https://fronteirasul-fmudazpm.manus.space/node_modules/.pnpm/@oxc-project+runtime@0.72.2/node_modules/@oxc-project/runtime/src/helpers/objectSpread2.js",
+      "mesmoSite": true,
+      "estado": "descartado",
+      "motivo": "HTTP 404",
+      "status": 404,
+      "contentType": "",
+      "tamanho": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "cabecalhos": {},
+      "candidato": true,
+      "por": [
+        "https://fronteirasul-fmudazpm.manus.space/assets/index-FbaU4KfD.js"
+      ]
+    },
+    {
+      "url": "https://fronteirasul-fmudazpm.manus.space/node_modules/.pnpm/@oxc-project+runtime@0.72.2/node_modules/@oxc-project/runtime/src/helpers/objectWithoutPropertiesLoose.js",
+      "mesmoSite": true,
+      "estado": "descartado",
+      "motivo": "HTTP 404",
+      "status": 404,
+      "contentType": "",
+      "tamanho": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "cabecalhos": {},
+      "candidato": true,
+      "por": [
+        "https://fronteirasul-fmudazpm.manus.space/assets/index-FbaU4KfD.js"
+      ]
+    },
+    {
+      "url": "https://fronteirasul-fmudazpm.manus.space/node_modules/.pnpm/@oxc-project+runtime@0.72.2/node_modules/@oxc-project/runtime/src/helpers/objectWithoutProperties.js",
+      "mesmoSite": true,
+      "estado": "descartado",
+      "motivo": "HTTP 404",
+      "status": 404,
+      "contentType": "",
+      "tamanho": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "cabecalhos": {},
+      "candidato": true,
+      "por": [
+        "https://fronteirasul-fmudazpm.manus.space/assets/index-FbaU4KfD.js"
+      ]
+    },
+    {
+      "url": "https://fronteirasul-fmudazpm.manus.space/node_modules/.pnpm/@oxc-project+runtime@0.72.2/node_modules/@oxc-project/runtime/src/helpers/asyncIterator.js",
+      "mesmoSite": true,
+      "estado": "descartado",
+      "motivo": "HTTP 404",
+      "status": 404,
+      "contentType": "",
+      "tamanho": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "cabecalhos": {},
+      "candidato": true,
+      "por": [
+        "https://fronteirasul-fmudazpm.manus.space/assets/index-FbaU4KfD.js"
+      ]
+    },
+    {
+      "url": "https://fronteirasul-fmudazpm.manus.space/node_modules/.pnpm/@oxc-project+runtime@0.72.2/node_modules/@oxc-project/runtime/src/helpers/usingCtx.js",
+      "mesmoSite": true,
+      "estado": "descartado",
+      "motivo": "HTTP 404",
+      "status": 404,
+      "contentType": "",
+      "tamanho": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "cabecalhos": {},
+      "candidato": true,
+      "por": [
+        "https://fronteirasul-fmudazpm.manus.space/assets/index-FbaU4KfD.js"
+      ]
+    },
+    {
+      "url": "https://fronteirasul-fmudazpm.manus.space/node_modules/.pnpm/@oxc-project+runtime@0.72.2/node_modules/@oxc-project/runtime/src/helpers/OverloadYield.js",
+      "mesmoSite": true,
+      "estado": "descartado",
+      "motivo": "HTTP 404",
+      "status": 404,
+      "contentType": "",
+      "tamanho": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "cabecalhos": {},
+      "candidato": true,
+      "por": [
+        "https://fronteirasul-fmudazpm.manus.space/assets/index-FbaU4KfD.js"
+      ]
+    },
+    {
+      "url": "https://fronteirasul-fmudazpm.manus.space/node_modules/.pnpm/@oxc-project+runtime@0.72.2/node_modules/@oxc-project/runtime/src/helpers/awaitAsyncGenerator.js",
+      "mesmoSite": true,
+      "estado": "descartado",
+      "motivo": "HTTP 404",
+      "status": 404,
+      "contentType": "",
+      "tamanho": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "cabecalhos": {},
+      "candidato": true,
+      "por": [
+        "https://fronteirasul-fmudazpm.manus.space/assets/index-FbaU4KfD.js"
+      ]
+    },
+    {
+      "url": "https://fronteirasul-fmudazpm.manus.space/node_modules/.pnpm/@oxc-project+runtime@0.72.2/node_modules/@oxc-project/runtime/src/helpers/wrapAsyncGenerator.js",
+      "mesmoSite": true,
+      "estado": "descartado",
+      "motivo": "HTTP 404",
+      "status": 404,
+      "contentType": "",
+      "tamanho": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "cabecalhos": {},
+      "candidato": true,
+      "por": [
+        "https://fronteirasul-fmudazpm.manus.space/assets/index-FbaU4KfD.js"
+      ]
+    },
+    {
+      "url": "https://fronteirasul-fmudazpm.manus.space/manus-storage/fronteira-sul-logo_1b1b4c2d.webp",
+      "mesmoSite": true,
+      "estado": "salvo",
+      "destino": "site/manus-storage/fronteira-sul-logo_1b1b4c2d.webp",
+      "status": 200,
+      "contentType": "image/webp",
+      "tamanho": 244246,
+      "sha256": "6ba2906093fad36d2ea6e877d9653757923c63adab47ec51be67ab4468234091",
+      "cabecalhos": {
+        "content-type": "image/webp",
+        "cache-control": "max-age=31536000",
+        "etag": "\"74d5bd1496870ec974165017513f8486\"",
+        "last-modified": "Wed, 28 Oct 2026 21:21:50 GMT"
+      },
+      "redirecionamentos": [
+        {
+          "de": "https://fronteirasul-fmudazpm.manus.space/manus-storage/fronteira-sul-logo_1b1b4c2d.webp",
+          "status": 307,
+          "para": "https://d36hbw14aib5lz.cloudfront.net/310519663938856543/FmUDAzpMr2fDkhG5Nf2vYF/fronteira-sul-logo_1b1b4c2d.webp?…"
+        }
+      ],
+      "por": [
+        "https://fronteirasul-fmudazpm.manus.space/assets/index-FbaU4KfD.js",
+        "navegador (regras-desktop)",
+        "navegador (regras-movel)"
+      ]
+    },
+    {
+      "url": "https://fronteirasul-fmudazpm.manus.space/fronteira-sul-logo.webp",
+      "mesmoSite": true,
+      "estado": "salvo",
+      "destino": "site/fronteira-sul-logo.webp",
+      "status": 200,
+      "contentType": "image/webp",
+      "tamanho": 244246,
+      "sha256": "6ba2906093fad36d2ea6e877d9653757923c63adab47ec51be67ab4468234091",
+      "cabecalhos": {
+        "content-type": "image/webp",
+        "cache-control": "max-age=7776000"
+      },
+      "candidato": true,
+      "por": [
+        "https://fronteirasul-fmudazpm.manus.space/assets/index-FbaU4KfD.js"
+      ]
+    },
+    {
+      "url": "https://fronteirasul-fmudazpm.manus.space/assets/index-FbaU4KfD.js.map",
+      "mesmoSite": true,
+      "estado": "descartado",
+      "motivo": "HTTP 404",
+      "status": 404,
+      "contentType": "",
+      "tamanho": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "cabecalhos": {},
+      "candidato": true,
+      "por": [
+        "https://fronteirasul-fmudazpm.manus.space/assets/index-FbaU4KfD.js"
+      ]
+    },
+    {
+      "url": "https://files.manuscdn.com/user_upload_by_module/session_file/310519663938856543/ZRyVDfBpECjhaIYs.webp",
+      "mesmoSite": false,
+      "estado": "referencia",
+      "destino": "_copia/saida/externos/files.manuscdn.com/user_upload_by_module/session_file/310519663938856543/ZRyVDfBpECjhaIYs.webp",
+      "status": 200,
+      "contentType": "image/webp",
+      "tamanho": 244246,
+      "sha256": "6ba2906093fad36d2ea6e877d9653757923c63adab47ec51be67ab4468234091",
+      "cabecalhos": {
+        "content-type": "image/webp",
+        "cache-control": "max-age=31536000",
+        "content-disposition": "attachment",
+        "etag": "\"74d5bd1496870ec974165017513f8486\"",
+        "last-modified": "Wed, 28 Oct 2026 21:21:50 GMT"
+      },
+      "por": [
+        "navegador (convite-desktop)",
+        "navegador (convite-movel)",
+        "navegador (regras-desktop)",
+        "navegador (regras-movel)"
+      ]
+    },
+    {
+      "url": "https://d36hbw14aib5lz.cloudfront.net/310519663938856543/FmUDAzpMr2fDkhG5Nf2vYF/fronteira-sul-logo_1b1b4c2d.webp?…",
+      "mesmoSite": false,
+      "estado": "referencia",
+      "destino": "_copia/saida/externos/d36hbw14aib5lz.cloudfront.net/310519663938856543/FmUDAzpMr2fDkhG5Nf2vYF/fronteira-sul-logo_1b1b4c2d__q6ae74e51.webp",
+      "status": 200,
+      "contentType": "image/webp",
+      "tamanho": 244246,
+      "sha256": "6ba2906093fad36d2ea6e877d9653757923c63adab47ec51be67ab4468234091",
+      "cabecalhos": {
+        "content-type": "image/webp",
+        "cache-control": "max-age=31536000",
+        "etag": "\"74d5bd1496870ec974165017513f8486\"",
+        "last-modified": "Wed, 28 Oct 2026 21:21:50 GMT"
+      },
+      "por": [
+        "navegador (regras-desktop)"
+      ]
+    },
+    {
+      "url": "https://d36hbw14aib5lz.cloudfront.net/310519663938856543/FmUDAzpMr2fDkhG5Nf2vYF/fronteira-sul-logo_1b1b4c2d.webp?…",
+      "mesmoSite": false,
+      "estado": "referencia",
+      "destino": "_copia/saida/externos/d36hbw14aib5lz.cloudfront.net/310519663938856543/FmUDAzpMr2fDkhG5Nf2vYF/fronteira-sul-logo_1b1b4c2d__q74a556a0.webp",
+      "status": 200,
+      "contentType": "image/webp",
+      "tamanho": 244246,
+      "sha256": "6ba2906093fad36d2ea6e877d9653757923c63adab47ec51be67ab4468234091",
+      "cabecalhos": {
+        "content-type": "image/webp",
+        "cache-control": "max-age=31536000",
+        "etag": "\"74d5bd1496870ec974165017513f8486\"",
+        "last-modified": "Wed, 28 Oct 2026 21:21:50 GMT"
+      },
+      "por": [
+        "navegador (regras-movel)"
+      ]
+    }
+  ]
+}

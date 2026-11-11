@@ -1,83 +1,24 @@
-== ambiente ==
-Wed Nov 11 17:48:44 UTC 2026
-v22.23.4
-CHROME_BIN=/usr/bin/google-chrome
-google-chrome -> /usr/bin/google-chrome :: Google Chrome 156.0.8078.79 
-google-chrome-stable -> /usr/bin/google-chrome-stable :: Google Chrome 156.0.8078.79 
-chromium -> /usr/bin/chromium :: Chromium 156.0.8078.0 
-chromium-browser -> /usr/bin/chromium-browser :: Chromium 156.0.8078.0 
-fontes instaladas: 53
-== paginas ==
-convite-v | https://fronteirasul-fmudazpm.manus.space/convite/?v=c14b569 | 200 | text/html; charset=utf-8 | 2302 bytes | redirect= | sha256=ccc436828ee31cb4
-convite-v-2 | https://fronteirasul-fmudazpm.manus.space/convite/?v=c14b569 | 200 | text/html; charset=utf-8 | 2334 bytes | redirect= | sha256=6409903feb2fa887
-convite | https://fronteirasul-fmudazpm.manus.space/convite/ | 200 | text/html; charset=utf-8 | 2301 bytes | redirect= | sha256=415b4eef29ae95b2
-convite-semBarra | https://fronteirasul-fmudazpm.manus.space/convite | 200 | text/html; charset=utf-8 | 2302 bytes | redirect= | sha256=8449116f9f116620
-convite-index | https://fronteirasul-fmudazpm.manus.space/convite/index.html | 200 | text/html; charset=utf-8 | 2307 bytes | redirect= | sha256=9bb1e7003b4a31ff
-raiz | https://fronteirasul-fmudazpm.manus.space/ | 200 | text/html; charset=utf-8 | 1327 bytes | redirect= | sha256=a6046c25ece359f4
-raiz-2 | https://fronteirasul-fmudazpm.manus.space/ | 200 | text/html; charset=utf-8 | 1325 bytes | redirect= | sha256=3709c4b2115053eb
-raiz-index | https://fronteirasul-fmudazpm.manus.space/index.html | 200 | text/html; charset=utf-8 | 1332 bytes | redirect= | sha256=616d832b5dd2ce22
-robots | https://fronteirasul-fmudazpm.manus.space/robots.txt | 200 | text/plain | 109 bytes | redirect= | sha256=753ab454d2bccaee
-sitemap | https://fronteirasul-fmudazpm.manus.space/sitemap.xml | 200 | application/xml | 188 bytes | redirect= | sha256=fa4108aa2c87c770
-favicon | https://fronteirasul-fmudazpm.manus.space/favicon.ico | 302 |  | 0 bytes | redirect=https://files.manuscdn.com/user_upload_by_module/session_file/310519663938856543/ZRyVDfBpECjhaIYs.webp | sha256=e3b0c44298fc1c14
-manifest | https://fronteirasul-fmudazpm.manus.space/manifest.json | 404 |  | 0 bytes | redirect= | sha256=e3b0c44298fc1c14
-preview-jpg | https://fronteirasul-fmudazpm.manus.space/fronteira-sul-convite-preview.jpg | 200 | image/jpeg | 369138 bytes | redirect= | sha256=07584c62ac7cd814
-logo-webp | https://fronteirasul-fmudazpm.manus.space/manus-storage/fronteira-sul-logo_1b1b4c2d.webp | 307 |  | 0 bytes | redirect=https://d36hbw14aib5lz.cloudfront.net/310519663938856543/FmUDAzpMr2fDkhG5Nf2vYF/fronteira-sul-logo_1b1b4c2d.webp?Expires=1794422932&Signature=pt8HZn-7JpbfkQSSDTOCoEX8ZI7gi92w-hci~Enkun9sqgi4YYWeaqtITKaXYJV1OGmnXuX0-8Entl32UYoMO~eealOagxBqB3XdtevvwbWBDGzhkmHq6VCbsIw3rN-Wx2gk3Sdca35lZJl8tU50uoIQEHERNJZegnsK2sMR6qb-rKjiCOFCq2flr6aQbaEPhobFsj3~oaVX8CzijbbAm3fRQ9yU66KB0AqXmOrrMETwptGEU6igw0OWlerQI~tHtmfM2De7RMUCGRZDw-K9VizArpuD2-F1bePyjb74n4-tarVxKC2aVYxCCLaA1we4uY3IBJs6CFr8je1N8KKb6w__&Key-Pair-Id=K321XI5W1LNKUL | sha256=e3b0c44298fc1c14
-== caminhos inexistentes (comportamento do servidor original) ==
-inexistente-rota | https://fronteirasul-fmudazpm.manus.space/nao-existe-xyz123 | 200 | text/html; charset=utf-8 | 1332 bytes | redirect= | sha256=c5b6f314ee9f3d27
-inexistente-barra | https://fronteirasul-fmudazpm.manus.space/nao-existe-xyz123/ | 200 | text/html; charset=utf-8 | 1326 bytes | redirect= | sha256=5bcc258082c425c0
-inexistente-png | https://fronteirasul-fmudazpm.manus.space/nao-existe-xyz123.png | 404 |  | 0 bytes | redirect= | sha256=e3b0c44298fc1c14
-inexistente-js | https://fronteirasul-fmudazpm.manus.space/assets/nao-existe-xyz123.js | 404 |  | 0 bytes | redirect= | sha256=e3b0c44298fc1c14
-inexistente-sub | https://fronteirasul-fmudazpm.manus.space/convite/nao-existe-xyz123 | 200 | text/html; charset=utf-8 | 1327 bytes | redirect= | sha256=40cc5ab16783b508
-== outros agentes ==
-convite-discord | https://fronteirasul-fmudazpm.manus.space/convite/?v=c14b569 | 200 | text/html; charset=utf-8 | 2301 bytes | redirect= | sha256=e7e176b50ce5ed31
-raiz-googlebot | https://fronteirasul-fmudazpm.manus.space/ | 200 | text/html; charset=utf-8 | 1326 bytes | redirect= | sha256=f25d98d44f154d64
-raiz-curl | https://fronteirasul-fmudazpm.manus.space/ | 200 | text/html; charset=utf-8 | 1298 bytes | redirect= | sha256=c2923783abc1acd5
-== fim ==
-total 552
-drwxr-xr-x 2 runner runner   4096 Nov 11 17:48 .
-drwxr-xr-x 3 runner runner   4096 Nov 11 17:48 ..
--rw-r--r-- 1 runner runner    354 Nov 11 17:48 convite-discord.cabecalhos.txt
--rw-r--r-- 1 runner runner   5934 Nov 11 17:48 convite-discord.corpo
--rw-r--r-- 1 runner runner    354 Nov 11 17:48 convite-index.cabecalhos.txt
--rw-r--r-- 1 runner runner   5934 Nov 11 17:48 convite-index.corpo
--rw-r--r-- 1 runner runner    354 Nov 11 17:48 convite-semBarra.cabecalhos.txt
--rw-r--r-- 1 runner runner   5934 Nov 11 17:48 convite-semBarra.corpo
--rw-r--r-- 1 runner runner    354 Nov 11 17:48 convite-v-2.cabecalhos.txt
--rw-r--r-- 1 runner runner   5934 Nov 11 17:48 convite-v-2.corpo
--rw-r--r-- 1 runner runner    354 Nov 11 17:48 convite-v.cabecalhos.txt
--rw-r--r-- 1 runner runner   5934 Nov 11 17:48 convite-v.corpo
--rw-r--r-- 1 runner runner    354 Nov 11 17:48 convite.cabecalhos.txt
--rw-r--r-- 1 runner runner   5934 Nov 11 17:48 convite.corpo
--rw-r--r-- 1 runner runner    341 Nov 11 17:48 favicon.cabecalhos.txt
--rw-r--r-- 1 runner runner      0 Nov 11 17:48 favicon.corpo
--rw-r--r-- 1 runner runner    354 Nov 11 17:48 inexistente-barra.cabecalhos.txt
--rw-r--r-- 1 runner runner   3613 Nov 11 17:48 inexistente-barra.corpo
--rw-r--r-- 1 runner runner    227 Nov 11 17:48 inexistente-js.cabecalhos.txt
--rw-r--r-- 1 runner runner      0 Nov 11 17:48 inexistente-js.corpo
--rw-r--r-- 1 runner runner    227 Nov 11 17:48 inexistente-png.cabecalhos.txt
--rw-r--r-- 1 runner runner      0 Nov 11 17:48 inexistente-png.corpo
--rw-r--r-- 1 runner runner    354 Nov 11 17:48 inexistente-rota.cabecalhos.txt
--rw-r--r-- 1 runner runner   3613 Nov 11 17:48 inexistente-rota.corpo
--rw-r--r-- 1 runner runner    354 Nov 11 17:48 inexistente-sub.cabecalhos.txt
--rw-r--r-- 1 runner runner   3613 Nov 11 17:48 inexistente-sub.corpo
--rw-r--r-- 1 runner runner    844 Nov 11 17:48 logo-webp.cabecalhos.txt
--rw-r--r-- 1 runner runner      0 Nov 11 17:48 logo-webp.corpo
--rw-r--r-- 1 runner runner    227 Nov 11 17:48 manifest.cabecalhos.txt
--rw-r--r-- 1 runner runner      0 Nov 11 17:48 manifest.corpo
--rw-r--r-- 1 runner runner    290 Nov 11 17:48 preview-jpg.cabecalhos.txt
--rw-r--r-- 1 runner runner 369138 Nov 11 17:48 preview-jpg.corpo
--rw-r--r-- 1 runner runner    354 Nov 11 17:48 raiz-2.cabecalhos.txt
--rw-r--r-- 1 runner runner   3613 Nov 11 17:48 raiz-2.corpo
--rw-r--r-- 1 runner runner    354 Nov 11 17:48 raiz-curl.cabecalhos.txt
--rw-r--r-- 1 runner runner   3613 Nov 11 17:48 raiz-curl.corpo
--rw-r--r-- 1 runner runner    354 Nov 11 17:48 raiz-googlebot.cabecalhos.txt
--rw-r--r-- 1 runner runner   3613 Nov 11 17:48 raiz-googlebot.corpo
--rw-r--r-- 1 runner runner    354 Nov 11 17:48 raiz-index.cabecalhos.txt
--rw-r--r-- 1 runner runner   3613 Nov 11 17:48 raiz-index.corpo
--rw-r--r-- 1 runner runner    354 Nov 11 17:48 raiz.cabecalhos.txt
--rw-r--r-- 1 runner runner   3613 Nov 11 17:48 raiz.corpo
--rw-r--r-- 1 runner runner   3871 Nov 11 17:48 resumo.txt
--rw-r--r-- 1 runner runner    289 Nov 11 17:48 robots.cabecalhos.txt
--rw-r--r-- 1 runner runner    102 Nov 11 17:48 robots.corpo
--rw-r--r-- 1 runner runner    294 Nov 11 17:48 sitemap.cabecalhos.txt
--rw-r--r-- 1 runner runner    220 Nov 11 17:48 sitemap.corpo
+
+added 84 packages in 7s
+node v22.23.4 · chrome: /usr/bin/google-chrome
+[   0.0s] origem: https://fronteirasul-fmudazpm.manus.space
+[   0.0s] paginas pedidas: /convite/?v=c14b569  /
+[   1.6s] navegador: Chrome/156.0.8078.79 (/usr/bin/google-chrome)
+[   1.6s] 1) baixando as paginas e tudo que elas referenciam
+[   8.6s] AVISO: referencia sem arquivo (HTTP 500): https://fronteirasul-fmudazpm.manus.space/api/platform/config.js  <- https://fronteirasul-fmudazpm.manus.space/
+[   8.6s]    11 arquivo(s) do site ate aqui
+[   8.6s] 2) abrindo o site original no navegador
+[  18.2s]    convite-desktop: 12 pedidos, titulo "Fronteira do Sul RP — Convite oficial", altura 900px, 0 cliques
+[  26.5s]    convite-movel: 12 pedidos, titulo "Fronteira do Sul RP — Convite oficial", altura 844px, 0 cliques
+[  46.4s]    regras-desktop: 16 pedidos, titulo "Fronteira do Sul RP — Uma nova história começa aqui", altura 22608px, 5 cliques
+[  62.1s]    regras-movel: 16 pedidos, titulo "Fronteira do Sul RP — Uma nova história começa aqui", altura 30982px, 0 cliques
+[  62.2s]    11 arquivo(s) do site depois do navegador
+[  62.2s] AVISO: conteudo recebido pelo navegador difere do arquivo baixado: https://fronteirasul-fmudazpm.manus.space/api/platform/config.js
+[  62.2s] 3) sondando o comportamento do servidor original
+[  75.1s] 4) conferindo a copia em http://127.0.0.1:4173 (site original bloqueado)
+[  83.9s]    convite-desktop: igual (maior diferenca de imagem 0.000%)
+[  91.9s]    convite-movel: igual (maior diferenca de imagem 0.000%)
+[ 112.8s]    regras-desktop: PROBLEMAS: respostas diferentes: GET /api/platform/config.js: original 500, copia 404 | foto 2: 0.79% dos pixels diferentes | foto 3: 0.95% dos pixels diferentes (maior diferenca de imagem 0.949%)
+[ 127.9s]    regras-movel: PROBLEMAS: respostas diferentes: GET /api/platform/config.js: original 500, copia 404 (maior diferenca de imagem 0.000%)
+[ 128.0s] 5) escrevendo relatorios
+[ 128.1s] pronto: 11 arquivo(s) em site/, 2 aviso(s)
