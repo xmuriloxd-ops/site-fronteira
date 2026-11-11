@@ -9,6 +9,7 @@
  *   /convite  e  /convite/      -> site/convite/index.html (sem redirecionar)
  *   /qualquer-rota (sem ponto)  -> site/index.html         (rota do aplicativo)
  *   /arquivo-que-nao-existe.png -> 404 sem corpo
+ *   /api/qualquer-coisa         -> 500 sem corpo (no original a API não está no ar)
  *
  * Sem dependências: só precisa do Node 18 ou mais novo.
  *
@@ -31,12 +32,12 @@ const SILENCIOSO = process.env.SILENCIOSO === '1';
 const TIPOS = {
   '.html': 'text/html; charset=utf-8',
   '.htm': 'text/html; charset=utf-8',
-  '.js': 'application/javascript',
-  '.mjs': 'application/javascript',
+  '.js': 'text/javascript; charset=utf-8',
+  '.mjs': 'text/javascript; charset=utf-8',
   '.css': 'text/css; charset=utf-8',
   '.json': 'application/json',
   '.map': 'application/json',
-  '.webmanifest': 'application/manifest+json',
+  '.webmanifest': 'application/manifest+json; charset=utf-8',
   '.xml': 'application/xml',
   '.txt': 'text/plain',
   '.svg': 'image/svg+xml',
@@ -63,7 +64,7 @@ const TIPOS = {
 };
 
 const IMAGENS = new Set(['.png', '.jpg', '.jpeg', '.webp', '.avif', '.gif', '.ico', '.bmp']);
-const COMPRIMIVEIS = /^(text\/|application\/(javascript|json|manifest\+json|xml)|image\/svg\+xml)/;
+const COMPRIMIVEIS = /^(text\/|application\/(json|manifest\+json|xml)|image\/svg\+xml)/;
 
 /**
  * Imagens são identificadas pelo conteúdo, não pelo nome. No site original o
@@ -126,10 +127,13 @@ function localizar(caminhoUrl) {
     if (info) return { status: 200, arquivo, info };
   }
 
-  // Não existe. Igual ao original: com extensão é 404; sem extensão é uma rota
-  // do aplicativo, então quem responde é o index.html da raiz.
+  // Não existe. O servidor original responde assim:
+  //  - /api/...            -> erro 500 (o site publicado não tem API funcionando);
+  //  - nome com extensão   -> 404;
+  //  - o resto (e .html)   -> é uma rota do aplicativo: responde o index.html da raiz.
+  if (relativo === '/api' || relativo.startsWith('/api/')) return { status: 500 };
   const ultimo = relativo.split('/').filter(Boolean).pop() || '';
-  if (!ultimo.includes('.')) {
+  if (!ultimo.includes('.') || /\.html?$/i.test(ultimo)) {
     const arquivo = path.join(RAIZ, 'index.html');
     const info = arquivoComum(arquivo);
     if (info) return { status: 200, arquivo, info, rotaDoApp: true };

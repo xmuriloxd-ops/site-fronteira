@@ -6,7 +6,7 @@ mkdir -p "$FERRAMENTAS"
 (
   cd "$FERRAMENTAS" || exit 1
   [ -f package.json ] || npm init -y >/dev/null 2>&1
-  npm install --no-audit --no-fund --loglevel=error puppeteer-core@24 pixelmatch@5.3.0 pngjs@7
+  npm install --no-audit --no-fund --loglevel=error puppeteer-core@24 pngjs@7
 ) || echo "::warning::Nao foi possivel instalar as ferramentas do navegador; a copia segue sem a conferencia visual."
 export FERRAMENTAS
 echo "node $(node -v) · chrome: ${CHROME_BIN:-nao definido}"
