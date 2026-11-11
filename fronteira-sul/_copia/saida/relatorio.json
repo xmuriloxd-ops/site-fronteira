@@ -1,5 +1,5 @@
 {
-  "geradoEm": "2026-11-11T20:05:26.377Z",
+  "geradoEm": "2026-11-11T20:12:31.930Z",
   "origem": "https://fronteirasul-fmudazpm.manus.space",
   "paginasPedidas": [
     "/convite/?v=c14b569",
@@ -8,7 +8,6 @@
   "navegador": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36",
   "avisos": [
     "referencia sem arquivo (HTTP 500): https://fronteirasul-fmudazpm.manus.space/api/platform/config.js  <- https://fronteirasul-fmudazpm.manus.space/",
-    "depuracao: so 2 de 5 cenarios (convite-desktop, rota-inexistente-desktop)",
     "referencia sem arquivo (HTTP 500): https://fronteirasul-fmudazpm.manus.space/api/platform/config.js  <- https://fronteirasul-fmudazpm.manus.space/, navegador (convite-desktop)"
   ],
   "arquivosDoSite": [
@@ -48,7 +47,8 @@
       "por": [
         "https://fronteirasul-fmudazpm.manus.space/",
         "navegador (convite-desktop)",
-        "navegador (rota-inexistente-desktop)"
+        "navegador (regras-desktop)",
+        "navegador (regras-movel)"
       ],
       "igualNoSegundoDownload": true
     },
@@ -69,7 +69,8 @@
       "por": [
         "https://fronteirasul-fmudazpm.manus.space/",
         "navegador (convite-desktop)",
-        "navegador (rota-inexistente-desktop)"
+        "navegador (regras-desktop)",
+        "navegador (regras-movel)"
       ],
       "igualNoSegundoDownload": true
     },
@@ -81,7 +82,7 @@
       "status": 200,
       "contentType": "text/html; charset=utf-8",
       "tamanho": 5934,
-      "sha256": "26d68fee40eca2ba9d3d5a5f060de06c88e8b5458567256b4de7c059a6772e74",
+      "sha256": "8931769674d2466da91479d3b4e9e031a36015e183fbac135c11b277c33963eb",
       "cabecalhos": {
         "content-type": "text/html; charset=utf-8",
         "cache-control": "no-cache, no-store, must-revalidate"
@@ -121,7 +122,7 @@
         "caminho padrao",
         "https://fronteirasul-fmudazpm.manus.space/__manus/pwa/manifest.webmanifest",
         "navegador (convite-desktop)",
-        "navegador (rota-inexistente-desktop)"
+        "navegador (convite-movel)"
       ],
       "igualNoSegundoDownload": true
     },
@@ -142,7 +143,8 @@
       "por": [
         "https://fronteirasul-fmudazpm.manus.space/",
         "https://fronteirasul-fmudazpm.manus.space/convite/",
-        "navegador (convite-desktop)"
+        "navegador (convite-desktop)",
+        "navegador (convite-movel)"
       ],
       "igualNoSegundoDownload": true
     },
@@ -173,7 +175,7 @@
       "status": 200,
       "contentType": "text/html; charset=utf-8",
       "tamanho": 3613,
-      "sha256": "c673183fd4863a768eaeae7ff313d106fcd18643ca062360d9ae81ecf663d4af",
+      "sha256": "67ca0f2b93bbb40017134ece4f7747d87e8b8eb649356554d526bfd288209975",
       "cabecalhos": {
         "content-type": "text/html; charset=utf-8",
         "cache-control": "no-cache, no-store, must-revalidate"
@@ -213,7 +215,8 @@
       "por": [
         "https://fronteirasul-fmudazpm.manus.space/assets/index-FbaU4KfD.js",
         "navegador (convite-desktop)",
-        "navegador (rota-inexistente-desktop)"
+        "navegador (regras-desktop)",
+        "navegador (regras-movel)"
       ],
       "igualNoSegundoDownload": true
     },
@@ -244,7 +247,7 @@
       "status": 200,
       "contentType": "application/xml",
       "tamanho": 220,
-      "sha256": "0b50de7ef69b05bae53af98a6762451ef9a2bc3c45facd7745c116cc1266aca5",
+      "sha256": "564986b4b3a607f089073d9f108097f85fd0c19f4141293e7ae6394d102e2591",
       "cabecalhos": {
         "content-type": "application/xml",
         "x-manus-seo-source": "generated"
@@ -481,7 +484,7 @@
         "contentType": "application/xml",
         "cacheControl": "",
         "tamanho": 220,
-        "sha": "c4a25819e5b75524"
+        "sha": "aa99045cad1385a8"
       },
       "copia": {
         "status": 200,
@@ -489,7 +492,7 @@
         "contentType": "application/xml",
         "cacheControl": "no-cache",
         "tamanho": 220,
-        "sha": "0b50de7ef69b05ba"
+        "sha": "564986b4b3a607f0"
       }
     },
     "/404": {
@@ -935,7 +938,7 @@
         "rotulo": "original (carga 1)",
         "url": "https://fronteirasul-fmudazpm.manus.space/convite/?v=c14b569",
         "status": 200,
-        "duracaoSeg": 13.1,
+        "duracaoSeg": 13.6,
         "titulo": "Fronteira do Sul RP — Convite oficial",
         "altura": 900,
         "largura": 1440,
@@ -1019,7 +1022,7 @@
           },
           {
             "tipo": "warn",
-            "texto": "[.WebGL-0x60c001a4e00]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels"
+            "texto": "[.WebGL-0x306c02a42e00]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels"
           },
           {
             "tipo": "error",
@@ -1071,7 +1074,7 @@
           },
           {
             "tipo": "warn",
-            "texto": "[.WebGL-0x60c0080a600]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels"
+            "texto": "[.WebGL-0x306c0433b200]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels"
           },
           {
             "tipo": "error",
@@ -1106,7 +1109,7 @@
         "rotulo": "copia (carga 1)",
         "url": "http://127.0.0.1:4173/convite/?v=c14b569",
         "status": 200,
-        "duracaoSeg": 12.9,
+        "duracaoSeg": 12.7,
         "titulo": "Fronteira do Sul RP — Convite oficial",
         "altura": 900,
         "largura": 1440,
@@ -1185,16 +1188,16 @@
             "texto": "Ignoring Event: localhost"
           },
           {
-            "tipo": "warn",
-            "texto": "[]Automatic fallback to software WebGL has been deprecated. Please use the --enable-unsafe-swiftshader flag to opt in to lower security guarantees for trusted content."
-          },
-          {
-            "tipo": "warn",
-            "texto": "[]Automatic fallback to software WebGL has been deprecated. Please use the --enable-unsafe-swiftshader flag to opt in to lower security guarantees for trusted content."
-          },
-          {
             "tipo": "error",
             "texto": "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT"
+          },
+          {
+            "tipo": "warn",
+            "texto": "[]Automatic fallback to software WebGL has been deprecated. Please use the --enable-unsafe-swiftshader flag to opt in to lower security guarantees for trusted content."
+          },
+          {
+            "tipo": "warn",
+            "texto": "[]Automatic fallback to software WebGL has been deprecated. Please use the --enable-unsafe-swiftshader flag to opt in to lower security guarantees for trusted content."
           },
           {
             "tipo": "error",
@@ -1276,10 +1279,1526 @@
       "vazamentos": [],
       "duracoes": {
         "original": [
-          13
+          14
         ],
         "copia": [
           13
+        ]
+      }
+    },
+    {
+      "cenario": "convite-movel",
+      "caminho": "/convite/?v=c14b569",
+      "tela": "movel",
+      "problemas": [],
+      "observacoes": [],
+      "cargas": 1,
+      "fotos": {
+        "total": 1,
+        "identicas": 1,
+        "arredondamento": 0,
+        "maiorArredondamento": 0,
+        "pixelsArredondados": 0,
+        "variam": 0,
+        "diferentes": 0,
+        "ausentes": 0
+      },
+      "passos": [
+        {
+          "nome": "inicial",
+          "fotos": 1,
+          "identicas": 1,
+          "arredondamento": 0,
+          "variam": 0,
+          "diferentes": 0,
+          "estrutura": [],
+          "geometria": {
+            "elementos": 10,
+            "diferentes": 0
+          },
+          "pendentes": []
+        }
+      ],
+      "rede": {
+        "original": [
+          "GET /convite/?v=c14b569 -> 200",
+          "GET /favicon.ico -> 302",
+          "GET /fronteira-sul-convite-preview.jpg -> 200"
+        ],
+        "copia": [
+          "GET /convite/?v=c14b569 -> 200",
+          "GET /favicon.ico -> 200",
+          "GET /fronteira-sul-convite-preview.jpg -> 200"
+        ],
+        "soNoOriginal": [],
+        "soNaCopia": [],
+        "redirecionavaNoOriginal": [
+          "GET /favicon.ico"
+        ],
+        "statusDiferente": [],
+        "conteudoDiferente": []
+      },
+      "capturaOriginal": {
+        "rotulo": "original (carga 1)",
+        "url": "https://fronteirasul-fmudazpm.manus.space/convite/?v=c14b569",
+        "status": 200,
+        "duracaoSeg": 7.5,
+        "titulo": "Fronteira do Sul RP — Convite oficial",
+        "altura": 844,
+        "largura": 390,
+        "elementos": 42,
+        "caracteres": 149,
+        "imagens": [
+          {
+            "src": "https://fronteirasul-fmudazpm.manus.space/fronteira-sul-convite-preview.jpg",
+            "ok": true,
+            "w": 1200,
+            "h": 675
+          }
+        ],
+        "fontes": [],
+        "seloDaPlataforma": {
+          "sombra": true,
+          "filhosNaSombra": 1
+        },
+        "passos": [
+          "inicial [1 foto(s)]"
+        ],
+        "animacoesCongeladas": 0,
+        "pedidos": 11,
+        "falhas": [
+          {
+            "url": "https://manus-analytics.com/api/send",
+            "tipo": "other",
+            "metodo": "OPTIONS",
+            "erro": "net::ERR_BLOCKED_BY_CLIENT"
+          },
+          {
+            "url": "https://api.manus.im/api/user_behavior/batch_create_event_v2",
+            "tipo": "ping",
+            "metodo": "POST",
+            "erro": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "url": "https://api2.amplitude.com/2/httpapi",
+            "tipo": "ping",
+            "metodo": "POST",
+            "erro": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          }
+        ],
+        "console": [
+          {
+            "tipo": "error",
+            "texto": "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT"
+          },
+          {
+            "tipo": "warn",
+            "texto": "[]Automatic fallback to software WebGL has been deprecated. Please use the --enable-unsafe-swiftshader flag to opt in to lower security guarantees for trusted content."
+          },
+          {
+            "tipo": "warn",
+            "texto": "[]Automatic fallback to software WebGL has been deprecated. Please use the --enable-unsafe-swiftshader flag to opt in to lower security guarantees for trusted content."
+          },
+          {
+            "tipo": "warn",
+            "texto": "[.WebGL-0x306c0082ba00]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels"
+          },
+          {
+            "tipo": "error",
+            "texto": "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "tipo": "error",
+            "texto": "Failed to load resource: the server responded with a status of 403 ()"
+          },
+          {
+            "tipo": "error",
+            "texto": "Amplitude Logger [Error]: Failed to fetch remote config: Error: Network error occurred, remote config fetch failed"
+          },
+          {
+            "tipo": "error",
+            "texto": "Failed to load resource: the server responded with a status of 403 ()"
+          },
+          {
+            "tipo": "error",
+            "texto": "Failed to load resource: the server responded with a status of 403 ()"
+          },
+          {
+            "tipo": "error",
+            "texto": "Failed to load resource: the server responded with a status of 403 ()"
+          },
+          {
+            "tipo": "error",
+            "texto": "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          }
+        ],
+        "erros": [],
+        "vazamentos": [],
+        "estatisticasBarradas": [
+          "OPTIONS https://manus-analytics.com/api/send",
+          "POST https://api.manus.im/api/user_behavior/batch_create_event_v2",
+          "POST https://api2.amplitude.com/2/httpapi"
+        ],
+        "enviosATerceiros": [],
+        "janelas": [],
+        "saidasBarradas": [],
+        "avisos": [],
+        "urlNoFim": "https://fronteirasul-fmudazpm.manus.space/convite/?v=c14b569"
+      },
+      "capturaCopia": {
+        "rotulo": "copia (carga 1)",
+        "url": "http://127.0.0.1:4173/convite/?v=c14b569",
+        "status": 200,
+        "duracaoSeg": 7.4,
+        "titulo": "Fronteira do Sul RP — Convite oficial",
+        "altura": 844,
+        "largura": 390,
+        "elementos": 42,
+        "caracteres": 149,
+        "imagens": [
+          {
+            "src": "http://127.0.0.1:4173/fronteira-sul-convite-preview.jpg",
+            "ok": true,
+            "w": 1200,
+            "h": 675
+          }
+        ],
+        "fontes": [],
+        "seloDaPlataforma": {
+          "sombra": true,
+          "filhosNaSombra": 1
+        },
+        "passos": [
+          "inicial [1 foto(s)]"
+        ],
+        "animacoesCongeladas": 0,
+        "pedidos": 10,
+        "falhas": [
+          {
+            "url": "https://manus-analytics.com/api/send",
+            "tipo": "other",
+            "metodo": "OPTIONS",
+            "erro": "net::ERR_BLOCKED_BY_CLIENT"
+          },
+          {
+            "url": "https://api.manus.im/api/user_behavior/batch_create_event_v2",
+            "tipo": "ping",
+            "metodo": "POST",
+            "erro": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "url": "https://api2.amplitude.com/2/httpapi",
+            "tipo": "ping",
+            "metodo": "POST",
+            "erro": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          }
+        ],
+        "console": [
+          {
+            "tipo": "warn",
+            "texto": "Ignoring Event: localhost"
+          },
+          {
+            "tipo": "warn",
+            "texto": "Ignoring Event: localhost"
+          },
+          {
+            "tipo": "error",
+            "texto": "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT"
+          },
+          {
+            "tipo": "warn",
+            "texto": "[]Automatic fallback to software WebGL has been deprecated. Please use the --enable-unsafe-swiftshader flag to opt in to lower security guarantees for trusted content."
+          },
+          {
+            "tipo": "warn",
+            "texto": "[]Automatic fallback to software WebGL has been deprecated. Please use the --enable-unsafe-swiftshader flag to opt in to lower security guarantees for trusted content."
+          },
+          {
+            "tipo": "error",
+            "texto": "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "tipo": "error",
+            "texto": "Failed to load resource: the server responded with a status of 403 ()"
+          },
+          {
+            "tipo": "error",
+            "texto": "Amplitude Logger [Error]: Failed to fetch remote config: Error: Network error occurred, remote config fetch failed"
+          },
+          {
+            "tipo": "error",
+            "texto": "Failed to load resource: the server responded with a status of 403 ()"
+          },
+          {
+            "tipo": "error",
+            "texto": "Failed to load resource: the server responded with a status of 403 ()"
+          },
+          {
+            "tipo": "error",
+            "texto": "Failed to load resource: the server responded with a status of 403 ()"
+          },
+          {
+            "tipo": "error",
+            "texto": "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          }
+        ],
+        "erros": [],
+        "vazamentos": [],
+        "estatisticasBarradas": [
+          "OPTIONS https://manus-analytics.com/api/send",
+          "POST https://api.manus.im/api/user_behavior/batch_create_event_v2",
+          "POST https://api2.amplitude.com/2/httpapi"
+        ],
+        "enviosATerceiros": [],
+        "janelas": [],
+        "saidasBarradas": [],
+        "avisos": [],
+        "urlNoFim": "http://127.0.0.1:4173/convite/?v=c14b569"
+      },
+      "vazamentos": [],
+      "duracoes": {
+        "original": [
+          7
+        ],
+        "copia": [
+          7
+        ]
+      }
+    },
+    {
+      "cenario": "regras-desktop",
+      "caminho": "/",
+      "tela": "desktop",
+      "problemas": [],
+      "observacoes": [],
+      "cargas": 2,
+      "fotos": {
+        "total": 50,
+        "identicas": 50,
+        "arredondamento": 0,
+        "maiorArredondamento": 0,
+        "pixelsArredondados": 0,
+        "variam": 0,
+        "diferentes": 0,
+        "ausentes": 0
+      },
+      "passos": [
+        {
+          "nome": "inicial",
+          "fotos": 26,
+          "identicas": 26,
+          "arredondamento": 0,
+          "variam": 0,
+          "diferentes": 0,
+          "estrutura": [],
+          "geometria": {
+            "elementos": 754,
+            "diferentes": 0
+          },
+          "pendentes": []
+        },
+        {
+          "nome": "inicial › clique \"Buscar\"",
+          "fotos": 1,
+          "identicas": 1,
+          "arredondamento": 0,
+          "variam": 0,
+          "diferentes": 0,
+          "estrutura": [],
+          "pendentes": []
+        },
+        {
+          "nome": "inicial › clique \"Ir para ocorrência anterior\" (desabilitado)",
+          "fotos": 1,
+          "identicas": 1,
+          "arredondamento": 0,
+          "variam": 0,
+          "diferentes": 0,
+          "estrutura": [],
+          "pendentes": []
+        },
+        {
+          "nome": "inicial › clique \"Ir para próxima ocorrência\" (desabilitado)",
+          "fotos": 1,
+          "identicas": 1,
+          "arredondamento": 0,
+          "variam": 0,
+          "diferentes": 0,
+          "estrutura": [],
+          "pendentes": []
+        },
+        {
+          "nome": "inicial › clique \"@sr__black_ Copiar Discord\"",
+          "fotos": 1,
+          "identicas": 1,
+          "arredondamento": 0,
+          "variam": 0,
+          "diferentes": 0,
+          "estrutura": [],
+          "pendentes": []
+        },
+        {
+          "nome": "aba \"Regras da Polícia\"",
+          "fotos": 4,
+          "identicas": 4,
+          "arredondamento": 0,
+          "variam": 0,
+          "diferentes": 0,
+          "estrutura": [],
+          "geometria": {
+            "elementos": 749,
+            "diferentes": 0
+          },
+          "pendentes": []
+        },
+        {
+          "nome": "aba \"Regras da Polícia\" › clique \"Buscar\"",
+          "fotos": 1,
+          "identicas": 1,
+          "arredondamento": 0,
+          "variam": 0,
+          "diferentes": 0,
+          "estrutura": [],
+          "pendentes": []
+        },
+        {
+          "nome": "aba \"Regras da Polícia\" › clique \"Ir para ocorrência anterior\" (desabilitado)",
+          "fotos": 1,
+          "identicas": 1,
+          "arredondamento": 0,
+          "variam": 0,
+          "diferentes": 0,
+          "estrutura": [],
+          "pendentes": []
+        },
+        {
+          "nome": "aba \"Regras da Polícia\" › clique \"Ir para próxima ocorrência\" (desabilitado)",
+          "fotos": 1,
+          "identicas": 1,
+          "arredondamento": 0,
+          "variam": 0,
+          "diferentes": 0,
+          "estrutura": [],
+          "pendentes": []
+        },
+        {
+          "nome": "volta para a aba \"Regulamento geral\"",
+          "fotos": 1,
+          "identicas": 1,
+          "arredondamento": 0,
+          "variam": 0,
+          "diferentes": 0,
+          "estrutura": [],
+          "geometria": {
+            "elementos": 754,
+            "diferentes": 0
+          },
+          "pendentes": []
+        },
+        {
+          "nome": "busca › digitar \"arma\"",
+          "fotos": 1,
+          "identicas": 1,
+          "arredondamento": 0,
+          "variam": 0,
+          "diferentes": 0,
+          "estrutura": [],
+          "pendentes": []
+        },
+        {
+          "nome": "busca › Enter",
+          "fotos": 1,
+          "identicas": 1,
+          "arredondamento": 0,
+          "variam": 0,
+          "diferentes": 0,
+          "estrutura": [],
+          "pendentes": []
+        },
+        {
+          "nome": "busca › clique \"Buscar\"",
+          "fotos": 1,
+          "identicas": 1,
+          "arredondamento": 0,
+          "variam": 0,
+          "diferentes": 0,
+          "estrutura": [],
+          "pendentes": []
+        },
+        {
+          "nome": "busca › clique \"Ir para ocorrência anterior\"",
+          "fotos": 1,
+          "identicas": 1,
+          "arredondamento": 0,
+          "variam": 0,
+          "diferentes": 0,
+          "estrutura": [],
+          "pendentes": []
+        },
+        {
+          "nome": "busca › clique \"Ir para próxima ocorrência\"",
+          "fotos": 1,
+          "identicas": 1,
+          "arredondamento": 0,
+          "variam": 0,
+          "diferentes": 0,
+          "estrutura": [],
+          "pendentes": []
+        },
+        {
+          "nome": "busca › clique \"@sr__black_ Copiar Discord\"",
+          "fotos": 1,
+          "identicas": 1,
+          "arredondamento": 0,
+          "variam": 0,
+          "diferentes": 0,
+          "estrutura": [],
+          "pendentes": []
+        },
+        {
+          "nome": "busca › limpar",
+          "fotos": 1,
+          "identicas": 1,
+          "arredondamento": 0,
+          "variam": 0,
+          "diferentes": 0,
+          "estrutura": [],
+          "pendentes": []
+        },
+        {
+          "nome": "menu › \"Regras de ações\"",
+          "fotos": 1,
+          "identicas": 1,
+          "arredondamento": 0,
+          "variam": 0,
+          "diferentes": 0,
+          "estrutura": [],
+          "pendentes": []
+        },
+        {
+          "nome": "menu › \"Ações e negociações\"",
+          "fotos": 1,
+          "identicas": 1,
+          "arredondamento": 0,
+          "variam": 0,
+          "diferentes": 0,
+          "estrutura": [],
+          "pendentes": []
+        },
+        {
+          "nome": "indice › #apresentacao",
+          "fotos": 1,
+          "identicas": 1,
+          "arredondamento": 0,
+          "variam": 0,
+          "diferentes": 0,
+          "estrutura": [],
+          "pendentes": []
+        },
+        {
+          "nome": "indice › #pacificacao",
+          "fotos": 1,
+          "identicas": 1,
+          "arredondamento": 0,
+          "variam": 0,
+          "diferentes": 0,
+          "estrutura": [],
+          "pendentes": []
+        },
+        {
+          "nome": "indice › #negociacoes",
+          "fotos": 1,
+          "identicas": 1,
+          "arredondamento": 0,
+          "variam": 0,
+          "diferentes": 0,
+          "estrutura": [],
+          "pendentes": []
+        }
+      ],
+      "rede": {
+        "original": [
+          "GET / -> 200",
+          "GET /api/platform/config.js -> 500",
+          "GET /assets/index-DMP8NyHf.css -> 200",
+          "GET /assets/index-FbaU4KfD.js -> 200",
+          "GET /favicon.ico -> 302",
+          "GET /manus-storage/fronteira-sul-logo_1b1b4c2d.webp -> 307"
+        ],
+        "copia": [
+          "GET / -> 200",
+          "GET /api/platform/config.js -> 500",
+          "GET /assets/index-DMP8NyHf.css -> 200",
+          "GET /assets/index-FbaU4KfD.js -> 200",
+          "GET /favicon.ico -> 200",
+          "GET /manus-storage/fronteira-sul-logo_1b1b4c2d.webp -> 200"
+        ],
+        "soNoOriginal": [],
+        "soNaCopia": [],
+        "redirecionavaNoOriginal": [
+          "GET /manus-storage/fronteira-sul-logo_1b1b4c2d.webp",
+          "GET /favicon.ico"
+        ],
+        "statusDiferente": [],
+        "conteudoDiferente": []
+      },
+      "capturaOriginal": {
+        "rotulo": "original (carga 1)",
+        "url": "https://fronteirasul-fmudazpm.manus.space/",
+        "status": 200,
+        "duracaoSeg": 51.4,
+        "titulo": "Fronteira do Sul RP — Uma nova história começa aqui",
+        "altura": 22608,
+        "largura": 1440,
+        "elementos": 789,
+        "caracteres": 38047,
+        "imagens": [
+          {
+            "src": "https://fronteirasul-fmudazpm.manus.space/manus-storage/fronteira-sul-logo_1b1b4c2d.webp",
+            "ok": true,
+            "w": 1200,
+            "h": 676
+          },
+          {
+            "src": "https://fronteirasul-fmudazpm.manus.space/manus-storage/fronteira-sul-logo_1b1b4c2d.webp",
+            "ok": true,
+            "w": 1200,
+            "h": 676
+          }
+        ],
+        "fontes": [],
+        "seloDaPlataforma": {
+          "sombra": true,
+          "filhosNaSombra": 1
+        },
+        "passos": [
+          "inicial [26 foto(s)]",
+          "inicial › clique \"Buscar\" [1 foto(s)]",
+          "inicial › clique \"Ir para ocorrência anterior\" (desabilitado) [1 foto(s)]",
+          "inicial › clique \"Ir para próxima ocorrência\" (desabilitado) [1 foto(s)]",
+          "inicial › clique \"@sr__black_ Copiar Discord\" [1 foto(s)]",
+          "aba \"Regras da Polícia\" [4 foto(s)]",
+          "aba \"Regras da Polícia\" › clique \"Buscar\" [1 foto(s)]",
+          "aba \"Regras da Polícia\" › clique \"Ir para ocorrência anterior\" (desabilitado) [1 foto(s)]",
+          "aba \"Regras da Polícia\" › clique \"Ir para próxima ocorrência\" (desabilitado) [1 foto(s)]",
+          "volta para a aba \"Regulamento geral\" [1 foto(s)]",
+          "busca › digitar \"arma\" [1 foto(s)]",
+          "busca › Enter [1 foto(s)]",
+          "busca › clique \"Buscar\" [1 foto(s)]",
+          "busca › clique \"Ir para ocorrência anterior\" [1 foto(s)]",
+          "busca › clique \"Ir para próxima ocorrência\" [1 foto(s)]",
+          "busca › clique \"@sr__black_ Copiar Discord\" [1 foto(s)]",
+          "busca › limpar [1 foto(s)]",
+          "menu › \"Regras de ações\" [1 foto(s)]",
+          "menu › \"Ações e negociações\" [1 foto(s)]",
+          "indice › #apresentacao [1 foto(s)]",
+          "indice › #pacificacao [1 foto(s)]",
+          "indice › #negociacoes [1 foto(s)]"
+        ],
+        "animacoesCongeladas": 0,
+        "pedidos": 15,
+        "falhas": [
+          {
+            "url": "https://fronteirasul-fmudazpm.manus.space/api/platform/config.js",
+            "tipo": "script",
+            "metodo": "GET",
+            "erro": "net::ERR_ABORTED"
+          },
+          {
+            "url": "https://manus-analytics.com/api/send",
+            "tipo": "other",
+            "metodo": "OPTIONS",
+            "erro": "net::ERR_BLOCKED_BY_CLIENT"
+          },
+          {
+            "url": "https://api.manus.im/api/user_behavior/batch_create_event_v2",
+            "tipo": "ping",
+            "metodo": "POST",
+            "erro": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "url": "https://api2.amplitude.com/2/httpapi",
+            "tipo": "ping",
+            "metodo": "POST",
+            "erro": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "url": "https://api2.amplitude.com/2/httpapi",
+            "tipo": "ping",
+            "metodo": "POST",
+            "erro": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "url": "https://api2.amplitude.com/2/httpapi",
+            "tipo": "ping",
+            "metodo": "POST",
+            "erro": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "url": "https://api2.amplitude.com/2/httpapi",
+            "tipo": "ping",
+            "metodo": "POST",
+            "erro": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "url": "https://api2.amplitude.com/2/httpapi",
+            "tipo": "ping",
+            "metodo": "POST",
+            "erro": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "url": "https://api2.amplitude.com/2/httpapi",
+            "tipo": "ping",
+            "metodo": "POST",
+            "erro": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "url": "https://api2.amplitude.com/2/httpapi",
+            "tipo": "ping",
+            "metodo": "POST",
+            "erro": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "url": "https://api2.amplitude.com/2/httpapi",
+            "tipo": "ping",
+            "metodo": "POST",
+            "erro": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "url": "https://api2.amplitude.com/2/httpapi",
+            "tipo": "ping",
+            "metodo": "POST",
+            "erro": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "url": "https://api2.amplitude.com/2/httpapi",
+            "tipo": "ping",
+            "metodo": "POST",
+            "erro": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "url": "https://api2.amplitude.com/2/httpapi",
+            "tipo": "ping",
+            "metodo": "POST",
+            "erro": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "url": "https://api2.amplitude.com/2/httpapi",
+            "tipo": "ping",
+            "metodo": "POST",
+            "erro": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "url": "https://api2.amplitude.com/2/httpapi",
+            "tipo": "ping",
+            "metodo": "POST",
+            "erro": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "url": "https://api2.amplitude.com/2/httpapi",
+            "tipo": "ping",
+            "metodo": "POST",
+            "erro": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "url": "https://api2.amplitude.com/2/httpapi",
+            "tipo": "ping",
+            "metodo": "POST",
+            "erro": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          }
+        ],
+        "console": [
+          {
+            "tipo": "error",
+            "texto": "Failed to load resource: the server responded with a status of 500 ()"
+          },
+          {
+            "tipo": "error",
+            "texto": "Refused to execute script from 'https://fronteirasul-fmudazpm.manus.space/api/platform/config.js' because its MIME type ('text/html') is not executable, and strict MIME type checking is enabled."
+          },
+          {
+            "tipo": "error",
+            "texto": "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT"
+          },
+          {
+            "tipo": "warn",
+            "texto": "[]Automatic fallback to software WebGL has been deprecated. Please use the --enable-unsafe-swiftshader flag to opt in to lower security guarantees for trusted content."
+          },
+          {
+            "tipo": "warn",
+            "texto": "[]Automatic fallback to software WebGL has been deprecated. Please use the --enable-unsafe-swiftshader flag to opt in to lower security guarantees for trusted content."
+          },
+          {
+            "tipo": "warn",
+            "texto": "[.WebGL-0x306c023e5c00]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels (this message will no longer repeat)"
+          },
+          {
+            "tipo": "error",
+            "texto": "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "tipo": "error",
+            "texto": "Failed to load resource: the server responded with a status of 403 ()"
+          },
+          {
+            "tipo": "error",
+            "texto": "Amplitude Logger [Error]: Failed to fetch remote config: Error: Network error occurred, remote config fetch failed"
+          },
+          {
+            "tipo": "error",
+            "texto": "Failed to load resource: the server responded with a status of 403 ()"
+          },
+          {
+            "tipo": "error",
+            "texto": "Failed to load resource: the server responded with a status of 403 ()"
+          },
+          {
+            "tipo": "error",
+            "texto": "Failed to load resource: the server responded with a status of 403 ()"
+          },
+          {
+            "tipo": "error",
+            "texto": "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "tipo": "error",
+            "texto": "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "tipo": "error",
+            "texto": "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "tipo": "error",
+            "texto": "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "tipo": "error",
+            "texto": "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "tipo": "error",
+            "texto": "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "tipo": "error",
+            "texto": "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "tipo": "error",
+            "texto": "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          }
+        ],
+        "erros": [],
+        "vazamentos": [],
+        "estatisticasBarradas": [
+          "OPTIONS https://manus-analytics.com/api/send",
+          "POST https://api.manus.im/api/user_behavior/batch_create_event_v2",
+          "POST https://api2.amplitude.com/2/httpapi",
+          "POST https://api2.amplitude.com/2/httpapi",
+          "POST https://api2.amplitude.com/2/httpapi",
+          "POST https://api2.amplitude.com/2/httpapi",
+          "POST https://api2.amplitude.com/2/httpapi",
+          "POST https://api2.amplitude.com/2/httpapi",
+          "POST https://api2.amplitude.com/2/httpapi",
+          "POST https://api2.amplitude.com/2/httpapi",
+          "POST https://api2.amplitude.com/2/httpapi",
+          "POST https://api2.amplitude.com/2/httpapi",
+          "POST https://api2.amplitude.com/2/httpapi",
+          "POST https://api2.amplitude.com/2/httpapi",
+          "POST https://api2.amplitude.com/2/httpapi",
+          "POST https://api2.amplitude.com/2/httpapi",
+          "POST https://api2.amplitude.com/2/httpapi"
+        ],
+        "enviosATerceiros": [],
+        "janelas": [],
+        "saidasBarradas": [],
+        "avisos": [],
+        "urlNoFim": "https://fronteirasul-fmudazpm.manus.space/"
+      },
+      "capturaCopia": {
+        "rotulo": "copia (carga 1)",
+        "url": "http://127.0.0.1:4173/",
+        "status": 200,
+        "duracaoSeg": 51.2,
+        "titulo": "Fronteira do Sul RP — Uma nova história começa aqui",
+        "altura": 22608,
+        "largura": 1440,
+        "elementos": 789,
+        "caracteres": 38047,
+        "imagens": [
+          {
+            "src": "http://127.0.0.1:4173/manus-storage/fronteira-sul-logo_1b1b4c2d.webp",
+            "ok": true,
+            "w": 1200,
+            "h": 676
+          },
+          {
+            "src": "http://127.0.0.1:4173/manus-storage/fronteira-sul-logo_1b1b4c2d.webp",
+            "ok": true,
+            "w": 1200,
+            "h": 676
+          }
+        ],
+        "fontes": [],
+        "seloDaPlataforma": {
+          "sombra": true,
+          "filhosNaSombra": 1
+        },
+        "passos": [
+          "inicial [26 foto(s)]",
+          "inicial › clique \"Buscar\" [1 foto(s)]",
+          "inicial › clique \"Ir para ocorrência anterior\" (desabilitado) [1 foto(s)]",
+          "inicial › clique \"Ir para próxima ocorrência\" (desabilitado) [1 foto(s)]",
+          "inicial › clique \"@sr__black_ Copiar Discord\" [1 foto(s)]",
+          "aba \"Regras da Polícia\" [4 foto(s)]",
+          "aba \"Regras da Polícia\" › clique \"Buscar\" [1 foto(s)]",
+          "aba \"Regras da Polícia\" › clique \"Ir para ocorrência anterior\" (desabilitado) [1 foto(s)]",
+          "aba \"Regras da Polícia\" › clique \"Ir para próxima ocorrência\" (desabilitado) [1 foto(s)]",
+          "volta para a aba \"Regulamento geral\" [1 foto(s)]",
+          "busca › digitar \"arma\" [1 foto(s)]",
+          "busca › Enter [1 foto(s)]",
+          "busca › clique \"Buscar\" [1 foto(s)]",
+          "busca › clique \"Ir para ocorrência anterior\" [1 foto(s)]",
+          "busca › clique \"Ir para próxima ocorrência\" [1 foto(s)]",
+          "busca › clique \"@sr__black_ Copiar Discord\" [1 foto(s)]",
+          "busca › limpar [1 foto(s)]",
+          "menu › \"Regras de ações\" [1 foto(s)]",
+          "menu › \"Ações e negociações\" [1 foto(s)]",
+          "indice › #apresentacao [1 foto(s)]",
+          "indice › #pacificacao [1 foto(s)]",
+          "indice › #negociacoes [1 foto(s)]"
+        ],
+        "animacoesCongeladas": 0,
+        "pedidos": 13,
+        "falhas": [
+          {
+            "url": "http://127.0.0.1:4173/api/platform/config.js",
+            "tipo": "script",
+            "metodo": "GET",
+            "erro": "net::ERR_ABORTED"
+          },
+          {
+            "url": "https://manus-analytics.com/api/send",
+            "tipo": "other",
+            "metodo": "OPTIONS",
+            "erro": "net::ERR_BLOCKED_BY_CLIENT"
+          },
+          {
+            "url": "https://api.manus.im/api/user_behavior/batch_create_event_v2",
+            "tipo": "ping",
+            "metodo": "POST",
+            "erro": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "url": "https://api2.amplitude.com/2/httpapi",
+            "tipo": "ping",
+            "metodo": "POST",
+            "erro": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "url": "https://api2.amplitude.com/2/httpapi",
+            "tipo": "ping",
+            "metodo": "POST",
+            "erro": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "url": "https://api2.amplitude.com/2/httpapi",
+            "tipo": "ping",
+            "metodo": "POST",
+            "erro": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "url": "https://api2.amplitude.com/2/httpapi",
+            "tipo": "ping",
+            "metodo": "POST",
+            "erro": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "url": "https://api2.amplitude.com/2/httpapi",
+            "tipo": "ping",
+            "metodo": "POST",
+            "erro": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "url": "https://api2.amplitude.com/2/httpapi",
+            "tipo": "ping",
+            "metodo": "POST",
+            "erro": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "url": "https://api2.amplitude.com/2/httpapi",
+            "tipo": "ping",
+            "metodo": "POST",
+            "erro": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "url": "https://api2.amplitude.com/2/httpapi",
+            "tipo": "ping",
+            "metodo": "POST",
+            "erro": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "url": "https://api2.amplitude.com/2/httpapi",
+            "tipo": "ping",
+            "metodo": "POST",
+            "erro": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "url": "https://api2.amplitude.com/2/httpapi",
+            "tipo": "ping",
+            "metodo": "POST",
+            "erro": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "url": "https://api2.amplitude.com/2/httpapi",
+            "tipo": "ping",
+            "metodo": "POST",
+            "erro": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "url": "https://api2.amplitude.com/2/httpapi",
+            "tipo": "ping",
+            "metodo": "POST",
+            "erro": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "url": "https://api2.amplitude.com/2/httpapi",
+            "tipo": "ping",
+            "metodo": "POST",
+            "erro": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "url": "https://api2.amplitude.com/2/httpapi",
+            "tipo": "ping",
+            "metodo": "POST",
+            "erro": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "url": "https://api2.amplitude.com/2/httpapi",
+            "tipo": "ping",
+            "metodo": "POST",
+            "erro": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          }
+        ],
+        "console": [
+          {
+            "tipo": "error",
+            "texto": "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+          },
+          {
+            "tipo": "error",
+            "texto": "Refused to execute script from 'http://127.0.0.1:4173/api/platform/config.js' because its MIME type ('') is not executable, and strict MIME type checking is enabled."
+          },
+          {
+            "tipo": "warn",
+            "texto": "Ignoring Event: localhost"
+          },
+          {
+            "tipo": "warn",
+            "texto": "Ignoring Event: localhost"
+          },
+          {
+            "tipo": "error",
+            "texto": "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT"
+          },
+          {
+            "tipo": "warn",
+            "texto": "[]Automatic fallback to software WebGL has been deprecated. Please use the --enable-unsafe-swiftshader flag to opt in to lower security guarantees for trusted content."
+          },
+          {
+            "tipo": "warn",
+            "texto": "[]Automatic fallback to software WebGL has been deprecated. Please use the --enable-unsafe-swiftshader flag to opt in to lower security guarantees for trusted content."
+          },
+          {
+            "tipo": "error",
+            "texto": "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "tipo": "error",
+            "texto": "Failed to load resource: the server responded with a status of 403 ()"
+          },
+          {
+            "tipo": "error",
+            "texto": "Amplitude Logger [Error]: Failed to fetch remote config: Error: Network error occurred, remote config fetch failed"
+          },
+          {
+            "tipo": "error",
+            "texto": "Failed to load resource: the server responded with a status of 403 ()"
+          },
+          {
+            "tipo": "error",
+            "texto": "Failed to load resource: the server responded with a status of 403 ()"
+          },
+          {
+            "tipo": "error",
+            "texto": "Failed to load resource: the server responded with a status of 403 ()"
+          },
+          {
+            "tipo": "error",
+            "texto": "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "tipo": "error",
+            "texto": "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "tipo": "error",
+            "texto": "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "tipo": "error",
+            "texto": "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "tipo": "error",
+            "texto": "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "tipo": "error",
+            "texto": "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "tipo": "error",
+            "texto": "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          }
+        ],
+        "erros": [],
+        "vazamentos": [],
+        "estatisticasBarradas": [
+          "OPTIONS https://manus-analytics.com/api/send",
+          "POST https://api.manus.im/api/user_behavior/batch_create_event_v2",
+          "POST https://api2.amplitude.com/2/httpapi",
+          "POST https://api2.amplitude.com/2/httpapi",
+          "POST https://api2.amplitude.com/2/httpapi",
+          "POST https://api2.amplitude.com/2/httpapi",
+          "POST https://api2.amplitude.com/2/httpapi",
+          "POST https://api2.amplitude.com/2/httpapi",
+          "POST https://api2.amplitude.com/2/httpapi",
+          "POST https://api2.amplitude.com/2/httpapi",
+          "POST https://api2.amplitude.com/2/httpapi",
+          "POST https://api2.amplitude.com/2/httpapi",
+          "POST https://api2.amplitude.com/2/httpapi",
+          "POST https://api2.amplitude.com/2/httpapi",
+          "POST https://api2.amplitude.com/2/httpapi",
+          "POST https://api2.amplitude.com/2/httpapi",
+          "POST https://api2.amplitude.com/2/httpapi"
+        ],
+        "enviosATerceiros": [],
+        "janelas": [],
+        "saidasBarradas": [],
+        "avisos": [],
+        "urlNoFim": "http://127.0.0.1:4173/"
+      },
+      "vazamentos": [],
+      "duracoes": {
+        "original": [
+          51,
+          52
+        ],
+        "copia": [
+          51,
+          52
+        ]
+      }
+    },
+    {
+      "cenario": "regras-movel",
+      "caminho": "/",
+      "tela": "movel",
+      "problemas": [],
+      "observacoes": [],
+      "cargas": 1,
+      "fotos": {
+        "total": 43,
+        "identicas": 43,
+        "arredondamento": 0,
+        "maiorArredondamento": 0,
+        "pixelsArredondados": 0,
+        "variam": 0,
+        "diferentes": 0,
+        "ausentes": 0
+      },
+      "passos": [
+        {
+          "nome": "inicial",
+          "fotos": 37,
+          "identicas": 37,
+          "arredondamento": 0,
+          "variam": 0,
+          "diferentes": 0,
+          "estrutura": [],
+          "geometria": {
+            "elementos": 754,
+            "diferentes": 0
+          },
+          "pendentes": []
+        },
+        {
+          "nome": "aba \"Regras da Polícia\"",
+          "fotos": 5,
+          "identicas": 5,
+          "arredondamento": 0,
+          "variam": 0,
+          "diferentes": 0,
+          "estrutura": [],
+          "geometria": {
+            "elementos": 749,
+            "diferentes": 0
+          },
+          "pendentes": []
+        },
+        {
+          "nome": "volta para a aba \"Regulamento geral\"",
+          "fotos": 1,
+          "identicas": 1,
+          "arredondamento": 0,
+          "variam": 0,
+          "diferentes": 0,
+          "estrutura": [],
+          "geometria": {
+            "elementos": 754,
+            "diferentes": 0
+          },
+          "pendentes": []
+        }
+      ],
+      "rede": {
+        "original": [
+          "GET / -> 200",
+          "GET /api/platform/config.js -> 500",
+          "GET /assets/index-DMP8NyHf.css -> 200",
+          "GET /assets/index-FbaU4KfD.js -> 200",
+          "GET /favicon.ico -> 302",
+          "GET /manus-storage/fronteira-sul-logo_1b1b4c2d.webp -> 307"
+        ],
+        "copia": [
+          "GET / -> 200",
+          "GET /api/platform/config.js -> 500",
+          "GET /assets/index-DMP8NyHf.css -> 200",
+          "GET /assets/index-FbaU4KfD.js -> 200",
+          "GET /favicon.ico -> 200",
+          "GET /manus-storage/fronteira-sul-logo_1b1b4c2d.webp -> 200"
+        ],
+        "soNoOriginal": [],
+        "soNaCopia": [],
+        "redirecionavaNoOriginal": [
+          "GET /favicon.ico",
+          "GET /manus-storage/fronteira-sul-logo_1b1b4c2d.webp"
+        ],
+        "statusDiferente": [],
+        "conteudoDiferente": []
+      },
+      "capturaOriginal": {
+        "rotulo": "original (carga 1)",
+        "url": "https://fronteirasul-fmudazpm.manus.space/",
+        "status": 200,
+        "duracaoSeg": 32.5,
+        "titulo": "Fronteira do Sul RP — Uma nova história começa aqui",
+        "altura": 30982,
+        "largura": 390,
+        "elementos": 789,
+        "caracteres": 37581,
+        "imagens": [
+          {
+            "src": "https://fronteirasul-fmudazpm.manus.space/manus-storage/fronteira-sul-logo_1b1b4c2d.webp",
+            "ok": true,
+            "w": 1200,
+            "h": 676
+          },
+          {
+            "src": "https://fronteirasul-fmudazpm.manus.space/manus-storage/fronteira-sul-logo_1b1b4c2d.webp",
+            "ok": true,
+            "w": 1200,
+            "h": 676
+          }
+        ],
+        "fontes": [],
+        "seloDaPlataforma": {
+          "sombra": true,
+          "filhosNaSombra": 1
+        },
+        "passos": [
+          "inicial [37 foto(s)]",
+          "aba \"Regras da Polícia\" [5 foto(s)]",
+          "volta para a aba \"Regulamento geral\" [1 foto(s)]"
+        ],
+        "animacoesCongeladas": 0,
+        "pedidos": 15,
+        "falhas": [
+          {
+            "url": "https://fronteirasul-fmudazpm.manus.space/api/platform/config.js",
+            "tipo": "script",
+            "metodo": "GET",
+            "erro": "net::ERR_ABORTED"
+          },
+          {
+            "url": "https://manus-analytics.com/api/send",
+            "tipo": "other",
+            "metodo": "OPTIONS",
+            "erro": "net::ERR_BLOCKED_BY_CLIENT"
+          },
+          {
+            "url": "https://api.manus.im/api/user_behavior/batch_create_event_v2",
+            "tipo": "ping",
+            "metodo": "POST",
+            "erro": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "url": "https://api2.amplitude.com/2/httpapi",
+            "tipo": "ping",
+            "metodo": "POST",
+            "erro": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "url": "https://api2.amplitude.com/2/httpapi",
+            "tipo": "ping",
+            "metodo": "POST",
+            "erro": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "url": "https://api2.amplitude.com/2/httpapi",
+            "tipo": "ping",
+            "metodo": "POST",
+            "erro": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          }
+        ],
+        "console": [
+          {
+            "tipo": "error",
+            "texto": "Failed to load resource: the server responded with a status of 500 ()"
+          },
+          {
+            "tipo": "error",
+            "texto": "Refused to execute script from 'https://fronteirasul-fmudazpm.manus.space/api/platform/config.js' because its MIME type ('text/html') is not executable, and strict MIME type checking is enabled."
+          },
+          {
+            "tipo": "error",
+            "texto": "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT"
+          },
+          {
+            "tipo": "warn",
+            "texto": "[]Automatic fallback to software WebGL has been deprecated. Please use the --enable-unsafe-swiftshader flag to opt in to lower security guarantees for trusted content."
+          },
+          {
+            "tipo": "warn",
+            "texto": "[]Automatic fallback to software WebGL has been deprecated. Please use the --enable-unsafe-swiftshader flag to opt in to lower security guarantees for trusted content."
+          },
+          {
+            "tipo": "error",
+            "texto": "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "tipo": "error",
+            "texto": "Failed to load resource: the server responded with a status of 403 ()"
+          },
+          {
+            "tipo": "error",
+            "texto": "Amplitude Logger [Error]: Failed to fetch remote config: Error: Network error occurred, remote config fetch failed"
+          },
+          {
+            "tipo": "error",
+            "texto": "Failed to load resource: the server responded with a status of 403 ()"
+          },
+          {
+            "tipo": "error",
+            "texto": "Failed to load resource: the server responded with a status of 403 ()"
+          },
+          {
+            "tipo": "error",
+            "texto": "Failed to load resource: the server responded with a status of 403 ()"
+          },
+          {
+            "tipo": "error",
+            "texto": "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "tipo": "error",
+            "texto": "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "tipo": "error",
+            "texto": "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          }
+        ],
+        "erros": [],
+        "vazamentos": [],
+        "estatisticasBarradas": [
+          "OPTIONS https://manus-analytics.com/api/send",
+          "POST https://api.manus.im/api/user_behavior/batch_create_event_v2",
+          "POST https://api2.amplitude.com/2/httpapi",
+          "POST https://api2.amplitude.com/2/httpapi",
+          "POST https://api2.amplitude.com/2/httpapi"
+        ],
+        "enviosATerceiros": [],
+        "janelas": [],
+        "saidasBarradas": [],
+        "avisos": [],
+        "urlNoFim": "https://fronteirasul-fmudazpm.manus.space/"
+      },
+      "capturaCopia": {
+        "rotulo": "copia (carga 1)",
+        "url": "http://127.0.0.1:4173/",
+        "status": 200,
+        "duracaoSeg": 32.6,
+        "titulo": "Fronteira do Sul RP — Uma nova história começa aqui",
+        "altura": 30982,
+        "largura": 390,
+        "elementos": 789,
+        "caracteres": 37581,
+        "imagens": [
+          {
+            "src": "http://127.0.0.1:4173/manus-storage/fronteira-sul-logo_1b1b4c2d.webp",
+            "ok": true,
+            "w": 1200,
+            "h": 676
+          },
+          {
+            "src": "http://127.0.0.1:4173/manus-storage/fronteira-sul-logo_1b1b4c2d.webp",
+            "ok": true,
+            "w": 1200,
+            "h": 676
+          }
+        ],
+        "fontes": [],
+        "seloDaPlataforma": {
+          "sombra": true,
+          "filhosNaSombra": 1
+        },
+        "passos": [
+          "inicial [37 foto(s)]",
+          "aba \"Regras da Polícia\" [5 foto(s)]",
+          "volta para a aba \"Regulamento geral\" [1 foto(s)]"
+        ],
+        "animacoesCongeladas": 0,
+        "pedidos": 13,
+        "falhas": [
+          {
+            "url": "http://127.0.0.1:4173/api/platform/config.js",
+            "tipo": "script",
+            "metodo": "GET",
+            "erro": "net::ERR_ABORTED"
+          },
+          {
+            "url": "https://manus-analytics.com/api/send",
+            "tipo": "other",
+            "metodo": "OPTIONS",
+            "erro": "net::ERR_BLOCKED_BY_CLIENT"
+          },
+          {
+            "url": "https://api.manus.im/api/user_behavior/batch_create_event_v2",
+            "tipo": "ping",
+            "metodo": "POST",
+            "erro": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "url": "https://api2.amplitude.com/2/httpapi",
+            "tipo": "ping",
+            "metodo": "POST",
+            "erro": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "url": "https://api2.amplitude.com/2/httpapi",
+            "tipo": "ping",
+            "metodo": "POST",
+            "erro": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "url": "https://api2.amplitude.com/2/httpapi",
+            "tipo": "ping",
+            "metodo": "POST",
+            "erro": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          }
+        ],
+        "console": [
+          {
+            "tipo": "error",
+            "texto": "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+          },
+          {
+            "tipo": "error",
+            "texto": "Refused to execute script from 'http://127.0.0.1:4173/api/platform/config.js' because its MIME type ('') is not executable, and strict MIME type checking is enabled."
+          },
+          {
+            "tipo": "warn",
+            "texto": "Ignoring Event: localhost"
+          },
+          {
+            "tipo": "warn",
+            "texto": "Ignoring Event: localhost"
+          },
+          {
+            "tipo": "error",
+            "texto": "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT"
+          },
+          {
+            "tipo": "warn",
+            "texto": "[]Automatic fallback to software WebGL has been deprecated. Please use the --enable-unsafe-swiftshader flag to opt in to lower security guarantees for trusted content."
+          },
+          {
+            "tipo": "warn",
+            "texto": "[]Automatic fallback to software WebGL has been deprecated. Please use the --enable-unsafe-swiftshader flag to opt in to lower security guarantees for trusted content."
+          },
+          {
+            "tipo": "error",
+            "texto": "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "tipo": "error",
+            "texto": "Failed to load resource: the server responded with a status of 403 ()"
+          },
+          {
+            "tipo": "error",
+            "texto": "Amplitude Logger [Error]: Failed to fetch remote config: Error: Network error occurred, remote config fetch failed"
+          },
+          {
+            "tipo": "error",
+            "texto": "Failed to load resource: the server responded with a status of 403 ()"
+          },
+          {
+            "tipo": "error",
+            "texto": "Failed to load resource: the server responded with a status of 403 ()"
+          },
+          {
+            "tipo": "error",
+            "texto": "Failed to load resource: the server responded with a status of 403 ()"
+          },
+          {
+            "tipo": "error",
+            "texto": "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "tipo": "error",
+            "texto": "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "tipo": "error",
+            "texto": "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          }
+        ],
+        "erros": [],
+        "vazamentos": [],
+        "estatisticasBarradas": [
+          "OPTIONS https://manus-analytics.com/api/send",
+          "POST https://api.manus.im/api/user_behavior/batch_create_event_v2",
+          "POST https://api2.amplitude.com/2/httpapi",
+          "POST https://api2.amplitude.com/2/httpapi",
+          "POST https://api2.amplitude.com/2/httpapi"
+        ],
+        "enviosATerceiros": [],
+        "janelas": [],
+        "saidasBarradas": [],
+        "avisos": [],
+        "urlNoFim": "http://127.0.0.1:4173/"
+      },
+      "vazamentos": [],
+      "duracoes": {
+        "original": [
+          33
+        ],
+        "copia": [
+          33
         ]
       }
     },
@@ -1358,7 +2877,7 @@
         "rotulo": "original (carga 1)",
         "url": "https://fronteirasul-fmudazpm.manus.space/pagina-que-nao-existe",
         "status": 404,
-        "duracaoSeg": 81.3,
+        "duracaoSeg": 10.2,
         "titulo": "Fronteira do Sul RP — Uma nova história começa aqui",
         "altura": 900,
         "largura": 1440,
@@ -1375,7 +2894,7 @@
           "inicial › clique \"Go Home\" [1 foto(s)]"
         ],
         "animacoesCongeladas": 1,
-        "pedidos": 25,
+        "pedidos": 26,
         "falhas": [
           {
             "url": "https://fronteirasul-fmudazpm.manus.space/api/platform/config.js",
@@ -1454,10 +2973,6 @@
             "texto": "[]Automatic fallback to software WebGL has been deprecated. Please use the --enable-unsafe-swiftshader flag to opt in to lower security guarantees for trusted content."
           },
           {
-            "tipo": "warn",
-            "texto": "[.WebGL-0x60c01d66800]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels"
-          },
-          {
             "tipo": "error",
             "texto": "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector"
           },
@@ -1468,6 +2983,10 @@
           {
             "tipo": "error",
             "texto": "Amplitude Logger [Error]: Failed to fetch remote config: Error: Network error occurred, remote config fetch failed"
+          },
+          {
+            "tipo": "error",
+            "texto": "Failed to load resource: the server responded with a status of 403 ()"
           },
           {
             "tipo": "error",
@@ -1494,10 +3013,6 @@
             "texto": "[]Automatic fallback to software WebGL has been deprecated. Please use the --enable-unsafe-swiftshader flag to opt in to lower security guarantees for trusted content."
           },
           {
-            "tipo": "warn",
-            "texto": "[.WebGL-0x60c024b1200]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels (this message will no longer repeat)"
-          },
-          {
             "tipo": "error",
             "texto": "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector"
           },
@@ -1508,6 +3023,10 @@
           {
             "tipo": "error",
             "texto": "Amplitude Logger [Error]: Failed to fetch remote config: Error: Network error occurred, remote config fetch failed"
+          },
+          {
+            "tipo": "error",
+            "texto": "Failed to load resource: the server responded with a status of 403 ()"
           },
           {
             "tipo": "error",
@@ -1528,17 +3047,14 @@
         "enviosATerceiros": [],
         "janelas": [],
         "saidasBarradas": [],
-        "avisos": [
-          "a rede nao ficou parada",
-          "algumas respostas nao terminaram de chegar"
-        ],
+        "avisos": [],
         "urlNoFim": "https://fronteirasul-fmudazpm.manus.space/"
       },
       "capturaCopia": {
         "rotulo": "copia (carga 1)",
         "url": "http://127.0.0.1:4173/pagina-que-nao-existe",
         "status": 404,
-        "duracaoSeg": 19.9,
+        "duracaoSeg": 10.2,
         "titulo": "Fronteira do Sul RP — Uma nova história começa aqui",
         "altura": 900,
         "largura": 1440,
@@ -1708,18 +3224,16 @@
         "enviosATerceiros": [],
         "janelas": [],
         "saidasBarradas": [],
-        "avisos": [
-          "algumas respostas nao terminaram de chegar"
-        ],
+        "avisos": [],
         "urlNoFim": "http://127.0.0.1:4173/"
       },
       "vazamentos": [],
       "duracoes": {
         "original": [
-          81
+          10
         ],
         "copia": [
-          20
+          10
         ]
       }
     }
@@ -1749,7 +3263,114 @@
           "status": 200,
           "contentType": "text/html; charset=utf-8",
           "tamanho": 5934,
-          "sha256": "5699aa2be368ce50510ee1ee0fb08fc8bf10161a677edda07d2dbd566814a0a6"
+          "sha256": "9dcef5333683edb200929f420dcf21507e6f8ad9e573e3d689aa5bb7c7febf5b"
+        },
+        {
+          "url": "https://files.manuscdn.com/manus-space-dispatcher/spaceEditor-CDmbg89D.js",
+          "metodo": "GET",
+          "tipo": "script",
+          "status": 200,
+          "contentType": "application/javascript",
+          "tamanho": 736291,
+          "sha256": "cb0e5a06b30c099fc50f037cd3094da6fa7fa4e02da70b1bc4248a4554e230a6"
+        },
+        {
+          "url": "https://fronteirasul-fmudazpm.manus.space/fronteira-sul-convite-preview.jpg",
+          "metodo": "GET",
+          "tipo": "image",
+          "status": 200,
+          "contentType": "image/jpeg",
+          "tamanho": 369138,
+          "sha256": "07584c62ac7cd814c7903758838c6bd9792b79e84357e5134e2751601b52a2dc"
+        },
+        {
+          "url": "https://manus-analytics.com/script.js",
+          "metodo": "GET",
+          "tipo": "script",
+          "status": 200,
+          "contentType": "application/javascript; charset=UTF-8",
+          "tamanho": 2618,
+          "sha256": "7eba89b02651cb67beefeb8aed5d39402f7994b226114c2c639ae354dc1a94f2"
+        },
+        {
+          "url": "https://plausible.io/js/script.file-downloads.hash.outbound-links.pageview-props.revenue.tagged-events.js",
+          "metodo": "GET",
+          "tipo": "script",
+          "status": 200,
+          "contentType": "application/javascript",
+          "tamanho": 5052,
+          "sha256": "11a728321cfeacecdbf76afa55ec545dcf2bd1411e1579e3aa003029c236ca5b"
+        },
+        {
+          "url": "https://fronteirasul-fmudazpm.manus.space/favicon.ico",
+          "metodo": "GET",
+          "tipo": "other",
+          "status": 302,
+          "contentType": "",
+          "para": "https://files.manuscdn.com/user_upload_by_module/session_file/310519663938856543/ZRyVDfBpECjhaIYs.webp"
+        },
+        {
+          "url": "https://files.manuscdn.com/user_upload_by_module/session_file/310519663938856543/ZRyVDfBpECjhaIYs.webp",
+          "metodo": "GET",
+          "tipo": "other",
+          "status": 200,
+          "contentType": "image/webp",
+          "tamanho": 244246,
+          "sha256": "6ba2906093fad36d2ea6e877d9653757923c63adab47ec51be67ab4468234091"
+        },
+        {
+          "url": "https://sr-client-cfg.amplitude.com/config?api_key=46ac3f9abb41dd2d17a5785e052bc6d3&config_keys=analyticsSDK.pageActions",
+          "metodo": "GET",
+          "tipo": "fetch",
+          "status": 403,
+          "contentType": "text/plain;charset=utf-8",
+          "tamanho": 15,
+          "sha256": "95e93a58a8936d5557620c36bddcf4379d290998b6313a38d15112b37fd2f003"
+        },
+        {
+          "url": "https://sr-client-cfg.amplitude.com/config/46ac3f9abb41dd2d17a5785e052bc6d3?config_group=browser",
+          "metodo": "GET",
+          "tipo": "fetch",
+          "status": 403,
+          "contentType": "application/json",
+          "tamanho": 30,
+          "sha256": "997d54a047c1b5bd675d5cbd183cf95cfcfe3ef71d75d14e7fd75888eb9588bd"
+        },
+        {
+          "url": "https://sr-client-cfg.amplitude.com/config/46ac3f9abb41dd2d17a5785e052bc6d3?config_group=browser",
+          "metodo": "GET",
+          "tipo": "fetch",
+          "status": 403,
+          "contentType": "application/json",
+          "tamanho": 30,
+          "sha256": "997d54a047c1b5bd675d5cbd183cf95cfcfe3ef71d75d14e7fd75888eb9588bd"
+        },
+        {
+          "url": "https://sr-client-cfg.amplitude.com/config/46ac3f9abb41dd2d17a5785e052bc6d3?config_group=browser",
+          "metodo": "GET",
+          "tipo": "fetch",
+          "status": 403,
+          "contentType": "application/json",
+          "tamanho": 30,
+          "sha256": "997d54a047c1b5bd675d5cbd183cf95cfcfe3ef71d75d14e7fd75888eb9588bd"
+        },
+        {
+          "url": "https://fronteirasul-fmudazpm.manus.space/",
+          "metodo": "GET",
+          "tipo": "document",
+          "status": 200,
+          "contentType": "text/html; charset=utf-8",
+          "tamanho": 3613,
+          "sha256": "3ea33aa08b9c8e18480a4e1046ff14761b633d8152fea02ac0c8e10a06804746"
+        },
+        {
+          "url": "https://files.manuscdn.com/manus-space-dispatcher/spaceEditor-CDmbg89D.js",
+          "metodo": "GET",
+          "tipo": "script",
+          "status": 200,
+          "contentType": "application/javascript",
+          "tamanho": 736291,
+          "sha256": "cb0e5a06b30c099fc50f037cd3094da6fa7fa4e02da70b1bc4248a4554e230a6"
         },
         {
           "url": "https://plausible.io/js/script.file-downloads.hash.outbound-links.pageview-props.revenue.tagged-events.js",
@@ -1768,6 +3389,135 @@
           "contentType": "application/javascript; charset=UTF-8",
           "tamanho": 2618,
           "sha256": "7eba89b02651cb67beefeb8aed5d39402f7994b226114c2c639ae354dc1a94f2"
+        },
+        {
+          "url": "https://fronteirasul-fmudazpm.manus.space/api/platform/config.js",
+          "metodo": "GET",
+          "tipo": "script",
+          "status": 500,
+          "contentType": "text/html; charset=UTF-8",
+          "tamanho": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "url": "https://fronteirasul-fmudazpm.manus.space/assets/index-FbaU4KfD.js",
+          "metodo": "GET",
+          "tipo": "script",
+          "status": 200,
+          "contentType": "text/javascript; charset=utf-8",
+          "tamanho": 473107,
+          "sha256": "de95a285ca5e0ac9a2beb86d26fd53e92b9fe18e72d02fd556b17ca4046e0e24"
+        },
+        {
+          "url": "https://fronteirasul-fmudazpm.manus.space/assets/index-DMP8NyHf.css",
+          "metodo": "GET",
+          "tipo": "stylesheet",
+          "status": 200,
+          "contentType": "text/css; charset=utf-8",
+          "tamanho": 123524,
+          "sha256": "19d4496e133becebc2cc6e75a748674232e867e2cb0bda9dbc5882c59e7ab255"
+        },
+        {
+          "url": "https://fronteirasul-fmudazpm.manus.space/manus-storage/fronteira-sul-logo_1b1b4c2d.webp",
+          "metodo": "GET",
+          "tipo": "image",
+          "status": 307,
+          "contentType": "",
+          "para": "https://d36hbw14aib5lz.cloudfront.net/310519663938856543/FmUDAzpMr2fDkhG5Nf2vYF/fronteira-sul-logo_1b1b4c2d.webp?…"
+        },
+        {
+          "url": "https://d36hbw14aib5lz.cloudfront.net/310519663938856543/FmUDAzpMr2fDkhG5Nf2vYF/fronteira-sul-logo_1b1b4c2d.webp?…",
+          "metodo": "GET",
+          "tipo": "image",
+          "status": 200,
+          "contentType": "image/webp",
+          "tamanho": 244246,
+          "sha256": "6ba2906093fad36d2ea6e877d9653757923c63adab47ec51be67ab4468234091"
+        },
+        {
+          "url": "https://fronteirasul-fmudazpm.manus.space/favicon.ico",
+          "metodo": "GET",
+          "tipo": "other",
+          "status": 302,
+          "contentType": "",
+          "para": "https://files.manuscdn.com/user_upload_by_module/session_file/310519663938856543/ZRyVDfBpECjhaIYs.webp"
+        },
+        {
+          "url": "https://files.manuscdn.com/user_upload_by_module/session_file/310519663938856543/ZRyVDfBpECjhaIYs.webp",
+          "metodo": "GET",
+          "tipo": "other",
+          "status": 200,
+          "contentType": "image/webp",
+          "tamanho": 244246,
+          "sha256": "6ba2906093fad36d2ea6e877d9653757923c63adab47ec51be67ab4468234091"
+        },
+        {
+          "url": "https://sr-client-cfg.amplitude.com/config?api_key=46ac3f9abb41dd2d17a5785e052bc6d3&config_keys=analyticsSDK.pageActions",
+          "metodo": "GET",
+          "tipo": "fetch",
+          "status": 403,
+          "contentType": "text/plain;charset=utf-8",
+          "tamanho": 15,
+          "sha256": "95e93a58a8936d5557620c36bddcf4379d290998b6313a38d15112b37fd2f003"
+        },
+        {
+          "url": "https://sr-client-cfg.amplitude.com/config/46ac3f9abb41dd2d17a5785e052bc6d3?config_group=browser",
+          "metodo": "GET",
+          "tipo": "fetch",
+          "status": 403,
+          "contentType": "application/json",
+          "tamanho": 30,
+          "sha256": "997d54a047c1b5bd675d5cbd183cf95cfcfe3ef71d75d14e7fd75888eb9588bd"
+        },
+        {
+          "url": "https://sr-client-cfg.amplitude.com/config/46ac3f9abb41dd2d17a5785e052bc6d3?config_group=browser",
+          "metodo": "GET",
+          "tipo": "fetch",
+          "status": 403,
+          "contentType": "application/json",
+          "tamanho": 30,
+          "sha256": "997d54a047c1b5bd675d5cbd183cf95cfcfe3ef71d75d14e7fd75888eb9588bd"
+        },
+        {
+          "url": "https://sr-client-cfg.amplitude.com/config/46ac3f9abb41dd2d17a5785e052bc6d3?config_group=browser",
+          "metodo": "GET",
+          "tipo": "fetch",
+          "status": 403,
+          "contentType": "application/json",
+          "tamanho": 30,
+          "sha256": "997d54a047c1b5bd675d5cbd183cf95cfcfe3ef71d75d14e7fd75888eb9588bd"
+        }
+      ]
+    },
+    {
+      "cenario": "convite-movel",
+      "rede": [
+        {
+          "url": "https://fronteirasul-fmudazpm.manus.space/convite/?v=c14b569",
+          "metodo": "GET",
+          "tipo": "document",
+          "status": 200,
+          "contentType": "text/html; charset=utf-8",
+          "tamanho": 5934,
+          "sha256": "76a2df0dfb98cf76e210d70ffea8ae459d39a76f8458d9e4d76eb5321b3ab044"
+        },
+        {
+          "url": "https://manus-analytics.com/script.js",
+          "metodo": "GET",
+          "tipo": "script",
+          "status": 200,
+          "contentType": "application/javascript; charset=UTF-8",
+          "tamanho": 2618,
+          "sha256": "7eba89b02651cb67beefeb8aed5d39402f7994b226114c2c639ae354dc1a94f2"
+        },
+        {
+          "url": "https://plausible.io/js/script.file-downloads.hash.outbound-links.pageview-props.revenue.tagged-events.js",
+          "metodo": "GET",
+          "tipo": "script",
+          "status": 200,
+          "contentType": "application/javascript",
+          "tamanho": 5052,
+          "sha256": "11a728321cfeacecdbf76afa55ec545dcf2bd1411e1579e3aa003029c236ca5b"
         },
         {
           "url": "https://files.manuscdn.com/manus-space-dispatcher/spaceEditor-CDmbg89D.js",
@@ -1839,7 +3589,12 @@
           "contentType": "application/json",
           "tamanho": 30,
           "sha256": "997d54a047c1b5bd675d5cbd183cf95cfcfe3ef71d75d14e7fd75888eb9588bd"
-        },
+        }
+      ]
+    },
+    {
+      "cenario": "regras-desktop",
+      "rede": [
         {
           "url": "https://fronteirasul-fmudazpm.manus.space/",
           "metodo": "GET",
@@ -1847,7 +3602,25 @@
           "status": 200,
           "contentType": "text/html; charset=utf-8",
           "tamanho": 3613,
-          "sha256": "eab014ad5c662a1b5ebd4e02a1eea3c13075bfcc0908a03964b38d2b3010dc9b"
+          "sha256": "b92a8b0a86b4e0f5ef5065c61789ae0c997bc52c8822f7f70511f04788256f2d"
+        },
+        {
+          "url": "https://fronteirasul-fmudazpm.manus.space/api/platform/config.js",
+          "metodo": "GET",
+          "tipo": "script",
+          "status": 500,
+          "contentType": "text/html; charset=UTF-8",
+          "tamanho": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "url": "https://manus-analytics.com/script.js",
+          "metodo": "GET",
+          "tipo": "script",
+          "status": 200,
+          "contentType": "application/javascript; charset=UTF-8",
+          "tamanho": 2618,
+          "sha256": "7eba89b02651cb67beefeb8aed5d39402f7994b226114c2c639ae354dc1a94f2"
         },
         {
           "url": "https://files.manuscdn.com/manus-space-dispatcher/spaceEditor-CDmbg89D.js",
@@ -1866,24 +3639,6 @@
           "contentType": "application/javascript",
           "tamanho": 5052,
           "sha256": "11a728321cfeacecdbf76afa55ec545dcf2bd1411e1579e3aa003029c236ca5b"
-        },
-        {
-          "url": "https://manus-analytics.com/script.js",
-          "metodo": "GET",
-          "tipo": "script",
-          "status": 200,
-          "contentType": "application/javascript; charset=UTF-8",
-          "tamanho": 2618,
-          "sha256": "7eba89b02651cb67beefeb8aed5d39402f7994b226114c2c639ae354dc1a94f2"
-        },
-        {
-          "url": "https://fronteirasul-fmudazpm.manus.space/api/platform/config.js",
-          "metodo": "GET",
-          "tipo": "script",
-          "status": 500,
-          "contentType": "text/html; charset=UTF-8",
-          "tamanho": 0,
-          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
         },
         {
           "url": "https://fronteirasul-fmudazpm.manus.space/assets/index-DMP8NyHf.css",
@@ -1912,15 +3667,6 @@
           "para": "https://d36hbw14aib5lz.cloudfront.net/310519663938856543/FmUDAzpMr2fDkhG5Nf2vYF/fronteira-sul-logo_1b1b4c2d.webp?…"
         },
         {
-          "url": "https://sr-client-cfg.amplitude.com/config?api_key=46ac3f9abb41dd2d17a5785e052bc6d3&config_keys=analyticsSDK.pageActions",
-          "metodo": "GET",
-          "tipo": "fetch",
-          "status": 403,
-          "contentType": "text/plain;charset=utf-8",
-          "tamanho": 15,
-          "sha256": "95e93a58a8936d5557620c36bddcf4379d290998b6313a38d15112b37fd2f003"
-        },
-        {
           "url": "https://fronteirasul-fmudazpm.manus.space/favicon.ico",
           "metodo": "GET",
           "tipo": "other",
@@ -1938,6 +3684,24 @@
           "sha256": "6ba2906093fad36d2ea6e877d9653757923c63adab47ec51be67ab4468234091"
         },
         {
+          "url": "https://d36hbw14aib5lz.cloudfront.net/310519663938856543/FmUDAzpMr2fDkhG5Nf2vYF/fronteira-sul-logo_1b1b4c2d.webp?…",
+          "metodo": "GET",
+          "tipo": "image",
+          "status": 200,
+          "contentType": "image/webp",
+          "tamanho": 244246,
+          "sha256": "6ba2906093fad36d2ea6e877d9653757923c63adab47ec51be67ab4468234091"
+        },
+        {
+          "url": "https://sr-client-cfg.amplitude.com/config?api_key=46ac3f9abb41dd2d17a5785e052bc6d3&config_keys=analyticsSDK.pageActions",
+          "metodo": "GET",
+          "tipo": "fetch",
+          "status": 403,
+          "contentType": "text/plain;charset=utf-8",
+          "tamanho": 15,
+          "sha256": "95e93a58a8936d5557620c36bddcf4379d290998b6313a38d15112b37fd2f003"
+        },
+        {
           "url": "https://sr-client-cfg.amplitude.com/config/46ac3f9abb41dd2d17a5785e052bc6d3?config_group=browser",
           "metodo": "GET",
           "tipo": "fetch",
@@ -1947,6 +3711,117 @@
           "sha256": "997d54a047c1b5bd675d5cbd183cf95cfcfe3ef71d75d14e7fd75888eb9588bd"
         },
         {
+          "url": "https://sr-client-cfg.amplitude.com/config/46ac3f9abb41dd2d17a5785e052bc6d3?config_group=browser",
+          "metodo": "GET",
+          "tipo": "fetch",
+          "status": 403,
+          "contentType": "application/json",
+          "tamanho": 30,
+          "sha256": "997d54a047c1b5bd675d5cbd183cf95cfcfe3ef71d75d14e7fd75888eb9588bd"
+        },
+        {
+          "url": "https://sr-client-cfg.amplitude.com/config/46ac3f9abb41dd2d17a5785e052bc6d3?config_group=browser",
+          "metodo": "GET",
+          "tipo": "fetch",
+          "status": 403,
+          "contentType": "application/json",
+          "tamanho": 30,
+          "sha256": "997d54a047c1b5bd675d5cbd183cf95cfcfe3ef71d75d14e7fd75888eb9588bd"
+        }
+      ]
+    },
+    {
+      "cenario": "regras-movel",
+      "rede": [
+        {
+          "url": "https://fronteirasul-fmudazpm.manus.space/",
+          "metodo": "GET",
+          "tipo": "document",
+          "status": 200,
+          "contentType": "text/html; charset=utf-8",
+          "tamanho": 3613,
+          "sha256": "7a652b5b0efe4e8a81d89faa0ec5e0bad72faf194ff51eb40a32c70a1bdd3bc8"
+        },
+        {
+          "url": "https://fronteirasul-fmudazpm.manus.space/api/platform/config.js",
+          "metodo": "GET",
+          "tipo": "script",
+          "status": 500,
+          "contentType": "text/html; charset=UTF-8",
+          "tamanho": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "url": "https://manus-analytics.com/script.js",
+          "metodo": "GET",
+          "tipo": "script",
+          "status": 200,
+          "contentType": "application/javascript; charset=UTF-8",
+          "tamanho": 2618,
+          "sha256": "7eba89b02651cb67beefeb8aed5d39402f7994b226114c2c639ae354dc1a94f2"
+        },
+        {
+          "url": "https://files.manuscdn.com/manus-space-dispatcher/spaceEditor-CDmbg89D.js",
+          "metodo": "GET",
+          "tipo": "script",
+          "status": 200,
+          "contentType": "application/javascript",
+          "tamanho": 736291,
+          "sha256": "cb0e5a06b30c099fc50f037cd3094da6fa7fa4e02da70b1bc4248a4554e230a6"
+        },
+        {
+          "url": "https://plausible.io/js/script.file-downloads.hash.outbound-links.pageview-props.revenue.tagged-events.js",
+          "metodo": "GET",
+          "tipo": "script",
+          "status": 200,
+          "contentType": "application/javascript",
+          "tamanho": 5052,
+          "sha256": "11a728321cfeacecdbf76afa55ec545dcf2bd1411e1579e3aa003029c236ca5b"
+        },
+        {
+          "url": "https://fronteirasul-fmudazpm.manus.space/assets/index-DMP8NyHf.css",
+          "metodo": "GET",
+          "tipo": "stylesheet",
+          "status": 200,
+          "contentType": "text/css; charset=utf-8",
+          "tamanho": 123524,
+          "sha256": "19d4496e133becebc2cc6e75a748674232e867e2cb0bda9dbc5882c59e7ab255"
+        },
+        {
+          "url": "https://fronteirasul-fmudazpm.manus.space/assets/index-FbaU4KfD.js",
+          "metodo": "GET",
+          "tipo": "script",
+          "status": 200,
+          "contentType": "text/javascript; charset=utf-8",
+          "tamanho": 473107,
+          "sha256": "de95a285ca5e0ac9a2beb86d26fd53e92b9fe18e72d02fd556b17ca4046e0e24"
+        },
+        {
+          "url": "https://fronteirasul-fmudazpm.manus.space/favicon.ico",
+          "metodo": "GET",
+          "tipo": "other",
+          "status": 302,
+          "contentType": "",
+          "para": "https://files.manuscdn.com/user_upload_by_module/session_file/310519663938856543/ZRyVDfBpECjhaIYs.webp"
+        },
+        {
+          "url": "https://fronteirasul-fmudazpm.manus.space/manus-storage/fronteira-sul-logo_1b1b4c2d.webp",
+          "metodo": "GET",
+          "tipo": "image",
+          "status": 307,
+          "contentType": "",
+          "para": "https://d36hbw14aib5lz.cloudfront.net/310519663938856543/FmUDAzpMr2fDkhG5Nf2vYF/fronteira-sul-logo_1b1b4c2d.webp?…"
+        },
+        {
+          "url": "https://files.manuscdn.com/user_upload_by_module/session_file/310519663938856543/ZRyVDfBpECjhaIYs.webp",
+          "metodo": "GET",
+          "tipo": "other",
+          "status": 200,
+          "contentType": "image/webp",
+          "tamanho": 244246,
+          "sha256": "6ba2906093fad36d2ea6e877d9653757923c63adab47ec51be67ab4468234091"
+        },
+        {
           "url": "https://d36hbw14aib5lz.cloudfront.net/310519663938856543/FmUDAzpMr2fDkhG5Nf2vYF/fronteira-sul-logo_1b1b4c2d.webp?…",
           "metodo": "GET",
           "tipo": "image",
@@ -1954,6 +3829,24 @@
           "contentType": "image/webp",
           "tamanho": 244246,
           "sha256": "6ba2906093fad36d2ea6e877d9653757923c63adab47ec51be67ab4468234091"
+        },
+        {
+          "url": "https://sr-client-cfg.amplitude.com/config?api_key=46ac3f9abb41dd2d17a5785e052bc6d3&config_keys=analyticsSDK.pageActions",
+          "metodo": "GET",
+          "tipo": "fetch",
+          "status": 403,
+          "contentType": "text/plain;charset=utf-8",
+          "tamanho": 15,
+          "sha256": "95e93a58a8936d5557620c36bddcf4379d290998b6313a38d15112b37fd2f003"
+        },
+        {
+          "url": "https://sr-client-cfg.amplitude.com/config/46ac3f9abb41dd2d17a5785e052bc6d3?config_group=browser",
+          "metodo": "GET",
+          "tipo": "fetch",
+          "status": 403,
+          "contentType": "application/json",
+          "tamanho": 30,
+          "sha256": "997d54a047c1b5bd675d5cbd183cf95cfcfe3ef71d75d14e7fd75888eb9588bd"
         },
         {
           "url": "https://sr-client-cfg.amplitude.com/config/46ac3f9abb41dd2d17a5785e052bc6d3?config_group=browser",
@@ -1985,7 +3878,7 @@
           "status": 200,
           "contentType": "text/html; charset=utf-8",
           "tamanho": 3613,
-          "sha256": "3eedb121745611aa532d3aa972681a133ecbae323bddcd8a7fbb394a518f69cb"
+          "sha256": "696d167cc7372a7d79e158e3a37dc047936aa05ef402061005cc261153f6a754"
         },
         {
           "url": "https://fronteirasul-fmudazpm.manus.space/api/platform/config.js",
@@ -2006,15 +3899,6 @@
           "sha256": "7eba89b02651cb67beefeb8aed5d39402f7994b226114c2c639ae354dc1a94f2"
         },
         {
-          "url": "https://plausible.io/js/script.file-downloads.hash.outbound-links.pageview-props.revenue.tagged-events.js",
-          "metodo": "GET",
-          "tipo": "script",
-          "status": 200,
-          "contentType": "application/javascript",
-          "tamanho": 5052,
-          "sha256": "11a728321cfeacecdbf76afa55ec545dcf2bd1411e1579e3aa003029c236ca5b"
-        },
-        {
           "url": "https://files.manuscdn.com/manus-space-dispatcher/spaceEditor-CDmbg89D.js",
           "metodo": "GET",
           "tipo": "script",
@@ -2022,6 +3906,15 @@
           "contentType": "application/javascript",
           "tamanho": 736291,
           "sha256": "cb0e5a06b30c099fc50f037cd3094da6fa7fa4e02da70b1bc4248a4554e230a6"
+        },
+        {
+          "url": "https://plausible.io/js/script.file-downloads.hash.outbound-links.pageview-props.revenue.tagged-events.js",
+          "metodo": "GET",
+          "tipo": "script",
+          "status": 200,
+          "contentType": "application/javascript",
+          "tamanho": 5052,
+          "sha256": "11a728321cfeacecdbf76afa55ec545dcf2bd1411e1579e3aa003029c236ca5b"
         },
         {
           "url": "https://fronteirasul-fmudazpm.manus.space/assets/index-FbaU4KfD.js",
@@ -2046,7 +3939,16 @@
           "metodo": "GET",
           "tipo": "fetch",
           "status": 403,
-          "contentType": "text/plain;charset=utf-8"
+          "contentType": "text/plain;charset=utf-8",
+          "semCorpo": "Could not load response body for this request. This might happen if the request "
+        },
+        {
+          "url": "https://sr-client-cfg.amplitude.com/config/46ac3f9abb41dd2d17a5785e052bc6d3?config_group=browser",
+          "metodo": "GET",
+          "tipo": "fetch",
+          "status": 403,
+          "contentType": "application/json",
+          "semCorpo": "Could not load response body for this request. This might happen if the request "
         },
         {
           "url": "https://fronteirasul-fmudazpm.manus.space/404",
@@ -2055,7 +3957,7 @@
           "status": 404,
           "contentType": "text/html; charset=utf-8",
           "tamanho": 3613,
-          "sha256": "3c0ecbd6c687df5f984bc1cd4270730612dd310820b2ac730204b7e1463254e0"
+          "sha256": "bdb5ce2f571379e3de4610ec9a567d8ecdfad049025bf243ced4c455abfdcc45"
         },
         {
           "url": "https://fronteirasul-fmudazpm.manus.space/assets/index-FbaU4KfD.js",
@@ -2210,7 +4112,7 @@
       "status": 200,
       "contentType": "text/html; charset=utf-8",
       "tamanho": 3613,
-      "sha256": "c673183fd4863a768eaeae7ff313d106fcd18643ca062360d9ae81ecf663d4af",
+      "sha256": "67ca0f2b93bbb40017134ece4f7747d87e8b8eb649356554d526bfd288209975",
       "cabecalhos": {
         "content-type": "text/html; charset=utf-8",
         "cache-control": "no-cache, no-store, must-revalidate"
@@ -2241,7 +4143,8 @@
       "por": [
         "https://fronteirasul-fmudazpm.manus.space/",
         "https://fronteirasul-fmudazpm.manus.space/convite/",
-        "navegador (convite-desktop)"
+        "navegador (convite-desktop)",
+        "navegador (convite-movel)"
       ],
       "igualNoSegundoDownload": true
     },
@@ -2262,7 +4165,8 @@
       "por": [
         "https://fronteirasul-fmudazpm.manus.space/",
         "navegador (convite-desktop)",
-        "navegador (rota-inexistente-desktop)"
+        "navegador (regras-desktop)",
+        "navegador (regras-movel)"
       ],
       "igualNoSegundoDownload": true
     },
@@ -2283,7 +4187,8 @@
       "por": [
         "https://fronteirasul-fmudazpm.manus.space/",
         "navegador (convite-desktop)",
-        "navegador (rota-inexistente-desktop)"
+        "navegador (regras-desktop)",
+        "navegador (regras-movel)"
       ],
       "igualNoSegundoDownload": true
     },
@@ -2323,7 +4228,8 @@
       "por": [
         "https://fronteirasul-fmudazpm.manus.space/",
         "navegador (convite-desktop)",
-        "navegador (rota-inexistente-desktop)"
+        "navegador (regras-desktop)",
+        "navegador (regras-movel)"
       ]
     },
     {
@@ -2391,7 +4297,7 @@
       "status": 200,
       "contentType": "text/html; charset=utf-8",
       "tamanho": 5934,
-      "sha256": "26d68fee40eca2ba9d3d5a5f060de06c88e8b5458567256b4de7c059a6772e74",
+      "sha256": "8931769674d2466da91479d3b4e9e031a36015e183fbac135c11b277c33963eb",
       "cabecalhos": {
         "content-type": "text/html; charset=utf-8",
         "cache-control": "no-cache, no-store, must-revalidate"
@@ -2411,7 +4317,7 @@
       "status": 200,
       "contentType": "text/html; charset=utf-8",
       "tamanho": 5934,
-      "sha256": "d83853addf7d8d9b64567a05d307e65039f110a737020a7731e311613718cd89",
+      "sha256": "32eedfdfe0975770d5addcfc41df4dd0c6c4efcef16b2b9738f2f5c352eeda9d",
       "cabecalhos": {
         "content-type": "text/html; charset=utf-8",
         "cache-control": "no-cache, no-store, must-revalidate"
@@ -2420,7 +4326,8 @@
       "confereComNavegador": true,
       "por": [
         "pagina pedida",
-        "navegador (convite-desktop)"
+        "navegador (convite-desktop)",
+        "navegador (convite-movel)"
       ]
     },
     {
@@ -2451,7 +4358,7 @@
         "caminho padrao",
         "https://fronteirasul-fmudazpm.manus.space/__manus/pwa/manifest.webmanifest",
         "navegador (convite-desktop)",
-        "navegador (rota-inexistente-desktop)"
+        "navegador (convite-movel)"
       ],
       "igualNoSegundoDownload": true
     },
@@ -2482,7 +4389,7 @@
       "status": 200,
       "contentType": "application/xml",
       "tamanho": 220,
-      "sha256": "0b50de7ef69b05bae53af98a6762451ef9a2bc3c45facd7745c116cc1266aca5",
+      "sha256": "564986b4b3a607f089073d9f108097f85fd0c19f4141293e7ae6394d102e2591",
       "cabecalhos": {
         "content-type": "application/xml",
         "x-manus-seo-source": "generated"
@@ -2682,7 +4589,7 @@
       "status": 200,
       "contentType": "text/html; charset=utf-8",
       "tamanho": 3613,
-      "sha256": "3ccefa80a80eaa840ccabe2668105cc0a6b885468e828a29b507b2655a82d964",
+      "sha256": "9b9403b1d9a3a36ff410b470b16ccd90cef10ae5f9647a1e8bb69e51314e6b0e",
       "cabecalhos": {
         "content-type": "text/html; charset=utf-8",
         "cache-control": "no-cache, no-store, must-revalidate"
@@ -2700,7 +4607,7 @@
       "status": 200,
       "contentType": "text/html; charset=utf-8",
       "tamanho": 3613,
-      "sha256": "ae853e30a613d244c401ca2409456bf4108b818aab93f50e752ee3983db6902f",
+      "sha256": "c1013f568df8b6fdfd3997e95ab448d25a76978f20f570e427ea03de6c4e5f11",
       "cabecalhos": {
         "content-type": "text/html; charset=utf-8",
         "cache-control": "no-cache, no-store, must-revalidate"
@@ -2718,7 +4625,7 @@
       "status": 200,
       "contentType": "text/html; charset=utf-8",
       "tamanho": 3613,
-      "sha256": "dae74e10a64b69ed96075823ed0d7a795bd509961e212864c85ea21dd06c640b",
+      "sha256": "2cc108a02d5c8153fdaca4ae8abd4f0ef963d870f538d934523c5b4aa52daf75",
       "cabecalhos": {
         "content-type": "text/html; charset=utf-8",
         "cache-control": "no-cache, no-store, must-revalidate"
@@ -2736,7 +4643,7 @@
       "status": 200,
       "contentType": "text/html; charset=utf-8",
       "tamanho": 3613,
-      "sha256": "e5b3acac2037330c0b35d65524a5064548df2d334fe0e309d1aff454b22b0761",
+      "sha256": "d007fe07479299774d29f273c55954f7e973db0b91b900f019e59bb0fa2d61b5",
       "cabecalhos": {
         "content-type": "text/html; charset=utf-8",
         "cache-control": "no-cache, no-store, must-revalidate"
@@ -2754,7 +4661,7 @@
       "status": 200,
       "contentType": "text/html; charset=utf-8",
       "tamanho": 3613,
-      "sha256": "80fe0fb47f8c2aab6f9d04596224d1b8a92e2a764ddd27bcfc2be55953c8c027",
+      "sha256": "f5518a8aa7a59444125226ee7e0895f7c4b2efb572b128145806b03d7400f796",
       "cabecalhos": {
         "content-type": "text/html; charset=utf-8",
         "cache-control": "no-cache, no-store, must-revalidate"
@@ -2772,7 +4679,7 @@
       "status": 200,
       "contentType": "text/html; charset=utf-8",
       "tamanho": 3613,
-      "sha256": "9ae762caf7614d845ea931a185d4fa5d3a27944b273b1a48032b3e3d142ecec9",
+      "sha256": "e21478463ed92243b6de1a7d619eeff59b1f2a4bc08bfc09cacb95f4c5b87efc",
       "cabecalhos": {
         "content-type": "text/html; charset=utf-8",
         "cache-control": "no-cache, no-store, must-revalidate"
@@ -2790,7 +4697,7 @@
       "status": 200,
       "contentType": "text/html; charset=utf-8",
       "tamanho": 3613,
-      "sha256": "321c6f5c6128273429619f03f864f62d221cc9b2236ee37d248947f8b0e5196f",
+      "sha256": "fa5231e7c830370b2d5816ac65e1634611eb968eca8d0d9ec629e2f419f4e620",
       "cabecalhos": {
         "content-type": "text/html; charset=utf-8",
         "cache-control": "no-cache, no-store, must-revalidate"
@@ -2808,7 +4715,7 @@
       "status": 200,
       "contentType": "text/html; charset=utf-8",
       "tamanho": 3613,
-      "sha256": "23a1392d87bccd7d8cc0094c6abec5ab898e97a81f74dd01889a63594845e281",
+      "sha256": "40bbe7ad74aa2ffdc89d8ef38a463b9e916b354a9ea4b8b1acde436a6f5d87cf",
       "cabecalhos": {
         "content-type": "text/html; charset=utf-8",
         "cache-control": "no-cache, no-store, must-revalidate"
@@ -2826,7 +4733,7 @@
       "status": 200,
       "contentType": "text/html; charset=utf-8",
       "tamanho": 3613,
-      "sha256": "5b4e0c1ecce5b7877024d3f4a5316307960bcce56edec06c81117347da3abce0",
+      "sha256": "e9d11dc4e0e580070c23835acea48344660d64f49ed736d2461acda82565ba54",
       "cabecalhos": {
         "content-type": "text/html; charset=utf-8",
         "cache-control": "no-cache, no-store, must-revalidate"
@@ -2844,7 +4751,7 @@
       "status": 200,
       "contentType": "text/html; charset=utf-8",
       "tamanho": 3613,
-      "sha256": "21622f9fb37c2afb3324eb1266ea4daf0651dac28b1bb6d8138d279d11239512",
+      "sha256": "46dd4a78b07dc620d9a8193543dbe8b458297b4352546bf4b0040f4b734d7892",
       "cabecalhos": {
         "content-type": "text/html; charset=utf-8",
         "cache-control": "no-cache, no-store, must-revalidate"
@@ -2862,7 +4769,7 @@
       "status": 200,
       "contentType": "text/html; charset=utf-8",
       "tamanho": 3613,
-      "sha256": "0e5d593e4d2a25f36221486faf47f6a60493e3023eed33d81e45ba3cf12bb349",
+      "sha256": "5f0c1d2124aa7e982761a9042afb6a69d0784efe8b27d4e529c816aa9ebee983",
       "cabecalhos": {
         "content-type": "text/html; charset=utf-8",
         "cache-control": "no-cache, no-store, must-revalidate"
@@ -2880,7 +4787,7 @@
       "status": 200,
       "contentType": "text/html; charset=utf-8",
       "tamanho": 3613,
-      "sha256": "3a82514f793cdf31829308a87e055ebab249b7860d2b93ac187e6f91254b422d",
+      "sha256": "78e34340835f852522649f89235cacdddf5c707360934637bdf5822784b89dba",
       "cabecalhos": {
         "content-type": "text/html; charset=utf-8",
         "cache-control": "no-cache, no-store, must-revalidate"
@@ -2898,7 +4805,7 @@
       "status": 200,
       "contentType": "text/html; charset=utf-8",
       "tamanho": 3613,
-      "sha256": "85f90c97f042fd44f120eccd89fb8399d59453e402c581d7b9f1b14990ffbcda",
+      "sha256": "fd817b1a3febcbbb91814e08faabadc99bd7b4ad4968cec37e5b9d126dffb90d",
       "cabecalhos": {
         "content-type": "text/html; charset=utf-8",
         "cache-control": "no-cache, no-store, must-revalidate"
@@ -2916,7 +4823,7 @@
       "status": 200,
       "contentType": "text/html; charset=utf-8",
       "tamanho": 3613,
-      "sha256": "2cf6b432b3c26535d4ea86f590cea28f38f7a72c7045bcfc6a52563d2df39d25",
+      "sha256": "513af459681bc9296bdc405d5c79df42afbaed9335cd9b4a990e9ee8e68e50f6",
       "cabecalhos": {
         "content-type": "text/html; charset=utf-8",
         "cache-control": "no-cache, no-store, must-revalidate"
@@ -2934,7 +4841,7 @@
       "status": 200,
       "contentType": "text/html; charset=utf-8",
       "tamanho": 3613,
-      "sha256": "6f995e39f6fcea17bf61877255ba96b10ced4507a82c09b64afd2c540af11b74",
+      "sha256": "ee0ec4c9b1b268b14646012b66f83a8c0839a5090ac214d989ae33c409631a26",
       "cabecalhos": {
         "content-type": "text/html; charset=utf-8",
         "cache-control": "no-cache, no-store, must-revalidate"
@@ -2952,7 +4859,7 @@
       "status": 200,
       "contentType": "text/html; charset=utf-8",
       "tamanho": 3613,
-      "sha256": "2112442dd4be2fe90e507b41ec52c8a1627f8e26a90c53d58139ca4a06bcb97f",
+      "sha256": "9acdfe3cb8f6ca863352ad94ecbfd4fb52da20417094b03a46caa61fdb63b0fc",
       "cabecalhos": {
         "content-type": "text/html; charset=utf-8",
         "cache-control": "no-cache, no-store, must-revalidate"
@@ -2970,7 +4877,7 @@
       "status": 200,
       "contentType": "text/html; charset=utf-8",
       "tamanho": 3613,
-      "sha256": "262e0d1a6b8c5c9af5114a814b05d23fa9913c938ec2bbe2e7c2a572f0a33b4a",
+      "sha256": "1543344d0ee24dee7ed389923f4c13be8747f7cd447abd4dacc7034bccf84e36",
       "cabecalhos": {
         "content-type": "text/html; charset=utf-8",
         "cache-control": "no-cache, no-store, must-revalidate"
@@ -2988,7 +4895,7 @@
       "status": 200,
       "contentType": "text/html; charset=utf-8",
       "tamanho": 3613,
-      "sha256": "e043ef5d5213607781e2316b48f9a04fd04f80515c2804cdcaef023f43369b59",
+      "sha256": "2d61c8a978afc9305a32797b33bd2031f077e66b15019fc513c82516320dcc6d",
       "cabecalhos": {
         "content-type": "text/html; charset=utf-8",
         "cache-control": "no-cache, no-store, must-revalidate"
@@ -3006,7 +4913,7 @@
       "status": 200,
       "contentType": "text/html; charset=utf-8",
       "tamanho": 3613,
-      "sha256": "daac775f013eca23866d34e775bb5cbe000cd3588e49699243250fda9a59136f",
+      "sha256": "d12a21c79db5d6a63ecb3e96a5177721e4c2c75425929d5dabb472e14000a123",
       "cabecalhos": {
         "content-type": "text/html; charset=utf-8",
         "cache-control": "no-cache, no-store, must-revalidate"
@@ -3024,7 +4931,7 @@
       "status": 200,
       "contentType": "text/html; charset=utf-8",
       "tamanho": 3613,
-      "sha256": "b2deb71ee15cedacf21eca6ad26dea63c5544e4fcecc29273b4dbf96d0b48b1e",
+      "sha256": "cb5bdde337a3086733330ad69b4221d0070dbe82bdfa51ff33bdd256e9a0db91",
       "cabecalhos": {
         "content-type": "text/html; charset=utf-8",
         "cache-control": "no-cache, no-store, must-revalidate"
@@ -3042,7 +4949,7 @@
       "status": 200,
       "contentType": "text/html; charset=utf-8",
       "tamanho": 3613,
-      "sha256": "52e3397d22c4072c5dd1bdb4e148169015d133b8a238edcd3866bd00458d2b7c",
+      "sha256": "49e44765b662d17df5dd9835446e49bf966a69944bf3092ef7fcea4935086f58",
       "cabecalhos": {
         "content-type": "text/html; charset=utf-8",
         "cache-control": "no-cache, no-store, must-revalidate"
@@ -3060,7 +4967,7 @@
       "status": 200,
       "contentType": "text/html; charset=utf-8",
       "tamanho": 3613,
-      "sha256": "c9af116eb4d8561439b939986a1adbe14b48201f1b38d0eb742233837bfcfa2c",
+      "sha256": "a52d9020dd5cf4483ba07fb395f0abc5e61489a50b6b5d2bbe47c9bcacb198ea",
       "cabecalhos": {
         "content-type": "text/html; charset=utf-8",
         "cache-control": "no-cache, no-store, must-revalidate"
@@ -3078,7 +4985,7 @@
       "status": 200,
       "contentType": "text/html; charset=utf-8",
       "tamanho": 3613,
-      "sha256": "fe2c24b195babdf7d1e82048d5bfb7ce7833b693cf3aa57ae59f6003be6dd7e2",
+      "sha256": "e935e8eada03ba5006bfc840c12b6a202d04c216d3bc712f83aecf098625cfd9",
       "cabecalhos": {
         "content-type": "text/html; charset=utf-8",
         "cache-control": "no-cache, no-store, must-revalidate"
@@ -3096,7 +5003,7 @@
       "status": 200,
       "contentType": "text/html; charset=utf-8",
       "tamanho": 3613,
-      "sha256": "d602e7656baeb3e4322a128437b3f3c5e6b006b10106cbc2801ba665dc5bb9a5",
+      "sha256": "b563d55de7cc935718980097dfb8b75e5a9c7740318e29d12062ef8859910585",
       "cabecalhos": {
         "content-type": "text/html; charset=utf-8",
         "cache-control": "no-cache, no-store, must-revalidate"
@@ -3114,7 +5021,7 @@
       "status": 200,
       "contentType": "text/html; charset=utf-8",
       "tamanho": 3613,
-      "sha256": "74042fbb97e99ec2cb277b8662e3ef7f9f8eeba484e5bdd808d0ed75a39ab4a1",
+      "sha256": "7365bff38871e6796764a154fca356fbe28e86fa1d29ca8bced387191ca015e9",
       "cabecalhos": {
         "content-type": "text/html; charset=utf-8",
         "cache-control": "no-cache, no-store, must-revalidate"
@@ -3132,7 +5039,7 @@
       "status": 200,
       "contentType": "text/html; charset=utf-8",
       "tamanho": 3613,
-      "sha256": "8a481cd7ccf672d123fe1103f1c959cf2f909cd7d9a3868efdc857a5df4ca667",
+      "sha256": "7a3041334a3b0d17642ab89712ecdd57a9baee150d6c5f05c086c9edac99da83",
       "cabecalhos": {
         "content-type": "text/html; charset=utf-8",
         "cache-control": "no-cache, no-store, must-revalidate"
@@ -3150,7 +5057,7 @@
       "status": 200,
       "contentType": "text/html; charset=utf-8",
       "tamanho": 3613,
-      "sha256": "fe875407918bafa13cc33dbfb0bf0ee23e09e857ee2ad622e0b225bf9fa8601f",
+      "sha256": "8c3ce59b43962b84c18f7f86c400357bb8bb75f992d3bcd40f725a64f3b36c1d",
       "cabecalhos": {
         "content-type": "text/html; charset=utf-8",
         "cache-control": "no-cache, no-store, must-revalidate"
@@ -3168,7 +5075,7 @@
       "status": 200,
       "contentType": "text/html; charset=utf-8",
       "tamanho": 3613,
-      "sha256": "c382e3db98b5c7af1ff2a92cf8f5c6d1d8bca7a41cd3e751c70a52d062a13a12",
+      "sha256": "ed67b94575f9b736a8f485f6cfe8df986b90a1c23c89c0975c45b3c89d797133",
       "cabecalhos": {
         "content-type": "text/html; charset=utf-8",
         "cache-control": "no-cache, no-store, must-revalidate"
@@ -3186,7 +5093,7 @@
       "status": 200,
       "contentType": "text/html; charset=utf-8",
       "tamanho": 3613,
-      "sha256": "d2306cb38e6dd5c4b8e86613bee79c8b59d86d4cc3b2faa31005bbd20fa69e1a",
+      "sha256": "76386fbde9809ef2be01e73a328770dd1311550b2b8501b09c01031e294b163e",
       "cabecalhos": {
         "content-type": "text/html; charset=utf-8",
         "cache-control": "no-cache, no-store, must-revalidate"
@@ -3204,7 +5111,7 @@
       "status": 200,
       "contentType": "text/html; charset=utf-8",
       "tamanho": 3613,
-      "sha256": "70d78be7e88651d6d7eb1a8490aa4dffa227de433caec68d5d3d9c31f53c4672",
+      "sha256": "7685de55518a64876be860d38a7310edf93911dc2b7dbe9a65bff88cb013226b",
       "cabecalhos": {
         "content-type": "text/html; charset=utf-8",
         "cache-control": "no-cache, no-store, must-revalidate"
@@ -3222,7 +5129,7 @@
       "status": 200,
       "contentType": "text/html; charset=utf-8",
       "tamanho": 3613,
-      "sha256": "f1e6fcbe39a1e82919311909f0809ba695961f27e65ad1bb62851399b84dfe2d",
+      "sha256": "a557856438dcbd3f0d4e1a8f82ed8640ac783deb8aa37968f07684a343be197e",
       "cabecalhos": {
         "content-type": "text/html; charset=utf-8",
         "cache-control": "no-cache, no-store, must-revalidate"
@@ -3240,7 +5147,7 @@
       "status": 200,
       "contentType": "text/html; charset=utf-8",
       "tamanho": 3613,
-      "sha256": "45507931989506bd14c80ab324e14575df8ad1ef064438e1f742f0dcd430d0cf",
+      "sha256": "4ed06d169578a267a2748baea0a466db2a1e5e8b27340b33958069757bf2f00b",
       "cabecalhos": {
         "content-type": "text/html; charset=utf-8",
         "cache-control": "no-cache, no-store, must-revalidate"
@@ -3258,7 +5165,7 @@
       "status": 200,
       "contentType": "text/html; charset=utf-8",
       "tamanho": 3613,
-      "sha256": "dae3560049e79887107a1386e40ffed6cb494d4ff0700a5053ac629f4563228d",
+      "sha256": "938578657dfb8ce9d4b35b294c4b3b1cdc489ac0481e44e44e0411014efa4503",
       "cabecalhos": {
         "content-type": "text/html; charset=utf-8",
         "cache-control": "no-cache, no-store, must-revalidate"
@@ -3276,7 +5183,7 @@
       "status": 200,
       "contentType": "text/html; charset=utf-8",
       "tamanho": 3613,
-      "sha256": "d74bd3796692610471fdfe71967a0b647febf72a9afce904c9547bba26194977",
+      "sha256": "f0168183ec5ceb82188ce6b2f281e11c1910e9f2750e08076f4b231b912c17a4",
       "cabecalhos": {
         "content-type": "text/html; charset=utf-8",
         "cache-control": "no-cache, no-store, must-revalidate"
@@ -3294,7 +5201,7 @@
       "status": 200,
       "contentType": "text/html; charset=utf-8",
       "tamanho": 3613,
-      "sha256": "f3fe6be4ac14cd5e9800ca35f104d59d24339e37248b884df891ca42610dedc5",
+      "sha256": "c58be81fa38841732581818af804163fb49cd8da0f37a8e552b8fd6bf7f8658d",
       "cabecalhos": {
         "content-type": "text/html; charset=utf-8",
         "cache-control": "no-cache, no-store, must-revalidate"
@@ -3312,7 +5219,7 @@
       "status": 200,
       "contentType": "text/html; charset=utf-8",
       "tamanho": 3613,
-      "sha256": "460e1f8487fe90a29f08ef4f02d0e1218cb72c2a8c487832e694a230c51fc0e7",
+      "sha256": "01edffa90b984f9a350e71913e306ad2990e961978d4b7675da7e1e29f569473",
       "cabecalhos": {
         "content-type": "text/html; charset=utf-8",
         "cache-control": "no-cache, no-store, must-revalidate"
@@ -3330,7 +5237,7 @@
       "status": 200,
       "contentType": "text/html; charset=utf-8",
       "tamanho": 3613,
-      "sha256": "b64d0a70d4efe328048714f00ceb7b0fcf0d788ea267efacc14275200759ff71",
+      "sha256": "919e8bb1dbb4c3a14a1c0e429addbbc46b9b2fb9fa42ddfc2410ede19a4f263b",
       "cabecalhos": {
         "content-type": "text/html; charset=utf-8",
         "cache-control": "no-cache, no-store, must-revalidate"
@@ -3348,7 +5255,7 @@
       "status": 200,
       "contentType": "text/html; charset=utf-8",
       "tamanho": 3613,
-      "sha256": "57844a1dc2d4e67cc9a61a1a6cd8878ba470d21312bc576885748097620c0ded",
+      "sha256": "9423d2917123d5689abc4761d81ef0083a0554952cf275f6770c4b9c68088990",
       "cabecalhos": {
         "content-type": "text/html; charset=utf-8",
         "cache-control": "no-cache, no-store, must-revalidate"
@@ -3366,7 +5273,7 @@
       "status": 200,
       "contentType": "text/html; charset=utf-8",
       "tamanho": 3613,
-      "sha256": "422be7465aeb09e679f4e1f24b45f5d1a80e48b14fa6ee41c25cbb3ea6da812e",
+      "sha256": "b5264c6af18d631d7b71bb91db4efc1a6b7bd0e54109fd2d9ab613411c6d64bb",
       "cabecalhos": {
         "content-type": "text/html; charset=utf-8",
         "cache-control": "no-cache, no-store, must-revalidate"
@@ -3384,7 +5291,7 @@
       "status": 200,
       "contentType": "text/html; charset=utf-8",
       "tamanho": 3613,
-      "sha256": "3c4a127bda4ad63b503366f98058b48de95f94113a532624b38ad5ff31047e18",
+      "sha256": "0e168cb0f9327f77e4db7d25ea1506ea36c18c504e33b0ea92526e794fcf3386",
       "cabecalhos": {
         "content-type": "text/html; charset=utf-8",
         "cache-control": "no-cache, no-store, must-revalidate"
@@ -3402,7 +5309,7 @@
       "status": 200,
       "contentType": "text/html; charset=utf-8",
       "tamanho": 3613,
-      "sha256": "081ad26ede35a7b1ea739f17db8af1462728c5b429120001f604b9c629bd1153",
+      "sha256": "1c4abc75a336059e0b4e7ace24c9d358b7df3b31a273541c96adf06098c59618",
       "cabecalhos": {
         "content-type": "text/html; charset=utf-8",
         "cache-control": "no-cache, no-store, must-revalidate"
@@ -3420,7 +5327,7 @@
       "status": 200,
       "contentType": "text/html; charset=utf-8",
       "tamanho": 3613,
-      "sha256": "ffacb2e4eebe0ca2fdaa59ca3b4574babfa09878d9dc7cce31e6b40e7a051a99",
+      "sha256": "34fef6e83d5739b9e7d0405d44b07149fb22dc5dc2188affb0c76c3ac86d2ae6",
       "cabecalhos": {
         "content-type": "text/html; charset=utf-8",
         "cache-control": "no-cache, no-store, must-revalidate"
@@ -3438,7 +5345,7 @@
       "status": 200,
       "contentType": "text/html; charset=utf-8",
       "tamanho": 3613,
-      "sha256": "78826affc68a879eb1138e52e373606a1e9aac5fb6cb0f2aa2c68fd3df08101a",
+      "sha256": "832735a036970e25ff6f7fd52fa04dd7338fd0095fab07220460c21ddaac5efa",
       "cabecalhos": {
         "content-type": "text/html; charset=utf-8",
         "cache-control": "no-cache, no-store, must-revalidate"
@@ -3456,7 +5363,7 @@
       "status": 200,
       "contentType": "text/html; charset=utf-8",
       "tamanho": 3613,
-      "sha256": "0c6abd7826c69282836c5050324522fb474900ca9888bb75079b89e4ed1a15c0",
+      "sha256": "4b79bcc0e1208b5f2bf0a4871bf4cd5fa2b6699ba5c5ab80aef709fe7ae23d6d",
       "cabecalhos": {
         "content-type": "text/html; charset=utf-8",
         "cache-control": "no-cache, no-store, must-revalidate"
@@ -3474,7 +5381,7 @@
       "status": 200,
       "contentType": "text/html; charset=utf-8",
       "tamanho": 3613,
-      "sha256": "5657c6ac6f930374b3857595bde83c96c0c2b82612e7916cf2536b9c14c0e85f",
+      "sha256": "ce10b5d75b90a8ea3830b502a6d3ce8b38855a2c47555e267d38797f2848f026",
       "cabecalhos": {
         "content-type": "text/html; charset=utf-8",
         "cache-control": "no-cache, no-store, must-revalidate"
@@ -3492,7 +5399,7 @@
       "status": 200,
       "contentType": "text/html; charset=utf-8",
       "tamanho": 3613,
-      "sha256": "cdbde3f85d60b291c2c676a45f56335c0b6eac39ec85774e6af02a630827d20f",
+      "sha256": "4ec6b1e59e927466fd63d90c582175547ad2bfc78023de5cd333d829b3436473",
       "cabecalhos": {
         "content-type": "text/html; charset=utf-8",
         "cache-control": "no-cache, no-store, must-revalidate"
@@ -3510,7 +5417,7 @@
       "status": 200,
       "contentType": "text/html; charset=utf-8",
       "tamanho": 3613,
-      "sha256": "10e243c71a59e2e1c09a1044630e8cdd1c591fec58c09051c042a871bfc8f817",
+      "sha256": "fd10b3ce4685c7da4a8e11a19ce8f81f4775146d0cf727f6775bd304da0a5d97",
       "cabecalhos": {
         "content-type": "text/html; charset=utf-8",
         "cache-control": "no-cache, no-store, must-revalidate"
@@ -3528,7 +5435,7 @@
       "status": 200,
       "contentType": "text/html; charset=utf-8",
       "tamanho": 3613,
-      "sha256": "dc2f76be1a14c777813a05937bdc7248306565a1d3dd99304af24cb8a944309d",
+      "sha256": "8829115f26672a4e232e4c07a150ccdd401a8592bedd26c0109da73bfce9991e",
       "cabecalhos": {
         "content-type": "text/html; charset=utf-8",
         "cache-control": "no-cache, no-store, must-revalidate"
@@ -3546,7 +5453,7 @@
       "status": 200,
       "contentType": "text/html; charset=utf-8",
       "tamanho": 3613,
-      "sha256": "ebf13ae49b66cfbd711e6c0f196df54426c14095ae6676bc766fce36cfb3d801",
+      "sha256": "f4c7677425a001c77b380deeb1bab7cd9f7d5f5c1d2442fcebfceca8791928dc",
       "cabecalhos": {
         "content-type": "text/html; charset=utf-8",
         "cache-control": "no-cache, no-store, must-revalidate"
@@ -3564,7 +5471,7 @@
       "status": 200,
       "contentType": "text/html; charset=utf-8",
       "tamanho": 3613,
-      "sha256": "5c1e684106e30a0ea48e3e557c9f58aef7a10726c2dc3ec949da8bdfddd5fc6b",
+      "sha256": "263acb8b684f50b54387da262f1222726b93e8d7ccd3200ddaae52db3db6ee7a",
       "cabecalhos": {
         "content-type": "text/html; charset=utf-8",
         "cache-control": "no-cache, no-store, must-revalidate"
@@ -3582,7 +5489,7 @@
       "status": 200,
       "contentType": "text/html; charset=utf-8",
       "tamanho": 3613,
-      "sha256": "6aa417e3f75b77d474f9b73ed8ad49f4fedc31b8b7046d1f645979c8edec9a6a",
+      "sha256": "2e244890ca481c522cd6e529dbd08dd69f6c8469915c4e67a417146a0182d43d",
       "cabecalhos": {
         "content-type": "text/html; charset=utf-8",
         "cache-control": "no-cache, no-store, must-revalidate"
@@ -3600,7 +5507,7 @@
       "status": 200,
       "contentType": "text/html; charset=utf-8",
       "tamanho": 3613,
-      "sha256": "16911d30a2a49f44f7f6b9adfa0fc7135bcdae413755f4a8740b55b858e902ab",
+      "sha256": "7da4124a2077de370eacc6b422daf97d34cc37830151a0ee5814b751f27f776a",
       "cabecalhos": {
         "content-type": "text/html; charset=utf-8",
         "cache-control": "no-cache, no-store, must-revalidate"
@@ -3618,7 +5525,7 @@
       "status": 200,
       "contentType": "text/html; charset=utf-8",
       "tamanho": 3613,
-      "sha256": "d6d6c0513d467aca9b835e9a2dee9d76fe11b4d357487cdc5feee047785f26ce",
+      "sha256": "d41071f8bdace4e8c7f65ebc7740a45514f4b95f59c1fab16a0bbc4ced373877",
       "cabecalhos": {
         "content-type": "text/html; charset=utf-8",
         "cache-control": "no-cache, no-store, must-revalidate"
@@ -3626,21 +5533,6 @@
       "candidato": true,
       "por": [
         "palpite de pagina"
-      ]
-    },
-    {
-      "url": "https://fronteirasul-fmudazpm.manus.space/assets/index-DMP8NyHf.css.map",
-      "mesmoSite": true,
-      "estado": "descartado",
-      "motivo": "HTTP 404",
-      "status": 404,
-      "contentType": "",
-      "tamanho": 0,
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-      "cabecalhos": {},
-      "candidato": true,
-      "por": [
-        "https://fronteirasul-fmudazpm.manus.space/assets/index-DMP8NyHf.css"
       ]
     },
     {
@@ -3849,7 +5741,8 @@
       "por": [
         "https://fronteirasul-fmudazpm.manus.space/assets/index-FbaU4KfD.js",
         "navegador (convite-desktop)",
-        "navegador (rota-inexistente-desktop)"
+        "navegador (regras-desktop)",
+        "navegador (regras-movel)"
       ],
       "igualNoSegundoDownload": true
     },
@@ -3888,6 +5781,21 @@
       ]
     },
     {
+      "url": "https://fronteirasul-fmudazpm.manus.space/assets/index-DMP8NyHf.css.map",
+      "mesmoSite": true,
+      "estado": "descartado",
+      "motivo": "HTTP 404",
+      "status": 404,
+      "contentType": "",
+      "tamanho": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "cabecalhos": {},
+      "candidato": true,
+      "por": [
+        "https://fronteirasul-fmudazpm.manus.space/assets/index-DMP8NyHf.css"
+      ]
+    },
+    {
       "url": "https://fronteirasul-fmudazpm.manus.space/pagina-que-nao-existe",
       "mesmoSite": true,
       "estado": "rota-do-app",
@@ -3895,7 +5803,7 @@
       "status": 200,
       "contentType": "text/html; charset=utf-8",
       "tamanho": 3613,
-      "sha256": "54386988f7f3a633b2d28f44792becefa7fa229ea9cce73baa398aa0925b9a9a",
+      "sha256": "82fcde867e5d2641e22099aea1230da046f017bd30230df4eea1b653c18e499c",
       "cabecalhos": {
         "content-type": "text/html; charset=utf-8",
         "cache-control": "no-cache, no-store, must-revalidate"
@@ -3913,7 +5821,7 @@
       "status": 404,
       "contentType": "text/html; charset=utf-8",
       "tamanho": 3613,
-      "sha256": "3bea06de4fbf55ee75bfb01ab88d817fe5d2a3ea444c68aa6fdbdc3632a57764",
+      "sha256": "6b4753cbfbe2cb50a4bb410007048dc8fe690f8c638b9f8c0872f5512de1aa6c",
       "cabecalhos": {
         "content-type": "text/html; charset=utf-8",
         "cache-control": "no-cache, no-store, must-revalidate"
