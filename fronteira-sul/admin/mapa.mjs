@@ -7,6 +7,14 @@
  * escreveu (ver conteudo.mjs). O texto original de cada campo é lido do
  * próprio arquivo, não fica repetido aqui.
  *
+ * O que este projeto mudou em relação ao site copiado também está aqui:
+ *   - `padrao` em um campo = o texto que o site usa no lugar do que veio na
+ *     cópia (hoje, os créditos). Para o painel, esse é o texto "original" do
+ *     campo: é para ele que "Voltar ao original" e "Restaurar o site original"
+ *     voltam. O administrador continua podendo trocar pelo painel.
+ *   - OPCOES_PADRAO, no fim do arquivo: o que vem ligado ou desligado (o
+ *     convite no início da página de regras, a aba Admin...).
+ *
  * Como um "local" é descrito:
  *   { arquivo: 'js', apos, chave }   texto dentro do aplicativo de regras:
  *       `apos`  = trecho único do arquivo que vem antes do texto;
@@ -35,7 +43,7 @@ export const IMAGENS = [
   {
     id: 'convite',
     rotulo: 'Imagem do convite',
-    ajuda: 'Aparece na página do convite e na prévia quando o link é colado no Discord ou no WhatsApp. O ideal é 1200 × 675.',
+    ajuda: 'Aparece no início da página de regras, na página do convite e na prévia quando o link é colado no Discord ou no WhatsApp. O ideal é 1200 × 675.',
     caminhos: ['/fronteira-sul-convite-preview.jpg'],
   },
   {
@@ -69,7 +77,8 @@ const meta = (arquivo, nome) => attr(arquivo, `<meta ${nome.startsWith('og:') ? 
 /**
  * Campos de texto. `tipo`: 'curto' (uma linha), 'longo' (caixa maior),
  * 'link', 'email' ou 'telefone'. `seVazioEsconde`: seletor CSS do bloco que
- * some da página quando o campo fica vazio.
+ * some da página quando o campo fica vazio. `padrao`: o texto deste projeto,
+ * quando é diferente do que veio na cópia (vazio = a linha não aparece).
  */
 export const CAMPOS = [
   // ───────────── Página de regras: barra do topo ─────────────
@@ -135,6 +144,7 @@ export const CAMPOS = [
     rotulo: 'Nome',
     ajuda: 'Deixe vazio para esconder.',
     seVazioEsconde: '.author-details > .author-name',
+    padrao: 'MURILO MENDES',
     locais: [js(H(545))],
   },
   { id: 'regras.creditos.rotuloDiscord', pagina: 'regras', grupo: 'Créditos (fim da página)', rotulo: 'Discord: nome da linha', locais: [js(H(547))] },
@@ -145,6 +155,7 @@ export const CAMPOS = [
     rotulo: 'Discord: usuário',
     ajuda: 'É também o texto copiado quando o visitante clica. Deixe vazio para esconder a linha.',
     seVazioEsconde: '.author-details > .contact-row:nth-child(2)',
+    padrao: 'sgtmendes1997_29726',
     locais: [js(H(548), 'children:['), js('navigator.clipboard.writeText(', '')],
   },
   { id: 'regras.creditos.copiar', pagina: 'regras', grupo: 'Créditos (fim da página)', rotulo: 'Discord: descrição do botão de copiar', locais: [js(H(555), 'p?"Copiado":')] },
@@ -164,6 +175,7 @@ export const CAMPOS = [
     tipo: 'telefone',
     ajuda: 'Deixe vazio para esconder a linha.',
     seVazioEsconde: '.author-details > .contact-row:nth-child(3)',
+    padrao: '',
     locais: [js(H(565)), js(H(565), 'href:', { prefixo: 'tel:', transformar: 'telefone' })],
   },
   { id: 'regras.creditos.rotuloEmail', pagina: 'regras', grupo: 'Créditos (fim da página)', rotulo: 'E-mail: nome da linha', locais: [js(H(568))] },
@@ -175,6 +187,7 @@ export const CAMPOS = [
     tipo: 'email',
     ajuda: 'Deixe vazio para esconder a linha.',
     seVazioEsconde: '.author-details > .contact-row:nth-child(4)',
+    padrao: '',
     locais: [js(H(569)), js(H(569), 'href:', { prefixo: 'mailto:' })],
   },
   { id: 'regras.creditos.final1', pagina: 'regras', grupo: 'Créditos (fim da página)', rotulo: 'Frase final, primeira parte', locais: [js(H(575), 'children:[')] },
@@ -255,6 +268,8 @@ export const CAMPOS = [
   },
 
   // ───────────── Convite ─────────────
+  // Estes textos aparecem na página /convite/ e, com a opção `conviteNoInicio`
+  // ligada, também no bloco do início da página de regras (convite-no-inicio.mjs).
   { id: 'convite.sobretitulo', pagina: 'convite', grupo: 'Texto do convite', rotulo: 'Linha pequena acima do título', locais: [texto('convite', '<span class="eyebrow">', '</span>')] },
   { id: 'convite.titulo', pagina: 'convite', grupo: 'Texto do convite', rotulo: 'Título', locais: [texto('convite', '<h1 id="title">', '</h1>')] },
   { id: 'convite.texto', pagina: 'convite', grupo: 'Texto do convite', rotulo: 'Texto', tipo: 'longo', locais: [texto('convite', '<p>', '</p>')] },
@@ -265,7 +280,7 @@ export const CAMPOS = [
     grupo: 'Botão',
     rotulo: 'Para onde o botão leva',
     tipo: 'link',
-    ajuda: 'Use / para a página de regras, ou um endereço completo começando com https://',
+    ajuda: 'Use / para as regras, ou um endereço completo começando com https://. Com /, o botão do início da página de regras desce até as regras. Clicar na imagem faz o mesmo que o botão.',
     locais: [attr('convite', '<a class="button" href="')],
   },
   {
@@ -361,6 +376,8 @@ export const CAMPOS = [
 
 /** Opções do site, com o valor que cada uma tem enquanto ninguém mexe. */
 export const OPCOES_PADRAO = {
+  /** Mostra o convite (imagem, texto e botão) no início da página de regras, antes de tudo. */
+  conviteNoInicio: true,
   /** Mostra a aba "Admin" ao lado das abas da página de regras. */
   abaAdmin: true,
   /** Mostra o bloco de créditos no fim da página de regras. */
@@ -378,6 +395,13 @@ export const OPCOES_PADRAO = {
 /** Opções de ligar e desligar que o painel mostra dentro de um grupo de campos. */
 export const INTERRUPTORES = [
   {
+    opcao: 'conviteNoInicio',
+    pagina: 'convite',
+    grupo: 'Texto do convite',
+    rotulo: 'Mostrar o convite no início da página de regras',
+    ajuda: 'A imagem, o texto e o botão aparecem antes das regras. Desligado, o convite fica só na página /convite/.',
+  },
+  {
     opcao: 'abaAdmin',
     pagina: 'regras',
     grupo: 'Abas',
@@ -392,6 +416,7 @@ export const INTERRUPTORES = [
 export const IDS_RESERVADOS = new Set([
   'root',
   'inicio',
+  'fs-convite-titulo',
   'integridade',
   'integridade-heading',
   'autor',

@@ -8,7 +8,7 @@ import path from 'node:path';
 import { spawn } from 'node:child_process';
 import { analisarImagem } from '../imagem.mjs';
 import { ARQUIVOS } from '../mapa.mjs';
-import { GIF_MINIMO, RAIZ, SITE, ok, pastaTemporaria, pngSimples, resumo } from './apoio.mjs';
+import { CREDITOS_DA_COPIA, GIF_MINIMO, PADRAO, RAIZ, SITE, ok, pastaTemporaria, pngSimples, resumo } from './apoio.mjs';
 
 const DADOS = pastaTemporaria();
 const resumoDe = (corpo) => crypto.createHash('sha256').update(corpo).digest('hex');
@@ -136,14 +136,22 @@ try {
   await subir();
   assert.ok(processo.saida().includes('senha inicial'), 'ao iniciar, o servidor avisa que a senha inicial está em uso');
 
-  // ───── o site, sem nenhuma alteração
+  // ───── o site, sem nenhuma alteração feita pelo painel
+  // A página de regras e o aplicativo dela saem com o que o projeto mudou na cópia
+  // (convite no início, créditos e aba Admin); todo o resto, byte a byte como a cópia.
+  const aplicativo = (await baixar(`/${ARQUIVOS.js}`)).corpo.toString('utf8');
+  assert.equal(aplicativo, PADRAO.js);
+  for (const caminho of ['/', '/index.html', '/uma-rota-qualquer', '/404']) assert.equal((await baixar(caminho)).corpo.toString('utf8'), PADRAO.index, caminho);
+  // Na página do convite, só o destino do botão muda: abre a página de regras já depois do convite.
+  for (const caminho of ['/convite', '/convite/', '/convite/index.html']) assert.equal((await baixar(caminho)).corpo.toString('utf8'), PADRAO.convite, caminho);
   for (const rel of Object.values(ARQUIVOS).concat('assets/index-DMP8NyHf.css', 'favicon.ico', 'fronteira-sul-convite-preview.jpg')) {
-    if (rel === ARQUIVOS.js) continue;
+    if (rel === ARQUIVOS.js || rel === ARQUIVOS.index || rel === ARQUIVOS.convite) continue;
     assert.equal(resumoDe((await baixar(`/${rel}`)).corpo), resumoDe(doSite(rel)), rel);
   }
-  const aplicativo = (await baixar(`/${ARQUIVOS.js}`)).corpo.toString('utf8');
-  assert.equal(aplicativo.length - doSite(ARQUIVOS.js).toString('utf8').length, 156, 'no aplicativo, só entra a aba Admin');
   assert.ok(aplicativo.includes('href:"/admin/"'));
+  assert.ok(aplicativo.includes('className:"site-shell",children:[R.jsx("section",{className:"fs-convite"'), 'o convite abre a página de regras');
+  assert.ok(aplicativo.includes('children:"MURILO MENDES"') && aplicativo.includes('navigator.clipboard.writeText("sgtmendes1997_29726")'));
+  for (const antigo of Object.values(CREDITOS_DA_COPIA)) assert.ok(!aplicativo.includes(antigo), 'os créditos da cópia não são entregues');
   for (const [caminho, status, tipo] of [
     ['/', 200, 'text/html; charset=utf-8'],
     ['/convite', 200, 'text/html; charset=utf-8'],
@@ -166,7 +174,7 @@ try {
   }
   assert.equal((await fetch(`${BASE}/`, { method: 'POST' })).status, 405);
   assert.equal((await fetch(`${BASE}/admin/`, { method: 'POST' })).status, 405);
-  ok('site sem alterações: mesmos bytes do original (mais a aba Admin) e as mesmas respostas do servidor original');
+  ok('site sem alterações do painel: a cópia mais o convite no início, os créditos novos e a aba Admin; mesmas respostas do servidor original');
 
   const painel = await baixar('/admin/');
   assert.ok(painel.headers.get('content-security-policy').includes("script-src 'self'"));
@@ -241,7 +249,9 @@ try {
   assert.equal(r.status, 200);
   assert.equal(r.dados.versao, 1);
   assert.ok((await baixar('/convite/')).corpo.toString('utf8').includes('<h1 id="title">Título &lt;novo&gt; &amp; "aspas"</h1>'));
-  assert.ok((await baixar(`/${ARQUIVOS.js}`)).corpo.toString('utf8').includes('children:["RP sério.",'));
+  const aplicativoNovo = (await baixar(`/${ARQUIVOS.js}`)).corpo.toString('utf8');
+  assert.ok(aplicativoNovo.includes('children:["RP sério.",'));
+  assert.ok(aplicativoNovo.includes('className:"fs-convite-titulo",children:"Título <novo> & \\"aspas\\""'), 'o convite do início acompanha o texto da página /convite/');
   assert.equal((await api('PUT', 'conteudo', { token, json: { versao: 0, textos: {} } })).status, 409);
   r = await api('PUT', 'conteudo', { token, json: { versao: 1, textos: { 'convite.titulo': 'x'.repeat(400) } } });
   assert.equal(r.status, 400);
@@ -343,9 +353,12 @@ try {
   r = await api('POST', 'restaurar-original', { token: token2 });
   assert.equal(r.status, 200);
   assert.deepEqual(r.dados.textos, {});
-  for (const rel of ['index.html', 'convite/index.html', 'fronteira-sul-convite-preview.jpg', 'favicon.ico']) {
+  for (const rel of ['fronteira-sul-convite-preview.jpg', 'favicon.ico']) {
     assert.ok((await baixar(`/${rel}`)).corpo.equals(doSite(rel)), rel);
   }
+  assert.equal((await baixar('/convite/')).corpo.toString('utf8'), PADRAO.convite);
+  assert.equal((await baixar('/index.html')).corpo.toString('utf8'), PADRAO.index);
+  assert.equal((await baixar(`/${ARQUIVOS.js}`)).corpo.toString('utf8'), PADRAO.js);
   assert.equal((await entrar('chefe', 'nova-senha-1')).status, 200, 'restaurar o site não mexe no acesso');
   ok('histórico e "restaurar o site original" devolvem os arquivos byte a byte');
 

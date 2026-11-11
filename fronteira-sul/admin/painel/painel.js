@@ -498,7 +498,7 @@ function blocoDaSecao(secao, i, redesenhar) {
 // ───────────────────────────── aba: página de regras ─────────────────────────────
 function abaRegras() {
   return [
-    ...cabecalho('Página de regras', 'Os textos fixos da página: topo, abertura, índice, destaque e créditos. O texto das regras fica em “Regulamento”.'),
+    ...cabecalho('Página de regras', 'Os textos fixos da página: topo, abertura, índice, destaque e créditos. O texto das regras fica em “Regulamento”; o convite que aparece no início da página, em “Convite”.'),
     ...gruposDeCampos('regras'),
   ];
 }
@@ -645,7 +645,7 @@ function blocoDaFaixa(faixa, i, redesenhar) {
 // ───────────────────────────── aba: convite ─────────────────────────────
 function abaConvite() {
   const paraImagens = h('p', { class: 'texto' }, 'Para trocar a foto do convite, vá em ', h('button', { type: 'button', class: 'link', text: 'Imagens', onclick: () => irPara('imagens') }), '.');
-  return [...cabecalho('Convite', 'A página do convite (/convite/): texto, botão e descrição da imagem.'), ...gruposDeCampos('convite', { Imagem: paraImagens })];
+  return [...cabecalho('Convite', 'O convite aparece em dois lugares: no início da página de regras e na página /convite/. Aqui ficam o texto, o botão e a descrição da imagem.'), ...gruposDeCampos('convite', { Imagem: paraImagens })];
 }
 
 // ───────────────────────────── aba: imagens ─────────────────────────────
@@ -818,7 +818,7 @@ function abaHistorico() {
       'section',
       { class: 'grupo' },
       h('h2', { text: 'Site original' }),
-      h('p', { class: 'texto', text: 'Desfaz tudo o que foi mudado pelo painel: textos, regras, opções e imagens voltam a ser os da cópia do site. O usuário e a senha não mudam.' }),
+      h('p', { class: 'texto', text: 'Desfaz tudo o que foi mudado pelo painel: textos, regras, opções e imagens voltam a ser como eram antes de qualquer alteração feita aqui. O usuário e a senha não mudam.' }),
       h(
         'div',
         { class: 'acoes' },
@@ -828,7 +828,7 @@ function abaHistorico() {
             trocarTudo(
               { titulo: 'Restaurar o site original?', texto: 'Todos os textos, as regras e as opções voltam ao original, e as imagens que você enviou são apagadas.', ok: 'Restaurar tudo' },
               () => api('POST', 'restaurar-original'),
-              'Pronto. O site voltou a ser a cópia original.',
+              'Pronto. O site voltou ao original.',
             ),
           'perigo',
         ),

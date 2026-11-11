@@ -1,20 +1,31 @@
 /**
  * Conteúdo editável do site.
  *
- * Guarda o que o administrador alterou (dados/conteudo.json) e monta, na hora
- * de entregar cada página, a versão com essas alterações. Os arquivos de
- * ../site são só lidos: continuam sendo a cópia exata do site original, e
- * "restaurar o original" é simplesmente deixar de aplicar as alterações.
+ * Monta, na hora de entregar cada página, a versão que vale. São três camadas:
+ *
+ *   1. os arquivos de ../site: a cópia exata do site original, só lida;
+ *   2. o que este projeto mudou em relação à cópia (os `padrao` e as opções
+ *      de mapa.mjs): vale em toda instalação e é o "original" do painel;
+ *   3. o que o administrador alterou pelo painel (dados/conteudo.json).
+ *
+ * "Restaurar o original" é deixar de aplicar a camada 3.
  */
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import vm from 'node:vm';
 import zlib from 'node:zlib';
+import { ATALHO_DAS_REGRAS, LINK_DAS_REGRAS, MARCA_DO_INICIO, blocoDoConvite, cabecaDoConvite } from './convite-no-inicio.mjs';
+import { analisarImagem } from './imagem.mjs';
 import { ARQUIVOS, CAMPOS, IDS_RESERVADOS, IMAGENS, INTERRUPTORES, OPCOES_PADRAO, ORIGEM_ORIGINAL } from './mapa.mjs';
 
 const FORMATO = 1;
 const MAX_HISTORICO = 15;
+
+/** Endereço da imagem do convite dentro do site. */
+const IMAGEM_DO_CONVITE = IMAGENS.find((img) => img.id === 'convite').caminhos[0];
+/** Endereço do logo (as medidas dele reservam o espaço na barra do topo). */
+const IMAGEM_DO_LOGO = IMAGENS.find((img) => img.id === 'logo').caminhos[0];
 
 /** A aba "Admin": entra logo depois das duas abas da página de regras. */
 const FIM_DAS_ABAS = 'children:"Regras da Polícia"})';
@@ -334,7 +345,7 @@ function limparPolicia(entrada) {
 function limparOpcoes(entrada) {
   const saida = { ...OPCOES_PADRAO };
   if (!entrada || typeof entrada !== 'object') return saida;
-  for (const chave of ['abaAdmin', 'mostrarCreditos', 'mostrarDestaque', 'removerManus']) {
+  for (const chave of ['conviteNoInicio', 'abaAdmin', 'mostrarCreditos', 'mostrarDestaque', 'removerManus']) {
     if (typeof entrada[chave] === 'boolean') saida[chave] = entrada[chave];
   }
   if (typeof entrada.cssExtra === 'string') {
@@ -361,6 +372,7 @@ function limparOpcoes(entrada) {
 
 const igual = (a, b) => JSON.stringify(a) === JSON.stringify(b);
 const copiar = (v) => JSON.parse(JSON.stringify(v));
+const tem = (objeto, chave) => Object.prototype.hasOwnProperty.call(objeto, chave);
 
 // ───────────────────────────── o conteúdo ─────────────────────────────
 export function criarConteudo({ raizSite, dirDados, aviso = () => {} }) {
@@ -380,7 +392,7 @@ export function criarConteudo({ raizSite, dirDados, aviso = () => {} }) {
   }
 
   function carimbo() {
-    return Object.values(ARQUIVOS)
+    return [...Object.values(ARQUIVOS), IMAGEM_DO_CONVITE, IMAGEM_DO_LOGO]
       .map((rel) => {
         try {
           const s = fs.statSync(path.join(raizSite, rel));
@@ -413,7 +425,18 @@ export function criarConteudo({ raizSite, dirDados, aviso = () => {} }) {
         const locais = campo.locais.map((local) => ({ arquivo: local.arquivo, ...resolverLocal(textos, local) }));
         const valores = new Set(locais.filter((l) => l.comparavel).map((l) => l.valor));
         if (valores.size > 1) throw new Error('o original usa textos diferentes nos lugares deste campo');
-        campos.set(campo.id, { campo, locais, original: locais[0].valor });
+        // `original` é o que está no arquivo copiado; `padrao`, o que o site mostra enquanto
+        // o administrador não mexe (igual ao original, a não ser que o projeto tenha mudado).
+        const original = locais[0].valor;
+        let padrao = original;
+        if (campo.padrao !== undefined) {
+          try {
+            padrao = limparCampo(campo, campo.padrao);
+          } catch (erro) {
+            problemas.push(`O texto padrão de "${campo.rotulo}" (mapa.mjs) é inválido e foi ignorado: ${erro.message}`);
+          }
+        }
+        campos.set(campo.id, { campo, locais, original, padrao });
       } catch (erro) {
         problemas.push(`O texto "${campo.rotulo}" não pode ser editado: ${erro.message}.`);
       }
@@ -439,9 +462,20 @@ export function criarConteudo({ raizSite, dirDados, aviso = () => {} }) {
       return { faixas, aplicacao, cnh, original: limparPolicia({ faixas: faixas.original, aplicacao: aplicacao.original, cnh: cnh.original }) };
     });
     const abaAdmin = tentar('A aba "Admin" não pôde ser colocada na página de regras', () => unico(js, MARCA_DAS_ABAS) + FIM_DAS_ABAS.length);
+    const conviteNoInicio = tentar('O convite não pôde ser colocado no início da página de regras', () => unico(js, MARCA_DO_INICIO) + MARCA_DO_INICIO.length);
+    // Largura e altura das imagens que vieram no site (para reservar o espaço delas na página).
+    const medidasDe = (rel) => {
+      try {
+        return analisarImagem(fs.readFileSync(path.join(raizSite, rel)));
+      } catch {
+        return null; // sem a imagem original, a página só não sabe as medidas
+      }
+    };
+    const imagemDoConvite = medidasDe(IMAGEM_DO_CONVITE);
+    const imagemDoLogo = medidasDe(IMAGEM_DO_LOGO);
 
     for (const p of problemas) aviso(p);
-    original = { marca, textos, campos, regulamento, policia, abaAdmin, problemas };
+    original = { marca, textos, campos, regulamento, policia, abaAdmin, conviteNoInicio, imagemDoConvite, imagemDoLogo, problemas };
     gerados.clear();
     return original;
   }
@@ -475,10 +509,10 @@ export function criarConteudo({ raizSite, dirDados, aviso = () => {} }) {
     };
     const textos = bruto.textos && typeof bruto.textos === 'object' ? bruto.textos : {};
     for (const [id, reg] of o.campos) {
-      if (!Object.prototype.hasOwnProperty.call(textos, id)) continue;
+      if (!tem(textos, id)) continue;
       tentar(() => {
         const limpo = limparCampo(reg.campo, textos[id]);
-        if (limpo !== reg.original) novo.textos[id] = limpo;
+        if (limpo !== reg.padrao) novo.textos[id] = limpo;
       });
     }
     if (o.regulamento && bruto.regulamento) {
@@ -582,9 +616,9 @@ export function criarConteudo({ raizSite, dirDados, aviso = () => {} }) {
       if (!entrada.textos || typeof entrada.textos !== 'object' || Array.isArray(entrada.textos)) throw new ErroDeConteudo('Textos: formato inválido.');
       novo.textos = {};
       for (const [id, reg] of o.campos) {
-        if (!Object.prototype.hasOwnProperty.call(entrada.textos, id)) continue;
+        if (!tem(entrada.textos, id)) continue;
         const limpo = limparCampo(reg.campo, entrada.textos[id]);
-        if (limpo !== reg.original) novo.textos[id] = limpo;
+        if (limpo !== reg.padrao) novo.textos[id] = limpo;
       }
     }
     if (entrada.regulamento !== undefined) {
@@ -611,7 +645,7 @@ export function criarConteudo({ raizSite, dirDados, aviso = () => {} }) {
     return { ...descrever(), mudou };
   }
 
-  /** Volta o site inteiro ao que era na cópia: textos, regras, opções e imagens. */
+  /** Desfaz tudo o que foi feito pelo painel: textos, regras, opções e imagens voltam ao padrão do projeto. */
   function restaurarOriginal() {
     const imagens = Object.values(estado.imagens);
     publicar(vazio());
@@ -699,18 +733,35 @@ export function criarConteudo({ raizSite, dirDados, aviso = () => {} }) {
   }
 
   // ── montagem das páginas ──
+  /** O texto que vale para um campo: o que o administrador escreveu ou, sem isso, o padrão do projeto. */
+  function textoDe(id) {
+    const reg = lerOriginal().campos.get(id);
+    if (!reg) return '';
+    return tem(estado.textos, id) ? estado.textos[id] : reg.padrao;
+  }
+
+  /** Os campos cujo texto em uso é diferente do que está no arquivo copiado: [registro do campo, texto]. */
+  function textosTrocados() {
+    const lista = [];
+    for (const [id, reg] of lerOriginal().campos) {
+      const valor = textoDe(id);
+      if (valor !== reg.original) lista.push([reg, valor]);
+    }
+    return lista;
+  }
+
   function trocasDeTexto(arquivo) {
-    const o = lerOriginal();
     const trocas = [];
-    for (const [id, valor] of Object.entries(estado.textos)) {
-      const reg = o.campos.get(id);
-      if (!reg) continue;
+    for (const [reg, valor] of textosTrocados()) {
       for (const local of reg.locais) {
         if (local.arquivo === arquivo && local.tipo === 'trecho') trocas.push({ inicio: local.inicio, fim: local.fim, novo: local.escrever(valor) });
       }
     }
     return trocas;
   }
+
+  /** O convite no início da página de regras está ligado (e o lugar dele foi achado no aplicativo)? */
+  const conviteNoInicio = () => estado.opcoes.conviteNoInicio && lerOriginal().conviteNoInicio != null;
 
   function montarJs() {
     const o = lerOriginal();
@@ -725,19 +776,30 @@ export function criarConteudo({ raizSite, dirDados, aviso = () => {} }) {
       }
     }
     if (o.abaAdmin != null && estado.opcoes.abaAdmin) trocas.push({ inicio: o.abaAdmin, fim: o.abaAdmin, novo: ABA_ADMIN });
+    if (conviteNoInicio()) {
+      // O bloco mostra o mesmo conteúdo da página /convite/, com a imagem que estiver valendo.
+      const medidas = estado.imagens.convite || o.imagemDoConvite || {};
+      const bloco = blocoDoConvite({
+        imagem: { endereco: IMAGEM_DO_CONVITE, descricao: textoDe('convite.imagemDescricao'), largura: medidas.largura || 0, altura: medidas.altura || 0 },
+        sobretitulo: textoDe('convite.sobretitulo'),
+        titulo: textoDe('convite.titulo'),
+        texto: textoDe('convite.texto'),
+        botao: textoDe('convite.botao'),
+        link: textoDe('convite.botaoLink') || '/',
+      });
+      trocas.push({ inicio: o.conviteNoInicio, fim: o.conviteNoInicio, novo: bloco });
+    }
     return trocas.length ? aplicarTrocas(o.textos.js, trocas) : null;
   }
 
   /** CSS acrescentado à página: blocos escondidos e o CSS extra do administrador. */
   function cssDaPagina(nome) {
-    const o = lerOriginal();
     const regras = [];
     if (nome === 'index') {
       if (!estado.opcoes.mostrarCreditos) regras.push('.author-card{display:none!important}');
       if (!estado.opcoes.mostrarDestaque) regras.push('.cheat-callout{display:none!important}');
-      for (const [id, valor] of Object.entries(estado.textos)) {
-        const campo = o.campos.get(id)?.campo;
-        if (campo?.seVazioEsconde && valor === '') regras.push(`${campo.seVazioEsconde}{display:none!important}`);
+      for (const [{ campo }, valor] of textosTrocados()) {
+        if (campo.seVazioEsconde && valor === '') regras.push(`${campo.seVazioEsconde}{display:none!important}`);
       }
     }
     // "</" não pode aparecer dentro de <style>; em CSS, "<\/" quer dizer a mesma coisa.
@@ -756,6 +818,16 @@ export function criarConteudo({ raizSite, dirDados, aviso = () => {} }) {
     const txt = o.textos[nome];
     if (txt == null) return null;
     let trocas = trocasDeTexto(nome);
+
+    // Com o convite também no início da página de regras, o botão da página /convite/ leva direto
+    // às regras; senão o visitante clicaria e veria o mesmo convite outra vez.
+    if (nome === 'convite' && conviteNoInicio() && textoDe('convite.botaoLink') === LINK_DAS_REGRAS) {
+      const local = o.campos.get('convite.botaoLink')?.locais.find((l) => l.arquivo === 'convite' && l.tipo === 'trecho');
+      if (local) {
+        trocas = trocas.filter((t) => t.inicio !== local.inicio || t.fim !== local.fim);
+        trocas.push({ inicio: local.inicio, fim: local.fim, novo: local.escrever(ATALHO_DAS_REGRAS) });
+      }
+    }
 
     // Com o endereço do site preenchido, os links de compartilhamento passam a apontar para cá.
     const destino = estado.opcoes.enderecoPublico;
@@ -779,9 +851,13 @@ export function criarConteudo({ raizSite, dirDados, aviso = () => {} }) {
       }
     }
 
+    // O que entra no fim do <head>. O CSS do administrador vem por último, para poder mudar o resto.
+    const noHead = [];
+    if (nome === 'index' && conviteNoInicio()) noHead.push(cabecaDoConvite(IMAGEM_DO_CONVITE, estado.imagens.logo || o.imagemDoLogo));
     const css = cssDaPagina(nome);
+    if (css) noHead.push(`<style id="ajustes-do-admin">\n${css}\n</style>`);
     const fimDoHead = txt.indexOf('</head>');
-    if (css && fimDoHead >= 0) trocas.push({ inicio: fimDoHead, fim: fimDoHead, novo: `<style id="ajustes-do-admin">\n${css}\n</style>` });
+    if (noHead.length && fimDoHead >= 0) trocas.push({ inicio: fimDoHead, fim: fimDoHead, novo: noHead.join('\n') });
 
     if (estado.opcoes.removerManus) {
       // Tudo que a hospedagem original colocou no fim da página: selo e estatísticas.
@@ -803,8 +879,8 @@ export function criarConteudo({ raizSite, dirDados, aviso = () => {} }) {
     const o = lerOriginal();
     if (o.textos.manifesto == null) return null;
     let json = null;
-    for (const [id, valor] of Object.entries(estado.textos)) {
-      for (const local of o.campos.get(id)?.locais || []) {
+    for (const [reg, valor] of textosTrocados()) {
+      for (const local of reg.locais) {
         if (local.tipo !== 'manifesto') continue;
         json ||= JSON.parse(o.textos.manifesto);
         for (const chave of local.chaves) json[chave] = valor;
@@ -869,7 +945,8 @@ export function criarConteudo({ raizSite, dirDados, aviso = () => {} }) {
         tipo: c.tipo || 'curto',
         max: LIMITES[c.tipo || 'curto'],
         escondeSeVazio: !!c.seVazioEsconde,
-        original: o.campos.get(c.id).original,
+        // Para o painel, "original" é o site como vem neste projeto.
+        original: o.campos.get(c.id).padrao,
       })),
       textos: { ...estado.textos },
       regulamento: o.regulamento ? { original: copiar(o.regulamento.original), atual: estado.regulamento ? copiar(estado.regulamento) : null } : null,

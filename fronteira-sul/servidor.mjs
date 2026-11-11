@@ -3,10 +3,14 @@
  * Servidor do site "Fronteira do Sul RP" (cópia), com o painel do administrador.
  *
  * Os arquivos de ./site são a cópia exata do site original e nunca são
- * reescritos. O que o administrador muda pelo painel (/admin/) fica guardado em
- * ./dados e é aplicado na hora de responder; sem alterações, cada arquivo sai
- * exatamente como está no disco. A única diferença de uma instalação nova para
- * o original é a aba "Admin" na página de regras (pode ser desligada no painel).
+ * reescritos. Tudo o que muda em relação a eles é aplicado na hora de responder:
+ *
+ *   - o que este projeto mudou no site copiado (admin/mapa.mjs): o convite no
+ *     início da página de regras, os créditos e a aba "Admin";
+ *   - o que o administrador muda pelo painel (/admin/), guardado em ./dados.
+ *
+ * Os arquivos que nenhuma dessas mudanças toca saem exatamente como estão no
+ * disco.
  *
  * As respostas seguem o servidor original (manus.space):
  *
