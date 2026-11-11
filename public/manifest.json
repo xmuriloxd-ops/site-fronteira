@@ -1,27 +1,28 @@
 {
-  "name": "PCPR RP · Prisões e Mandados",
-  "short_name": "PCPR RP",
-  "description": "Registro de prisões e mandados da Polícia Civil RP do Paraná, com cartazes enviados ao Discord.",
-  "start_url": "/",
+  "name": "Corregedoria PMPR · Denúncias",
+  "short_name": "Corregedoria PMPR",
+  "description": "Canal de denúncias da Corregedoria-Geral da Polícia Militar do Paraná (RP), com protocolo automático e envio ao Discord.",
+  "start_url": "./",
+  "scope": "./",
   "display": "standalone",
-  "background_color": "#000000",
-  "theme_color": "#000000",
+  "background_color": "#061527",
+  "theme_color": "#061527",
   "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "/favicon-pcpr.png",
+      "src": "favicon-pmpr.png",
       "sizes": "128x128",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/logo-pcpr.png",
-      "sizes": "642x848",
+      "src": "brasao-pmpr.png",
+      "sizes": "359x446",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/icon-pcpr-512.png",
+      "src": "icon-pmpr-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"

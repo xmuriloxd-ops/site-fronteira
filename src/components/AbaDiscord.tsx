@@ -1,36 +1,18 @@
 import { useEffect, useState } from 'react';
-import {
-  Check,
-  CircleHelp,
-  Copy,
-  Gavel,
-  Link2,
-  Radio,
-  Send,
-  ShieldCheck,
-  Terminal,
-  X,
-} from 'lucide-react';
+import { Check, CircleHelp, Copy, Link2, Radio, Send, ShieldCheck, Terminal, X } from 'lucide-react';
 import type { ConfigDiscord, EnvioDiscord } from '../types';
 import { dataHoraBR, limitar } from '../lib/format';
 import { webhookValido } from '../lib/discord';
-import { dadosCartazExemplo, gerarCartaz } from '../lib/cartaz';
-import { dadosMandadoExemplo, gerarCartazMandado } from '../lib/cartazMandado';
 import { Botao, Campo, Cartao, Entrada, Etiqueta, SecaoTitulo, Selecao, Vazio } from './ui';
 
 interface Props {
   config: ConfigDiscord;
-  configMandados: ConfigDiscord;
   envios: EnvioDiscord[];
   pendentes: number;
-  pendentesMandados: number;
   testando: boolean;
   onSalvar: (cfg: ConfigDiscord) => void;
-  onSalvarMandados: (cfg: ConfigDiscord) => void;
   onTestar: (cfg: ConfigDiscord) => void;
-  onTestarMandados: (cfg: ConfigDiscord) => void;
   onEnviarPendentes: () => void;
-  onEnviarPendentesMandados: () => void;
 }
 
 function Interruptor({
@@ -64,78 +46,25 @@ function Interruptor({
   );
 }
 
-export function AbaDiscord({
-  config,
-  configMandados,
-  envios,
-  pendentes,
-  pendentesMandados,
-  testando,
-  onSalvar,
-  onSalvarMandados,
-  onTestar,
-  onTestarMandados,
-  onEnviarPendentes,
-  onEnviarPendentesMandados,
-}: Props) {
+const ROTULO_FORMATO: Record<string, string> = {
+  ambos: 'EMBED + FOTOS',
+  texto: 'SÓ TEXTO',
+  fotos: 'RESUMO + FOTOS',
+};
+
+export function AbaDiscord({ config, envios, pendentes, testando, onSalvar, onTestar, onEnviarPendentes }: Props) {
   const [form, setForm] = useState<ConfigDiscord>(config);
-  const [formMandados, setFormMandados] = useState<ConfigDiscord>(configMandados);
   const [erroUrl, setErroUrl] = useState(false);
-  const [erroUrlMandados, setErroUrlMandados] = useState(false);
-  const [cartazExemplo, setCartazExemplo] = useState('');
-  const [mandadoExemplo, setMandadoExemplo] = useState('');
 
   useEffect(() => setForm(config), [config]);
-  useEffect(() => setFormMandados(configMandados), [configMandados]);
-
-  useEffect(() => {
-    let vivo = true;
-    void gerarCartaz(dadosCartazExemplo(), { marcaDagua: 'EXEMPLO' })
-      .then((arte) => {
-        if (vivo) setCartazExemplo(arte.dataUrl);
-      })
-      .catch(() => undefined);
-    return () => {
-      vivo = false;
-    };
-  }, []);
-
-  useEffect(() => {
-    let vivo = true;
-    void gerarCartazMandado(dadosMandadoExemplo(), { marcaDagua: 'EXEMPLO' })
-      .then((arte) => {
-        if (vivo) setMandadoExemplo(arte.dataUrl);
-      })
-      .catch(() => undefined);
-    return () => {
-      vivo = false;
-    };
-  }, []);
-
-  const baixarArte = (dataUrl: string, nome: string) => {
-    if (!dataUrl) return;
-    const a = document.createElement('a');
-    a.href = dataUrl;
-    a.download = nome;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-  };
 
   const alterar = <K extends keyof ConfigDiscord>(chave: K, valor: ConfigDiscord[K]) => {
     setForm((atual) => ({ ...atual, [chave]: valor }));
     if (chave === 'webhook') setErroUrl(false);
   };
 
-  const alterarMandados = <K extends keyof ConfigDiscord>(chave: K, valor: ConfigDiscord[K]) => {
-    setFormMandados((atual) => ({ ...atual, [chave]: valor, formatoEnvio: 'cartaz' }));
-    if (chave === 'webhook') setErroUrlMandados(false);
-  };
-
   const urlOk = webhookValido(form.webhook);
-  const urlMandadosOk = webhookValido(formMandados.webhook);
   const alterado = JSON.stringify(form) !== JSON.stringify(config);
-  const alteradoMandados = JSON.stringify(formMandados) !== JSON.stringify(configMandados);
 
   const salvar = () => {
     if (form.webhook.trim() && !urlOk) {
@@ -146,14 +75,7 @@ export function AbaDiscord({
     onSalvar(form);
   };
 
-  const salvarMandados = () => {
-    if (formMandados.webhook.trim() && !urlMandadosOk) {
-      setErroUrlMandados(true);
-      return;
-    }
-    setErroUrlMandados(false);
-    onSalvarMandados({ ...formMandados, formatoEnvio: 'cartaz' });
-  };
+  const formato = form.formatoEnvio ?? 'ambos';
 
   return (
     <div className="discord-layout">
@@ -167,8 +89,8 @@ export function AbaDiscord({
             <h3>{urlOk ? 'Canal vinculado' : 'Nenhum canal vinculado'}</h3>
             <p>
               {urlOk
-                ? `${form.canal || '#prisoes'} · ${form.autoEnviar ? 'envio automático ativado' : 'envio manual'}`
-                : 'Cole a URL do webhook do canal para receber as prisões automaticamente.'}
+                ? `${form.canal || '#denuncias'} · ${form.autoEnviar ? 'envio automático ativado' : 'envio manual'}`
+                : 'Cole a URL do webhook do canal para enviar as denúncias automaticamente.'}
             </p>
           </div>
           {urlOk ? <Etiqueta claro>ATIVO</Etiqueta> : <Etiqueta>AGUARDANDO</Etiqueta>}
@@ -178,7 +100,7 @@ export function AbaDiscord({
           <SecaoTitulo
             numero="01"
             titulo="Canal de destino"
-            descricao="Toda prisão registrada pode ser publicada neste canal com os dados completos e a foto."
+            descricao="Toda denúncia protocolada pode ser publicada neste canal automaticamente, com relato, identificação e evidências."
           />
           <Campo
             label="URL do webhook do canal"
@@ -205,7 +127,9 @@ export function AbaDiscord({
                 </button>
               )}
             </div>
-            {erroUrl && <span className="campo__erro">URL inválida. Ela deve começar com https://discord.com/api/webhooks/</span>}
+            {erroUrl && (
+              <span className="campo__erro">URL inválida. Ela deve começar com https://discord.com/api/webhooks/</span>
+            )}
             {form.webhook && !erroUrl && !urlOk && (
               <span className="campo__erro">Confira a URL: use o endereço completo copiado do Discord.</span>
             )}
@@ -213,28 +137,25 @@ export function AbaDiscord({
 
           <div className="grid-2">
             <Campo label="Nome do canal" dica="Apenas identificação no sistema.">
-              <Entrada value={form.canal} onChange={(e) => alterar('canal', e.target.value)} placeholder="#prisoes" />
+              <Entrada value={form.canal} onChange={(e) => alterar('canal', e.target.value)} placeholder="#denuncias" />
             </Campo>
             <Campo label="Nome do remetente" dica="Aparece como autor da mensagem.">
               <Entrada
                 value={form.nomeBot ?? ''}
                 onChange={(e) => alterar('nomeBot', e.target.value)}
-                placeholder="PCPR · Registro de Prisões"
+                placeholder="Corregedoria · Denúncias PMPR"
               />
             </Campo>
           </div>
 
-          <Campo
-            label="Formato da ficha no canal"
-            dica="O cartaz é a imagem da ficha no modelo impresso, já com a assinatura do escrivão."
-          >
+          <Campo label="Formato da denúncia no canal" dica="Escolha como a mensagem chega no Discord.">
             <Selecao
-              value={form.formatoEnvio ?? 'cartaz'}
+              value={formato}
               onChange={(e) => alterar('formatoEnvio', e.target.value as ConfigDiscord['formatoEnvio'])}
             >
-              <option value="cartaz">CARTAZ EM IMAGEM — modelo da ficha (recomendado)</option>
-              <option value="texto">FICHA EM TEXTO — embed com os campos</option>
-              <option value="ambos">CARTAZ + TEXTO — imagem e embed juntos</option>
+              <option value="ambos">EMBED COMPLETO + FOTOS — relato e evidências juntos (recomendado)</option>
+              <option value="fotos">RESUMO + FOTOS — embed curto com as evidências em destaque</option>
+              <option value="texto">SÓ TEXTO — embed completo sem anexar imagens</option>
             </Selecao>
           </Campo>
 
@@ -243,17 +164,17 @@ export function AbaDiscord({
               ligado={form.autoEnviar}
               onChange={(v) => alterar('autoEnviar', v)}
               titulo="Envio automático"
-              descricao="Publica a ficha no canal assim que a prisão é registrada."
+              descricao="Publica a denúncia no canal assim que ela for protocolada."
             />
             <Interruptor
               ligado={form.mencionarHere}
               onChange={(v) => alterar('mencionarHere', v)}
               titulo="Mencionar @here"
-              descricao="Notifica quem estiver online no canal a cada prisão."
+              descricao="Notifica quem estiver online no canal a cada denúncia."
             />
           </div>
 
-          <Campo label="ID do cargo para mencionar" dica="Opcional — menciona um cargo específico (ex.: Delegacia).">
+          <Campo label="ID do cargo para mencionar" dica="Opcional — menciona um cargo específico (ex.: Corregedoria).">
             <Entrada
               value={form.cargoId ?? ''}
               onChange={(e) => alterar('cargoId', e.target.value.replace(/\D/g, ''))}
@@ -275,7 +196,7 @@ export function AbaDiscord({
               {testando ? 'ENVIANDO...' : 'Enviar teste'}
             </Botao>
             {pendentes > 0 && (
-              <Botao variante="fantasma" icone={<Send size={15} />} onClick={onEnviarPendentes}>
+              <Botao variante="fantasma" icone={<Send size={15} />} onClick={onEnviarPendentes} disabled={testando}>
                 Enviar {pendentes} pendente{pendentes > 1 ? 's' : ''}
               </Botao>
             )}
@@ -283,114 +204,32 @@ export function AbaDiscord({
           </div>
         </Cartao>
 
-        <Cartao className="cartao--canal-mandados">
-          <SecaoTitulo
-            numero="02"
-            titulo="Canal dos mandados de prisão"
-            descricao="Os cartazes de mandados podem ir para um canal específico. Deixe o webhook em branco para usar o canal das prisões."
-          />
-          <div className="nota-mandados">
-            <Gavel size={17} />
-            <span>
-              <b>Sempre em formato de cartaz.</b> Cada mandado expedido gera uma imagem PNG com brasão, foto,
-              situação, dia/data automáticos e assinatura da autoridade — enviada como anexo ao Discord.
-            </span>
-          </div>
-          <Campo
-            label="URL do webhook dos mandados"
-            dica="Opcional — se vazio, usa o webhook configurado acima."
-          >
-            <div className="input-com-icone">
-              <Link2 size={16} />
-              <Entrada
-                value={formMandados.webhook}
-                onChange={(e) => alterarMandados('webhook', e.target.value)}
-                placeholder="https://discord.com/api/webhooks/...  (ou deixe em branco)"
-                className={erroUrlMandados ? 'input--erro' : ''}
-                spellCheck={false}
-                autoComplete="off"
-              />
-            </div>
-            {erroUrlMandados && (
-              <span className="campo__erro">URL inválida. Ela deve começar com https://discord.com/api/webhooks/</span>
-            )}
-            {formMandados.webhook && !erroUrlMandados && !urlMandadosOk && (
-              <span className="campo__erro">Confira a URL completa copiada do Discord.</span>
-            )}
-          </Campo>
-          <div className="grid-2">
-            <Campo label="Nome do canal" dica="Apenas identificação.">
-              <Entrada
-                value={formMandados.canal}
-                onChange={(e) => alterarMandados('canal', e.target.value)}
-                placeholder="#mandados"
-              />
-            </Campo>
-            <Campo label="Nome do remetente" dica="Aparece como autor da mensagem.">
-              <Entrada
-                value={formMandados.nomeBot ?? ''}
-                onChange={(e) => alterarMandados('nomeBot', e.target.value)}
-                placeholder="PCPR · Mandados de Prisão"
-              />
-            </Campo>
-          </div>
-          <div className="interruptores">
-            <Interruptor
-              ligado={formMandados.autoEnviar}
-              onChange={(v) => alterarMandados('autoEnviar', v)}
-              titulo="Envio automático de cartazes"
-              descricao="Publica o cartaz no canal assim que o mandado é expedido."
-            />
-            <Interruptor
-              ligado={formMandados.mencionarHere}
-              onChange={(v) => alterarMandados('mencionarHere', v)}
-              titulo="Mencionar @here"
-              descricao="Notifica quem estiver online no canal a cada mandado."
-            />
-          </div>
-          <div className="form-acoes form-acoes--dentro">
-            <Botao variante="primario" icone={<Check size={17} />} onClick={salvarMandados}>
-              Salvar canal de mandados
-            </Botao>
-            <Botao
-              variante="secundario"
-              icone={<Send size={16} />}
-              onClick={() => onTestarMandados(formMandados)}
-              disabled={testando || (!urlMandadosOk && !urlOk)}
-            >
-              {testando ? 'ENVIANDO...' : 'Enviar cartaz de teste'}
-            </Botao>
-            {pendentesMandados > 0 && (
-              <Botao variante="fantasma" icone={<Send size={15} />} onClick={onEnviarPendentesMandados}>
-                Enviar {pendentesMandados} cartaz{pendentesMandados > 1 ? 'es' : ''}
-              </Botao>
-            )}
-            {alteradoMandados && <span className="aviso-nao-salvo">Alterações ainda não salvas</span>}
-          </div>
-        </Cartao>
-
         <Cartao>
-          <SecaoTitulo numero="03" titulo="Como vincular o canal" descricao="Passo a passo dentro do seu servidor do Discord." />
+          <SecaoTitulo numero="02" titulo="Como vincular o canal" descricao="Passo a passo dentro do seu servidor do Discord." />
           <ol className="passos">
             <li>
               <span>1</span>
               <div>
                 <strong>Abra as configurações do canal</strong>
-                <p>Escolha o canal onde as prisões devem aparecer, por exemplo <b>#prisoes</b>.</p>
+                <p>
+                  Escolha o canal onde as denúncias devem aparecer, por exemplo <b>#denuncias</b>.
+                </p>
               </div>
             </li>
             <li>
               <span>2</span>
               <div>
                 <strong>Integrações → Webhooks → Novo webhook</strong>
-                <p>Dê um nome ao webhook (ex.: “PCPR Prisões”) e confirme.</p>
+                <p>Dê um nome ao webhook (ex.: “Corregedoria Denúncias”) e confirme.</p>
               </div>
             </li>
             <li>
               <span>3</span>
               <div>
                 <strong>Copiar URL do webhook</strong>
-                <p>Cole a URL no campo acima, salve e use <b>Enviar teste</b> para conferir.</p>
+                <p>
+                  Cole a URL no campo acima, salve e use <b>Enviar teste</b> para conferir.
+                </p>
               </div>
             </li>
           </ol>
@@ -398,7 +237,7 @@ export function AbaDiscord({
             <CircleHelp size={17} />
             <p>
               O webhook é um segredo: quem tem a URL pode postar no canal. Ele fica salvo apenas nos dados deste
-              sistema (servidor ou navegador) e é usado somente para enviar as fichas. Não é necessário criar bot
+              sistema (servidor ou navegador) e é usado somente para enviar as denúncias. Não é necessário criar bot
               nem token.
             </p>
           </div>
@@ -408,78 +247,66 @@ export function AbaDiscord({
       <aside className="discord-col__lado">
         <Cartao className="cartao--preview-discord">
           <SecaoTitulo
-            titulo="Prévia do cartaz"
-            descricao="Exatamente a imagem que chega no canal (exemplo com marca d'água)."
+            titulo="Prévia da mensagem"
+            descricao="Exatamente o formato que chega no canal (exemplo de denúncia)."
           />
           <div className="discord-preview">
             <div className="discord-preview__autor">
-              <img src="/logo-pcpr.png" alt="" />
+              <img src={`${import.meta.env.BASE_URL}brasao-pmpr.png`} alt="" />
               <div>
-                <strong>{form.nomeBot || 'PCPR · Registro de Prisões'}</strong>
-                <span>{form.canal || '#prisoes'} · FORMATO: {(form.formatoEnvio ?? 'cartaz').toUpperCase()}</span>
+                <strong>{form.nomeBot || 'Corregedoria · Denúncias PMPR'}</strong>
+                <span>{form.canal || '#denuncias'} · FORMATO: {ROTULO_FORMATO[formato]}</span>
               </div>
             </div>
             {form.mencionarHere && <div className="discord-preview__mencao">@here</div>}
-            <div className="cartaz-preview">
-              {cartazExemplo ? (
-                <img src={cartazExemplo} alt="Exemplo do cartaz da ficha enviado ao Discord" />
-              ) : (
-                <div className="preview-carregando">Gerando exemplo do cartaz...</div>
-              )}
-            </div>
-            <div className="cartaz-preview__rodape">
-              <span>
-                <Check size={13} /> Mesmo modelo da ficha, com foto, dia/data automáticos e assinatura do escrivão.
-              </span>
-              <Botao
-                variante="fantasma"
-                pequeno
-                onClick={() => baixarArte(cartazExemplo, 'cartaz-exemplo-pcpr.png')}
-                disabled={!cartazExemplo}
-              >
-                Baixar exemplo
-              </Botao>
-            </div>
-          </div>
-        </Cartao>
-
-        <Cartao className="cartao--preview-discord">
-          <SecaoTitulo
-            titulo="Prévia do cartaz de mandado"
-            descricao="Modelo enviado a cada expedição (exemplo com marca d'água)."
-          />
-          <div className="discord-preview">
-            <div className="discord-preview__autor">
-              <img src="/logo-pcpr.png" alt="" />
-              <div>
-                <strong>{formMandados.nomeBot || 'PCPR · Mandados de Prisão'}</strong>
-                <span>{formMandados.canal || '#mandados'} · FORMATO: CARTAZ</span>
+            <div className="discord-preview__embed">
+              <strong>⛔ DENÚNCIA · CORREGEDORIA-GERAL PMPR</strong>
+              <p>
+                <b>Protocolo DEN-2026-0001</b> — Conduta em serviço
+              </p>
+              <div className="discord-preview__campos">
+                <div>
+                  <span>🎯 Natureza</span>
+                  <b>Conduta em serviço</b>
+                </div>
+                <div>
+                  <span>📍 Local</span>
+                  <b>Centro — Curitiba</b>
+                </div>
+                <div className="discord-preview__campo-largo">
+                  <span>🛡️ Denunciado</span>
+                  <b>Soldado PM · 3º BPM</b>
+                </div>
+                <div className="discord-preview__campo-largo">
+                  <span>📜 Relato</span>
+                  <b>Em 05/11/2026, por volta das 22h, o militar abordou... (relato completo no embed)</b>
+                </div>
+                <div>
+                  <span>👤 Denunciante</span>
+                  <b>ANÔNIMO (identidade preservada)</b>
+                </div>
+                <div>
+                  <span>🗓️ Data dos fatos</span>
+                  <b>05/11/2026</b>
+                </div>
               </div>
-            </div>
-            {formMandados.mencionarHere && <div className="discord-preview__mencao">@here</div>}
-            <div className="cartaz-preview">
-              {mandadoExemplo ? (
-                <img src={mandadoExemplo} alt="Exemplo do cartaz de mandado enviado ao Discord" />
-              ) : (
-                <div className="preview-carregando">Gerando exemplo do cartaz de mandado...</div>
+              {formato !== 'texto' && (
+                <div className="discord-preview__foto">
+                  📎 {formato === 'ambos' ? 'EVIDÊNCIAS ANEXADAS (FOTOS)' : 'FOTOS DE EVIDÊNCIA EM DESTAQUE'}
+                </div>
               )}
-            </div>
-            <div className="cartaz-preview__rodape">
-              <span><Check size={13} /> Cartaz PNG com assinatura da autoridade.</span>
-              <Botao
-                variante="fantasma"
-                pequeno
-                onClick={() => baixarArte(mandadoExemplo, 'cartaz-mandado-exemplo.png')}
-                disabled={!mandadoExemplo}
-              >
-                Baixar exemplo
-              </Botao>
+              <span className="discord-preview__rodape">
+                Corregedoria-Geral · Polícia Militar do Paraná · RP | DEN-2026-0001
+              </span>
             </div>
           </div>
         </Cartao>
 
         <Cartao>
-          <SecaoTitulo titulo="Histórico de envios" descricao={`${envios.length} registro${envios.length === 1 ? '' : 's'} de entrega.`} />
+          <SecaoTitulo
+            titulo="Histórico de envios"
+            descricao={`${envios.length} registro${envios.length === 1 ? '' : 's'} de entrega.`}
+          />
           {envios.length === 0 ? (
             <Vazio
               icone={<Terminal size={26} />}
@@ -496,7 +323,9 @@ export function AbaDiscord({
                   <div>
                     <strong>{limitar(envio.titulo, 60)}</strong>
                     <p>{limitar(envio.detalhe, 110)}</p>
-                    <small>{dataHoraBR(envio.criadoEm)} · via {envio.via}</small>
+                    <small>
+                      {dataHoraBR(envio.criadoEm)} · via {envio.via}
+                    </small>
                   </div>
                 </li>
               ))}

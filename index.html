@@ -3,23 +3,23 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#000000" />
+    <meta name="theme-color" content="#061527" />
     <meta
       name="description"
-      content="Sistema da Polícia Civil RP do Paraná: fichas de prisão e mandados com foto, artigos, assinatura, dia/data automáticos e cartazes enviados ao Discord."
+      content="Canal de denúncias da Corregedoria-Geral da Polícia Militar do Paraná (RP): protocole denúncias com evidências, acompanhe o protocolo e receba as denúncias automaticamente no Discord."
     />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <link rel="manifest" href="/manifest.json" />
-    <link rel="icon" type="image/png" href="/favicon-pcpr.png" />
-    <title>PCPR RP · Prisões e Mandados</title>
+    <link rel="icon" type="image/png" href="/favicon-pmpr.png" />
+    <title>Corregedoria · Denúncias PMPR RP</title>
     <script>
       // Versoes antigas deste portal registraram um service worker que guardava
-      // o brasao anterior no Cache Storage. Remove o resquicio uma unica vez:
+      // assets anteriores no Cache Storage. Remove o resquicio uma unica vez:
       // desregistra o SW, limpa os caches e recarrega para servir os assets novos.
       (function () {
         try {
-          var chave = 'pcpr-cache-limpo-v3';
+          var chave = 'corregedoria-cache-limpo-v1';
           if (sessionStorage.getItem(chave)) return;
           var tarefas = [];
           if ('serviceWorker' in navigator && navigator.serviceWorker.getRegistrations) {

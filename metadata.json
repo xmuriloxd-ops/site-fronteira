@@ -1,6 +1,6 @@
 {
-  "name": "PCPR RP - Sistema de Registro de Prisões e Mandados",
-  "description": "Site preto e branco da Polícia Civil RP do Paraná para registrar prisões com foto, nome, ID, artigos, tempo de prisão, itens apreendidos, agente, unidade, escrivão, dia e data automáticos e assinatura do escrivão. Gera a ficha e o mandado de prisão em cartaz PNG e envia ao canal do Discord.",
+  "name": "Corregedoria PMPR RP - Canal de Denúncias",
+  "description": "Site da Corregedoria-Geral da Polícia Militar do Paraná (RP) para protocolar denúncias com evidências, gerar protocolo automático (DEN-AAAA-0001), acompanhar a situação e enviar as denúncias automaticamente ao canal do Discord via webhook, com brasão e cores institucionais da PMPR.",
   "requestFramePermissions": [],
   "majorCapabilities": []
 }

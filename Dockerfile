@@ -1,4 +1,4 @@
-# PCPR RP · Prisões e Mandados — imagem de produção
+# Corregedoria PMPR · Canal de Denúncias — imagem de produção
 # Dois estágios: compila o front (Vite) + servidor (esbuild), depois roda
 # apenas Node com as dependências de runtime (express + compression).
 
@@ -30,7 +30,7 @@ COPY --from=build /app/dist ./dist
 RUN mkdir -p /app/dados && chown -R node:node /app
 USER node
 
-# Monte um volume aqui para não perder prisões, mandados, fotos e os webhooks
+# Monte um volume aqui para não perder denúncias, fotos e webhooks
 # entre deploys. Com bind mount, ajuste o dono da pasta no host (uid 1000).
 VOLUME ["/app/dados"]
 

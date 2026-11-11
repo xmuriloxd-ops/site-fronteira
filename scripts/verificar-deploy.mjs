@@ -16,7 +16,7 @@ import path from 'node:path';
 const RAIZ = process.cwd();
 const PORTA = Number(process.env.PC_CHECK_PORT) || 3211;
 const BASE = `http://127.0.0.1:${PORTA}`;
-const USUARIO = 'pcpr';
+const USUARIO = 'corregedoria';
 const SENHA = 'verificacao-deploy';
 const AUTORIZACAO = `Basic ${Buffer.from(`${USUARIO}:${SENHA}`).toString('base64')}`;
 const dadosDir = fs.mkdtempSync(path.join(os.tmpdir(), 'pcpr-check-'));
@@ -65,22 +65,22 @@ async function esperarHealth() {
   return false;
 }
 
-const mandadoTeste = {
+const denunciaTeste = {
   id: 'check-deploy-1',
-  numero: 'MDP-2026-9999',
+  numero: 'DEN-2026-9999',
+  categoria: 'Conduta em serviço',
+  relato: 'Registro temporário do verificador de deploy.',
+  local: '—',
+  dataFatos: new Date().toISOString().slice(0, 10),
+  denunciadoNome: 'Verificação de Deploy',
+  denunciadoPosto: '',
+  denunciadoUnidade: '—',
+  anonima: true,
+  denuncianteNome: '',
+  denuncianteContato: '',
   fotos: [],
-  nome: 'Verificação de Deploy',
-  idRp: '0000',
-  artigos: 'Art. 0',
-  fundamento: 'Registro temporário do verificador.',
-  processo: '—',
-  autoridade: 'Sistema',
-  origem: '—',
-  unidade: '—',
-  agente: '—',
-  validade: '—',
-  status: 'pendente',
-  observacoes: '',
+  situacao: 'aberta',
+  parecer: '',
   criadoEm: new Date().toISOString(),
 };
 
@@ -132,35 +132,34 @@ async function main() {
     const r = await requisitar(asset);
     ok(`asset ${path.basename(asset)}`, r.status === 200 && /immutable/i.test(r.cabecalhos.get('cache-control') || ''));
   }
-  const logo = await requisitar('/logo-pcpr.png');
+  const logo = await requisitar('/brasao-pmpr.png');
   ok('logo servido sem cache', logo.status === 200 && /no-store/i.test(logo.cabecalhos.get('cache-control') || ''));
 
   // API e persistência
   const estado = await requisitar('/api/estado');
   ok(
-    'estado completo (prisões, mandados, configs, envios)',
+    'estado completo (denúncias, config do Discord, envios)',
     estado.status === 200 &&
-      Array.isArray(estado.json?.estado?.prisoes) &&
-      Array.isArray(estado.json?.estado?.mandados) &&
+      Array.isArray(estado.json?.estado?.denuncias) &&
       Array.isArray(estado.json?.estado?.envios) &&
-      Boolean(estado.json?.estado?.discordMandados),
+      Boolean(estado.json?.estado?.discord),
   );
 
   const criado = await requisitar('/api/sync', {
     metodo: 'POST',
-    corpo: { op: { tipo: 'criar-mandado', mandado: mandadoTeste } },
+    corpo: { op: { tipo: 'criar', denuncia: denunciaTeste } },
   });
   ok(
     'POST /api/sync persiste registro',
-    criado.status === 200 && criado.json?.estado?.mandados?.length === 1,
+    criado.status === 200 && criado.json?.estado?.denuncias?.length === 1,
   );
   const persistido = await requisitar('/api/estado');
-  ok('dados sobrevivem entre requisições', persistido.json?.estado?.mandados?.length === 1);
+  ok('dados sobrevivem entre requisições', persistido.json?.estado?.denuncias?.length === 1);
   const removido = await requisitar('/api/sync', {
     metodo: 'POST',
-    corpo: { op: { tipo: 'excluir-mandado', id: mandadoTeste.id } },
+    corpo: { op: { tipo: 'excluir', id: denunciaTeste.id } },
   });
-  ok('exclusão funciona', removido.json?.estado?.mandados?.length === 0);
+  ok('exclusão funciona', removido.json?.estado?.denuncias?.length === 0);
 
   // Proteção do proxy do Discord (sem depender de rede externa)
   const proxy = await requisitar('/api/discord/proxy', {
@@ -174,7 +173,7 @@ async function main() {
   ok('proxy rejeita destino que não é webhook do Discord', proxy.status === 400);
 
   // SPA fallback
-  const fallback = await requisitar('/mandados');
+  const fallback = await requisitar('/denuncias');
   ok('fallback SPA para rotas diretas', fallback.status === 200 && fallback.texto.includes('<div id="root">'));
 
   console.log(
