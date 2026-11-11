@@ -5,7 +5,8 @@ import path from 'node:path';
 import vm from 'node:vm';
 import { execFileSync } from 'node:child_process';
 import { criarConteudo, ErroDeConteudo } from '../conteudo.mjs';
-import { ARQUIVOS, CAMPOS, ORIGEM_ORIGINAL } from '../mapa.mjs';
+import { ANCORA_DAS_REGRAS, ATALHO_DAS_REGRAS, ID_DO_TITULO } from '../convite-no-inicio.mjs';
+import { ARQUIVOS, CAMPOS, IDS_RESERVADOS, ORIGEM_ORIGINAL } from '../mapa.mjs';
 import { ABA_ADMIN, BLOCO_DO_CONVITE, CABECA_DO_CONVITE, COPIA, CREDITOS_DA_COPIA, PADRAO, SITE, esconderLinha, ok, pastaTemporaria, pngSimples, resumo } from './apoio.mjs';
 
 /** O bloco do convite dentro do aplicativo montado: vai do começo da página até a barra do topo. */
@@ -90,7 +91,7 @@ function dadoDoOriginal(abre, fecha) {
     'children:"CONVITE OFICIAL"',
     'children:"Uma nova história começa aqui."',
     'children:"Conheça a cidade, confira as regras oficiais e prepare-se para o roleplay."',
-    'R.jsx("a",{className:"fs-convite-botao",href:"#inicio",onClick:',
+    'R.jsx("a",{className:"fs-convite-botao",href:"#regras",onClick:',
     'children:"Consultar regras oficiais"',
     // a imagem tem um "CONSULTE AS REGRAS" desenhado: clicar nela faz o mesmo que o botão
     'decoding:"async",style:{cursor:"pointer"},onClick:e=>{const b=e.currentTarget.closest(".fs-convite")?.querySelector(".fs-convite-botao");b&&b.click()}})',
@@ -109,8 +110,17 @@ function dadoDoOriginal(abre, fecha) {
   assert.ok(index.includes('\n.topbar-brand img{aspect-ratio:auto 1200/676}\n</style>'));
   assert.ok(index.includes('\nhtml:has(#rules-search:focus){scroll-padding-top:0}\n'));
   // Na página /convite/, o botão abre a página de regras já depois do convite (senão o visitante veria o convite duas vezes).
-  assert.ok(texto(c, 'convite').includes('<a class="button" href="/#inicio">Consultar regras oficiais</a>'));
-  assert.ok(bloco.includes('ref:e=>{') && bloco.includes('location.hash!=="#inicio"'), 'e a página de regras atende a esse endereço');
+  assert.ok(texto(c, 'convite').includes('<a class="button" href="/#regras">Consultar regras oficiais</a>'));
+  assert.ok(bloco.includes('ref:e=>{') && bloco.includes('location.hash!=="#regras"'), 'e a página de regras atende a esse endereço');
+  // Só para quem está chegando: ao recarregar ou voltar pelo histórico, quem decide a posição é o navegador.
+  assert.ok(bloco.includes('g.type==="reload"||g.type==="back_forward"'));
+  // Nenhum elemento da página pode se chamar "regras": se houvesse um, o navegador também rolaria até ele,
+  // por conta própria, e pararia em outro ponto (no celular, 54px abaixo do começo das regras).
+  assert.equal(ATALHO_DAS_REGRAS, '/#regras');
+  assert.ok(IDS_RESERVADOS.has(ANCORA_DAS_REGRAS) && IDS_RESERVADOS.has(ID_DO_TITULO), 'os identificadores do convite ficam reservados');
+  assert.ok(!/\bid:"regras"|\bname:"regras"|\bid=\\?"regras\\?"/.test(js), 'nada no aplicativo se chama "regras"');
+  assert.ok(!c.descrever().regulamento.original.some((s) => s.id === ANCORA_DAS_REGRAS), 'nem uma seção do regulamento');
+  for (const nome of ['index', 'convite']) assert.ok(!/\b(id|name)="regras"/.test(texto(c, nome)), `${nome}: nada se chama "regras"`);
   ok('o convite (imagem, textos e botão que leva às regras) é o primeiro item da página de regras');
 
   // Os créditos pedidos; telefone e e-mail não aparecem.
@@ -198,9 +208,9 @@ function dadoDoOriginal(abre, fecha) {
       if (nome === 'js') conferirSintaxe(t);
       if (nome === 'manifesto') JSON.parse(t);
       if (peloBloco && campo.tipo === 'link') {
-        // No bloco, "/" aparece como "#inicio"; outro destino entra como foi escrito, e só isso muda.
+        // No bloco, "/" aparece como "#regras"; outro destino entra como foi escrito, e só isso muda.
         assert.ok(blocoEm(t).includes(`className:"fs-convite-botao",href:${JSON.stringify(valor)},onClick:`), campo.id);
-        assert.equal(t.length, PADRAO.js.length + valor.length - '#inicio'.length, `${campo.id}: tamanho de ${nome}`);
+        assert.equal(t.length, PADRAO.js.length + valor.length - '#regras'.length, `${campo.id}: tamanho de ${nome}`);
         continue;
       }
       // Só os trechos do campo mudaram: o tamanho do arquivo bate com a troca.
@@ -256,7 +266,7 @@ function dadoDoOriginal(abre, fecha) {
   assert.ok(bloco.includes(`id:"fs-convite-titulo",className:"fs-convite-titulo",children:${JSON.stringify(esperado)}`));
   assert.ok(bloco.includes(`alt:${JSON.stringify(esperado)}`));
   // O botão é o mesmo da instalação nova (mesmo clique); só o destino e o texto mudam.
-  const botaoPadrao = 'R.jsx("a",{className:"fs-convite-botao",href:"#inicio",onClick:';
+  const botaoPadrao = 'R.jsx("a",{className:"fs-convite-botao",href:"#regras",onClick:';
   const fimDoBotaoPadrao = ',children:"Consultar regras oficiais"})';
   const clique = BLOCO_DO_CONVITE.slice(BLOCO_DO_CONVITE.indexOf(botaoPadrao) + botaoPadrao.length, BLOCO_DO_CONVITE.indexOf(fimDoBotaoPadrao));
   assert.ok(clique.startsWith('e=>{') && clique.endsWith('}') && !clique.includes('R.jsx'), 'não achei o clique do botão na instalação nova');
@@ -298,6 +308,8 @@ const pastaQueFica = pastaTemporaria();
   reg.push({ title: 'Seção Nova ção', paragraphs: ['  Primeiro  \n\n\n segundo pedaço ', '', 'Outro.'] });
   reg.push({ id: 'apresentacao', title: 'Repetida', paragraphs: ['x'] });
   reg.push({ title: 'Autor', paragraphs: [] }); // "autor" já é uma âncora da página
+  reg.push({ title: 'Regras', paragraphs: ['y'] }); // "regras" precisa continuar sem dono: /#regras abre a página já nas regras
+  reg.push({ id: 'regras', title: 'Outra com o nome do atalho', paragraphs: [] });
   [reg[1], reg[2]] = [reg[2], reg[1]];
   const pol = structuredClone(d.policia.original);
   pol.faixas[0].title = 'Leves (novo)';
@@ -311,7 +323,7 @@ const pastaQueFica = pastaTemporaria();
 
   const r = c.salvar({ versao: 0, regulamento: reg, policia: pol });
   const a = r.regulamento.atual;
-  assert.equal(a.length, d.regulamento.original.length - 1 + 3);
+  assert.equal(a.length, d.regulamento.original.length - 1 + 5);
   assert.deepEqual(a.slice(0, 3).map((s) => s.id), ['apresentacao', 'regras-de-ouro', 'regras-gerais']);
   assert.equal(a[0].paragraphs[0], 'Linha 1\nLinha 2 com \'aspas\' e "aspas" e \\ barra');
   const nova = a.find((s) => s.title === 'Seção Nova ção');
@@ -319,6 +331,9 @@ const pastaQueFica = pastaTemporaria();
   assert.deepEqual(nova.paragraphs, ['Primeiro\n segundo pedaço', 'Outro.']);
   assert.equal(a.find((s) => s.title === 'Repetida').id, 'apresentacao-2');
   assert.equal(a.find((s) => s.title === 'Autor').id, 'secao-autor');
+  assert.equal(a.find((s) => s.title === 'Regras').id, 'secao-regras-2');
+  assert.equal(a.find((s) => s.title === 'Outra com o nome do atalho').id, 'secao-regras', 'quem pediu um identificador escolhe primeiro');
+  assert.ok(!a.some((s) => s.id === 'regras'));
   assert.equal(new Set(a.map((s) => s.id)).size, a.length, 'nenhuma âncora repetida');
   const p = r.policia.atual;
   assert.equal(p.faixas[0].fines[0].points, 7);
@@ -491,24 +506,24 @@ const pastaQueFica = pastaTemporaria();
   conferirSintaxe(js);
   let bloco = blocoEm(js);
   assert.ok(bloco.includes('className:"fs-convite-titulo",children:"Bem-vindo à \\"cidade\\""'));
-  assert.ok(bloco.includes('href:"#inicio",onClick:') && bloco.includes('children:"Ver as regras"'));
+  assert.ok(bloco.includes('href:"#regras",onClick:') && bloco.includes('children:"Ver as regras"'));
   assert.ok(!bloco.includes('fs-convite-sobretitulo') && !bloco.includes('fs-convite-descricao'), 'texto vazio não deixa uma linha vazia');
   assert.ok(texto(c, 'convite').includes('<h1 id="title">Bem-vindo à "cidade"</h1>'));
-  assert.ok(texto(c, 'convite').includes('<a class="button" href="/#inicio">Ver as regras</a>'));
+  assert.ok(texto(c, 'convite').includes('<a class="button" href="/#regras">Ver as regras</a>'));
   ok('o convite do início usa os mesmos textos da página /convite/');
 
-  // O botão: "/" (as regras) vira "#inicio"; qualquer outro destino entra como foi escrito.
+  // O botão: "/" (as regras) vira "#regras"; qualquer outro destino entra como foi escrito.
   // (Na hora do clique, o botão desce a página se o link for desta mesma página; senão, o navegador segue o link.)
   for (const destino of ['https://discord.gg/exemplo', '/#regras-gerais', '#regras-gerais', 'https://meu-site.exemplo/']) {
     r = c.salvar({ versao: r.versao, textos: { 'convite.botaoLink': destino } });
     bloco = blocoEm(texto(c, 'js'));
     assert.ok(bloco.includes(`R.jsx("a",{className:"fs-convite-botao",href:${JSON.stringify(destino)},onClick:e=>{`), destino);
-    assert.ok(!bloco.includes('href:"#inicio"'), destino);
+    assert.ok(!bloco.includes('href:"#regras"'), destino);
     assert.ok(texto(c, 'convite').includes(`<a class="button" href="${destino}">Consultar regras oficiais</a>`), `${destino}: na página /convite/ vai o mesmo destino`);
   }
-  // "/#inicio" escrito à mão também quer dizer "as regras".
-  r = c.salvar({ versao: r.versao, textos: { 'convite.botaoLink': '/#inicio' } });
-  assert.ok(blocoEm(texto(c, 'js')).includes('className:"fs-convite-botao",href:"#inicio",onClick:'));
+  // "/#regras" escrito à mão também quer dizer "as regras".
+  r = c.salvar({ versao: r.versao, textos: { 'convite.botaoLink': '/#regras' } });
+  assert.ok(blocoEm(texto(c, 'js')).includes('className:"fs-convite-botao",href:"#regras",onClick:'));
   assert.equal(texto(c, 'convite'), PADRAO.convite);
   r = c.salvar({ versao: r.versao, textos: { 'convite.botao': '' } });
   bloco = blocoEm(texto(c, 'js'));

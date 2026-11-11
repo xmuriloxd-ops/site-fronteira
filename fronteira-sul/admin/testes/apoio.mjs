@@ -77,7 +77,7 @@ export const PADRAO = (() => {
   js = trocarOUnico(js, /href:"mailto:[^"]*",children:"[^"]*"/, () => 'href:"mailto:",children:""');
   const noHead = `${CABECA_DO_CONVITE}\n<style id="ajustes-do-admin">\n${esconderLinha(3)}\n${esconderLinha(4)}\n</style>`;
   const index = trocarOUnico(COPIA.index, /<\/head>/, (achado) => noHead + achado);
-  const convite = trocarOUnico(COPIA.convite, /<a class="button" href="\/">/, () => '<a class="button" href="/#inicio">');
+  const convite = trocarOUnico(COPIA.convite, /<a class="button" href="\/">/, () => '<a class="button" href="/#regras">');
   return { js, index, convite };
 })();
 

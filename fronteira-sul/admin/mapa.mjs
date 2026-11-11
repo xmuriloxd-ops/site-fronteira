@@ -412,10 +412,15 @@ export const INTERRUPTORES = [
   { opcao: 'mostrarCreditos', pagina: 'regras', grupo: 'Créditos (fim da página)', rotulo: 'Mostrar os créditos na página', ajuda: '' },
 ];
 
-/** Identificadores que uma seção do regulamento não pode usar (já existem na página). */
+/**
+ * Identificadores que uma seção do regulamento não pode usar: os que já existem
+ * na página e o "regras", que precisa continuar sem dono (/#regras abre a
+ * página já nas regras; ver ANCORA_DAS_REGRAS em convite-no-inicio.mjs).
+ */
 export const IDS_RESERVADOS = new Set([
   'root',
   'inicio',
+  'regras',
   'fs-convite-titulo',
   'integridade',
   'integridade-heading',

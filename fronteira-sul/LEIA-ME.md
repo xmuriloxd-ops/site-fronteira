@@ -28,7 +28,7 @@ Numa instalação nova, sem nada salvo pelo painel, o site difere do original em
    - O botão desce a página até as regras. Clicar na imagem faz o mesmo que o botão.
    - Isso vale enquanto o destino do botão for a própria página de regras: `/`, que é o padrão, ou o endereço completo do site. Se o destino for trocado no painel por outro site ou outra página, o botão abre esse endereço.
    - A imagem e os textos são os mesmos da página `/convite/`. Mudou no painel, mudou nos dois lugares.
-   - O botão da página `/convite/` abre a página de regras já nas regras (endereço `/#inicio`), para o visitante não ver o mesmo convite duas vezes.
+   - O botão da página `/convite/` abre a página de regras já nas regras, para o visitante não ver o mesmo convite duas vezes. O endereço que faz isso é `/#regras`, e ele também serve para divulgar um link que abre direto nas regras.
    - Para tirar o convite do início: painel > Convite > "Mostrar o convite no início da página de regras".
 2. **Créditos ("Quem criou"), no fim da página de regras.** Nome: MURILO MENDES. Discord: `sgtmendes1997_29726`. As linhas de telefone e de e-mail estão vazias e por isso não aparecem. Para mudar ou preencher: painel > Página de regras > "Créditos (fim da página)".
 3. **Aba Admin**, à direita de "Regras da Polícia".
@@ -212,8 +212,9 @@ Em 11/11/2026 a página de regras foi aberta no Chromium 153 em sete tamanhos de
 Em tela de computador (1440×900) e de celular (390×844) também foi conferido:
 
 - O botão da página `/convite/` abre a página de regras já nas regras, e o visitante consegue subir até o convite.
-- O destino do botão, trocado pelo painel: com o endereço completo do próprio site, o botão desce até as regras sem recarregar a página; com uma seção das regras (`#regras-gerais`), a página rola até ela; com outra página ou outro site, o navegador abre o endereço. Ctrl+clique abre em outra aba, já nas regras.
-- Com a rede lenta (logo chegando depois do clique), a página continua parada no começo das regras.
+- Com a rede lenta, a página continua parada no começo das regras. Foram dois casos: o logo chegando depois do clique, e os scripts de estatística demorando 0,4 s e 1,5 s para responder ao chegar por `/#regras` (este também em 800×600).
+- Ao recarregar uma página aberta por `/#regras`, ou voltar a ela pelo histórico, o convite não mexe na rolagem: quem devolve o visitante ao ponto em que ele estava é o navegador, como em qualquer página.
+- O destino do botão, trocado pelo painel: com o endereço completo do próprio site, o botão desce até as regras sem recarregar a página; com outra página ou outro site, o navegador abre o endereço. Ctrl+clique abre outra aba, que já começa nas regras.
 - A busca, o menu de seções e o logo do topo funcionam com o convite acima; digitar na busca não move a página.
 - Os créditos mostram MURILO MENDES e o Discord novo, o botão de copiar copia `sgtmendes1997_29726`, e nenhum dado dos créditos antigos aparece na página.
 - No painel: os créditos novos aparecem como texto original; mudar o texto do convite muda nos dois lugares; a opção desliga e religa o convite no início; "Voltar ao original" e "Restaurar o site original" voltam para este estado.

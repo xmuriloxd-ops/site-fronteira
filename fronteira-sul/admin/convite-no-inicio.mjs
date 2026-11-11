@@ -21,11 +21,30 @@ export const ID_DO_TITULO = 'fs-convite-titulo';
 export const LINK_DAS_REGRAS = '/';
 
 /**
+ * Nome que, no endereço, quer dizer "comece pelas regras": /#regras.
+ *
+ * De propósito, nenhum elemento da página tem este identificador (ele está em
+ * IDS_RESERVADOS, no mapa.mjs, para nenhuma seção do regulamento ficar com
+ * ele). Assim, quem leva a página até as regras é só o COMECAR_NAS_REGRAS,
+ * mais abaixo.
+ *
+ * Com um identificador que existe na página — o "#inicio", que a página
+ * original dá ao conteúdo — o navegador também rola até ele por conta própria,
+ * e para em outro ponto: ele deixa livre no alto o espaço que a página
+ * original pede (106px; 150px no celular), que não é a altura da barra do
+ * topo. No celular a página terminava 54px abaixo do começo das regras, com o
+ * logo cortado. Isso acontece sempre que os scripts de estatística demoram a
+ * responder — o normal na internet —, porque aí o aplicativo desenha a página
+ * antes de o navegador dar a leitura do HTML por terminada.
+ */
+export const ANCORA_DAS_REGRAS = 'regras';
+
+/**
  * Endereço que abre a página de regras já depois do convite. É para onde vai o
  * botão da página /convite/: sem isso, quem clicasse lá cairia no mesmo
  * convite outra vez, agora no início da página de regras.
  */
-export const ATALHO_DAS_REGRAS = '/#inicio';
+export const ATALHO_DAS_REGRAS = `/#${ANCORA_DAS_REGRAS}`;
 
 /**
  * Clique no botão. Quando o link aponta para esta mesma página — é o caso de
@@ -35,21 +54,24 @@ export const ATALHO_DAS_REGRAS = '/#inicio';
  * começam, e a barra do topo fica colada no alto da tela.
  *
  * Nos outros casos o navegador segue o link normalmente: outro site, outra
- * página, uma seção das regras (#regras-gerais) ou clique com Ctrl, Shift
- * etc., que abre em outra aba.
+ * página, um ponto desta página que não seja o começo das regras
+ * (#regras-gerais, por exemplo) ou clique com Ctrl, Shift etc., que abre em
+ * outra aba.
  *
  *   a = o botão;  c = o bloco do convite
  */
 const DESCER_ATE_AS_REGRAS =
   'e=>{if(e.button||e.metaKey||e.ctrlKey||e.shiftKey||e.altKey)return;const a=e.currentTarget,c=a.closest(".fs-convite");' +
-  'if(!c||a.origin!==location.origin||a.pathname!==location.pathname||a.hash&&a.hash!=="#inicio")return;' +
+  `if(!c||a.origin!==location.origin||a.pathname!==location.pathname||a.hash&&a.hash!=="#${ANCORA_DAS_REGRAS}")return;` +
   'e.preventDefault();window.scrollTo({top:Math.round(c.getBoundingClientRect().bottom+window.scrollY)})}';
 
 /**
  * Quando a página é aberta pelo ATALHO_DAS_REGRAS, ela já começa nas regras,
- * sem animação. Roda uma vez só, quando o bloco entra na página (o navegador
- * não faz isso sozinho: quando ele procura o "#inicio", o aplicativo ainda não
- * desenhou a página).
+ * sem animação. Roda uma vez só, quando o bloco entra na página.
+ *
+ * Só vale para quem está chegando. Ao recarregar a página ou voltar a ela
+ * pelo histórico, nada aqui roda: o navegador devolve o visitante ao ponto em
+ * que ele estava, como em qualquer página.
  *
  * Nos primeiros instantes a página ainda pode mudar de altura (as fontes e as
  * imagens terminam de carregar). Para o começo das regras não sair do lugar:
@@ -59,22 +81,29 @@ const DESCER_ATE_AS_REGRAS =
  *     se a barra do topo cresce (um logo sem medidas conhecidas, por
  *     exemplo), ele empurra a página para baixo e corta o alto da barra.
  * Tudo isso acaba no primeiro toque, clique, tecla ou giro do mouse do
- * visitante, ou em 10 segundos, ou quando a página aparece rolada para outro
- * lugar (barra de rolagem, por exemplo): daí em diante nada mais mexe na
- * rolagem.
+ * visitante, ou em 10 segundos, ou assim que a página aparece rolada para
+ * outro lugar (pela barra de rolagem, por exemplo): daí em diante nada mais
+ * mexe na rolagem.
  *
+ * Este código roda enquanto o aplicativo monta a página. Um erro aqui deixaria
+ * a página em branco; por isso fica dentro de um try/catch: na pior das
+ * hipóteses (um navegador que não aceite algum destes comandos), a página
+ * simplesmente abre pelo convite.
+ *
+ *   g = como a página foi aberta (chegada, recarga ou histórico)
  *   u = última posição colocada aqui (null: nenhuma ainda; undefined: acabou)
  *   f = encerra;  d = coloca a página no fim do convite (y)
  */
 const COMECAR_NAS_REGRAS =
-  'e=>{if(!e||e.dataset.visto)return;e.dataset.visto="1";if(location.hash!=="#inicio")return;' +
+  `e=>{try{if(!e||e.dataset.visto)return;e.dataset.visto="1";if(location.hash!=="#${ANCORA_DAS_REGRAS}")return;` +
+  'const g=performance.getEntriesByType&&performance.getEntriesByType("navigation")[0];if(g&&(g.type==="reload"||g.type==="back_forward"))return;' +
   'const h=document.documentElement,a=h.style.overflowAnchor,t=["wheel","touchstart","pointerdown","keydown"];let u=null,o=null;' +
-  'const f=()=>{if(u===void 0)return;u=void 0;h.style.overflowAnchor=a;o&&o.disconnect();t.forEach(n=>removeEventListener(n,f,!0))},' +
+  'const f=()=>{if(u===void 0)return;u=void 0;h.style.overflowAnchor=a;o&&o.disconnect();removeEventListener("scroll",d);t.forEach(n=>removeEventListener(n,f,!0))},' +
   'd=()=>{if(u===void 0)return;const y=Math.round(e.getBoundingClientRect().bottom+window.scrollY);' +
   'if(u!==null&&Math.abs(window.scrollY-u)>2&&Math.abs(window.scrollY-y)>2)return f();' +
   'window.scrollTo({top:y,behavior:"instant"});u=window.scrollY};' +
-  'h.style.overflowAnchor="none";t.forEach(n=>addEventListener(n,f,{capture:!0,passive:!0}));d();' +
-  'window.ResizeObserver&&(o=new ResizeObserver(d),o.observe(e));setTimeout(f,1e4)}';
+  'h.style.overflowAnchor="none";t.forEach(n=>addEventListener(n,f,{capture:!0,passive:!0}));addEventListener("scroll",d,{passive:!0});setTimeout(f,1e4);' +
+  'd();window.ResizeObserver&&(o=new ResizeObserver(d),o.observe(e))}catch(x){}}';
 
 /**
  * Clique na imagem: faz o mesmo que o botão. A imagem do convite traz um
@@ -111,9 +140,9 @@ export function blocoDoConvite({ imagem, sobretitulo = '', titulo = '', texto = 
   const pecas = [];
   if (linhas.length) pecas.push(`R.jsxs("div",{className:"fs-convite-texto",children:[${linhas.join(',')}]})`);
   if (botao) {
-    // Para as regras, o link é "#inicio": aberto em outra aba, já começa nelas (ver COMECAR_NAS_REGRAS).
+    // Para as regras, o link é "#regras": aberto em outra aba, a página já começa nelas (ver COMECAR_NAS_REGRAS).
     const paraAsRegras = link === LINK_DAS_REGRAS || link === ATALHO_DAS_REGRAS;
-    pecas.push(`R.jsx("a",{className:"fs-convite-botao",href:${literal(paraAsRegras ? '#inicio' : link)},onClick:${DESCER_ATE_AS_REGRAS},children:${literal(botao)}})`);
+    pecas.push(`R.jsx("a",{className:"fs-convite-botao",href:${literal(paraAsRegras ? `#${ANCORA_DAS_REGRAS}` : link)},onClick:${DESCER_ATE_AS_REGRAS},children:${literal(botao)}})`);
   }
 
   const itens = [foto];
