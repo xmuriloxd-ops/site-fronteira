@@ -1,0 +1,134 @@
+# TEMPORARIO - confere, de fora, o que o endereco de previa entrega ao servidor
+# do painel (cabecalhos e login). Este arquivo e removido logo depois.
+name: Diagnostico temporario da previa
+
+on:
+  push:
+    branches:
+      - 'arena/fc360186-btz-contrile'
+    paths:
+      - '.github/workflows/diagnostico-previa.yml'
+
+permissions: {}
+
+jobs:
+  diagnostico:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      SITE: https://4173-iqaz7yhxn6j51swc1eq6d.e2b.app
+      ECO: https://4174-iqaz7yhxn6j51swc1eq6d.e2b.app
+    steps:
+      - name: Cabecalhos e login por curl
+        run: |
+          set -u
+          echo "== 1. eco: o que chega ao servidor =="
+          curl -sS -i --max-time 30 "$ECO/eco?canal=todos" \
+            -H 'Authorization: Bearer TESTEaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' \
+            -H 'X-Painel-Sessao: TESTEbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb' \
+            -H 'Cookie: fs=TESTEcccc' \
+            -H 'X-Requested-With: fetch' || echo "curl falhou ($?)"
+          echo
+          echo "== 2. as paginas chegam como o servidor mandou? =="
+          for u in /admin/ /admin/painel.js /admin/painel.css / /regras/ /assets/index-FbaU4KfD.js; do
+            printf '%-28s %s\n' "$u" "$(curl -sS --max-time 30 "$SITE$u" | sha256sum | cut -c1-16)"
+          done
+          curl -sS -I --max-time 30 "$SITE/admin/" || echo "curl falhou ($?)"
+          echo "== 3. login por curl =="
+          resp=$(curl -sS --max-time 30 -X POST "$SITE/admin/api/entrar" -H 'Content-Type: application/json' -d '{"usuario":"adm","senha":"142536"}' -w '\n%{http_code}') || echo "curl falhou ($?)"
+          codigo=$(printf '%s' "$resp" | tail -n1)
+          t=$(printf '%s' "$resp" | head -n1 | jq -r '.token // empty' 2>/dev/null)
+          echo "entrar: $codigo; token com ${#t} caracteres"
+          for canal in "Authorization: Bearer $t" "X-Painel-Sessao: $t"; do
+            printf '%s -> %s\n' "${canal%%:*}" "$(curl -sS -o /dev/null -w '%{http_code}' --max-time 30 "$SITE/admin/api/conteudo" -H "$canal")"
+          done
+          curl -sS -o /dev/null --max-time 30 -X POST "$SITE/admin/api/sair" -H "Authorization: Bearer $t" -H "X-Painel-Sessao: $t" || true
+
+      - name: Login pelo navegador
+        run: |
+          set -u
+          mkdir t && cd t
+          npm init -y >/dev/null
+          npm install --no-audit --no-fund puppeteer-core >/dev/null 2>&1 || echo "npm install falhou"
+          which google-chrome chromium chromium-browser || true
+          cat > t.mjs <<'EOF'
+          import puppeteer from 'puppeteer-core';
+          import http from 'node:http';
+          import fs from 'node:fs';
+          const SITE = process.env.SITE;
+          const exe = ['/usr/bin/google-chrome', '/usr/bin/chromium', '/usr/bin/chromium-browser'].find((c) => fs.existsSync(c));
+          const espera = (ms) => new Promise((r) => setTimeout(r, ms));
+          const nav = await puppeteer.launch({ executablePath: exe, headless: true, args: ['--no-sandbox', '--disable-dev-shm-usage'] });
+          console.log('navegador:', await nav.version());
+
+          function vigiar(page, nome) {
+            page.on('request', (r) => { if (r.url().includes('/admin/api/')) console.log(`[${nome}] pedido   ${r.method()} ${new URL(r.url()).pathname} | cabecalhos: ${Object.keys(r.headers()).sort().join(', ')}`); });
+            page.on('response', (r) => { if (r.url().includes('/admin')) console.log(`[${nome}] resposta ${r.status()} ${r.request().method()} ${new URL(r.url()).pathname}`); });
+            page.on('console', (m) => console.log(`[${nome}] console ${m.type()}: ${m.text()}`));
+            page.on('pageerror', (e) => console.log(`[${nome}] erro de script: ${e.message}`));
+            page.on('requestfailed', (r) => console.log(`[${nome}] pedido falhou: ${r.url()} ${r.failure()?.errorText}`));
+          }
+          const estadoDe = (alvo) => alvo.evaluate(() => ({
+            painel: !document.querySelector('#tela-painel').hidden,
+            entrar: !document.querySelector('#tela-entrar').hidden,
+            aviso: document.querySelector('#entrar-aviso').hidden ? '' : document.querySelector('#entrar-aviso').textContent,
+            erro: document.querySelector('#entrar-erro').hidden ? '' : document.querySelector('#entrar-erro').textContent,
+            usuario: document.querySelector('#topo-usuario').textContent,
+            menu: document.querySelectorAll('#menu button').length,
+          }));
+          async function entrar(alvo, nome) {
+            await alvo.waitForSelector('#tela-entrar:not([hidden])', { timeout: 30000 });
+            await alvo.type('#entrar-usuario', 'adm');
+            await alvo.type('#entrar-senha', '142536');
+            await alvo.click('#entrar-botao');
+            const fim = Date.now() + 20000;
+            let estado = null;
+            while (Date.now() < fim) {
+              estado = await estadoDe(alvo);
+              if (estado.painel || estado.erro || estado.aviso) break;
+              await espera(250);
+            }
+            await espera(500);
+            estado = await estadoDe(alvo);
+            console.log(`[${nome}] RESULTADO DO LOGIN: ${JSON.stringify(estado)}`);
+            return estado;
+          }
+
+          // A. o painel aberto direto, em uma aba
+          try {
+            const page = await nav.newPage();
+            await page.setViewport({ width: 1280, height: 800 });
+            vigiar(page, 'aba');
+            await page.goto(SITE + '/admin/', { waitUntil: 'load', timeout: 45000 });
+            const estado = await entrar(page, 'aba');
+            if (estado.painel) {
+              await page.reload({ waitUntil: 'load', timeout: 45000 });
+              await espera(3000);
+              console.log(`[aba] DEPOIS DE RECARREGAR: ${JSON.stringify(await estadoDe(page))}`);
+              await page.click('#botao-sair');
+              await espera(1500);
+              console.log(`[aba] DEPOIS DE SAIR: ${JSON.stringify(await estadoDe(page))}`);
+            }
+            await page.close();
+          } catch (e) { console.log('[aba] FALHOU:', e.message); }
+
+          // B. o painel dentro de um quadro (iframe) de outro site, como numa tela de previa
+          try {
+            const srv = http.createServer((req, res) => { res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' }); res.end(`<!doctype html><title>moldura</title><iframe id="q" src="${SITE}/admin/" style="width:1200px;height:760px;border:0"></iframe>`); });
+            await new Promise((r) => srv.listen(8123, '127.0.0.1', r));
+            const page = await nav.newPage();
+            await page.setViewport({ width: 1280, height: 800 });
+            vigiar(page, 'quadro');
+            await page.goto('http://localhost:8123/', { waitUntil: 'load', timeout: 45000 });
+            await espera(1500);
+            const quadro = page.frames().find((f) => f.url().startsWith(SITE));
+            if (!quadro) throw new Error('o quadro nao carregou: ' + page.frames().map((f) => f.url()).join(' | '));
+            const estado = await entrar(quadro, 'quadro');
+            if (estado.painel) { await quadro.click('#botao-sair'); await espera(1500); console.log(`[quadro] DEPOIS DE SAIR: ${JSON.stringify(await estadoDe(quadro))}`); }
+            await page.close();
+            srv.close();
+          } catch (e) { console.log('[quadro] FALHOU:', e.message); }
+
+          await nav.close();
+          EOF
+          node t.mjs
