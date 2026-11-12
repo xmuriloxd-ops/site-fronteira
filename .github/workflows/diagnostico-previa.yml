@@ -1,5 +1,6 @@
 # TEMPORARIO - confere, de fora, o que o endereco de previa entrega ao servidor
 # do painel (cabecalhos e login). Este arquivo e removido logo depois.
+# O resultado sai em anotacoes da execucao (::notice), lidas pela API do GitHub.
 name: Diagnostico temporario da previa
 
 on:
@@ -14,43 +15,58 @@ permissions: {}
 jobs:
   diagnostico:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 6
     env:
       SITE: https://4173-iqaz7yhxn6j51swc1eq6d.e2b.app
       ECO: https://4174-iqaz7yhxn6j51swc1eq6d.e2b.app
     steps:
-      - name: Cabecalhos e login por curl
+      - name: Alcance, cabecalhos e login por curl
+        id: curl
         run: |
           set -u
-          echo "== 1. eco: o que chega ao servidor =="
-          curl -sS -i --max-time 30 "$ECO/eco?canal=todos" \
+          nota() { local t="$2"; t="${t//'%'/%25}"; t="${t//$'\r'/}"; t="${t//$'\n'/%0A}"; echo "::notice title=$1::$t [fim]"; }
+          H="${SITE#https://}"
+          r=$(curl -sS -i --max-time 20 "$SITE/robots.txt" 2>&1 | head -c 1800)
+          nota "1 site" "dns: $(getent hosts "$H" | tr '\n' ' ')
+          $r"
+          r=$(curl -sS -i --max-time 20 "$ECO/eco?canal=todos" \
             -H 'Authorization: Bearer TESTEaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' \
             -H 'X-Painel-Sessao: TESTEbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb' \
             -H 'Cookie: fs=TESTEcccc' \
-            -H 'X-Requested-With: fetch' || echo "curl falhou ($?)"
-          echo
-          echo "== 2. as paginas chegam como o servidor mandou? =="
+            -H 'X-Requested-With: fetch' 2>&1 | head -c 3200)
+          nota "2 eco" "$r"
+          r=""
           for u in /admin/ /admin/painel.js /admin/painel.css / /regras/ /assets/index-FbaU4KfD.js; do
-            printf '%-28s %s\n' "$u" "$(curl -sS --max-time 30 "$SITE$u" | sha256sum | cut -c1-16)"
+            r="$r$(printf '%-28s %s' "$u" "$(curl -sS --max-time 20 "$SITE$u" 2>&1 | sha256sum | cut -c1-16)")
+          "
           done
-          curl -sS -I --max-time 30 "$SITE/admin/" || echo "curl falhou ($?)"
-          echo "== 3. login por curl =="
-          resp=$(curl -sS --max-time 30 -X POST "$SITE/admin/api/entrar" -H 'Content-Type: application/json' -d '{"usuario":"adm","senha":"142536"}' -w '\n%{http_code}') || echo "curl falhou ($?)"
+          r="$r$(curl -sS -I --max-time 20 "$SITE/admin/" 2>&1 | head -c 1500)"
+          nota "3 paginas" "$r"
+          resp=$(curl -sS --max-time 20 -X POST "$SITE/admin/api/entrar" -H 'Content-Type: application/json' -d '{"usuario":"adm","senha":"142536"}' -w '\n%{http_code}' 2>&1)
           codigo=$(printf '%s' "$resp" | tail -n1)
           t=$(printf '%s' "$resp" | head -n1 | jq -r '.token // empty' 2>/dev/null)
-          echo "entrar: $codigo; token com ${#t} caracteres"
-          for canal in "Authorization: Bearer $t" "X-Painel-Sessao: $t"; do
-            printf '%s -> %s\n' "${canal%%:*}" "$(curl -sS -o /dev/null -w '%{http_code}' --max-time 30 "$SITE/admin/api/conteudo" -H "$canal")"
-          done
-          curl -sS -o /dev/null --max-time 30 -X POST "$SITE/admin/api/sair" -H "Authorization: Bearer $t" -H "X-Painel-Sessao: $t" || true
+          r="entrar: $codigo; token com ${#t} caracteres"
+          if [ -n "$t" ]; then
+            for canal in "Authorization: Bearer $t" "X-Painel-Sessao: $t"; do
+              r="$r
+          ${canal%%:*} -> $(curl -sS -o /dev/null -w '%{http_code}' --max-time 20 "$SITE/admin/api/conteudo" -H "$canal" 2>&1)"
+            done
+            curl -sS -o /dev/null --max-time 20 -X POST "$SITE/admin/api/sair" -H "Authorization: Bearer $t" -H "X-Painel-Sessao: $t" || true
+            echo "alcanca=sim" >> "$GITHUB_OUTPUT"
+          else
+            r="$r
+          resposta: $(printf '%s' "$resp" | head -c 600)"
+          fi
+          nota "4 login por curl" "$r"
 
       - name: Login pelo navegador
+        if: steps.curl.outputs.alcanca == 'sim'
         run: |
           set -u
+          nota() { local t="$2"; t="${t//'%'/%25}"; t="${t//$'\r'/}"; t="${t//$'\n'/%0A}"; echo "::notice title=$1::$t [fim]"; }
           mkdir t && cd t
           npm init -y >/dev/null
-          npm install --no-audit --no-fund puppeteer-core >/dev/null 2>&1 || echo "npm install falhou"
-          which google-chrome chromium chromium-browser || true
+          timeout 120 npm install --no-audit --no-fund puppeteer-core >/dev/null 2>&1 || echo "npm install falhou"
           cat > t.mjs <<'EOF'
           import puppeteer from 'puppeteer-core';
           import http from 'node:http';
@@ -62,11 +78,11 @@ jobs:
           console.log('navegador:', await nav.version());
 
           function vigiar(page, nome) {
-            page.on('request', (r) => { if (r.url().includes('/admin/api/')) console.log(`[${nome}] pedido   ${r.method()} ${new URL(r.url()).pathname} | cabecalhos: ${Object.keys(r.headers()).sort().join(', ')}`); });
-            page.on('response', (r) => { if (r.url().includes('/admin')) console.log(`[${nome}] resposta ${r.status()} ${r.request().method()} ${new URL(r.url()).pathname}`); });
-            page.on('console', (m) => console.log(`[${nome}] console ${m.type()}: ${m.text()}`));
-            page.on('pageerror', (e) => console.log(`[${nome}] erro de script: ${e.message}`));
-            page.on('requestfailed', (r) => console.log(`[${nome}] pedido falhou: ${r.url()} ${r.failure()?.errorText}`));
+            page.on('request', (r) => { if (r.url().includes('/admin/api/')) console.log(`[${nome}] pedido ${r.method()} ${new URL(r.url()).pathname} | ${Object.keys(r.headers()).filter((c) => /authorization|sessao|content-type/.test(c)).sort().join(', ')}`); });
+            page.on('response', (r) => { if (r.url().includes('/admin/api/')) console.log(`[${nome}] resposta ${r.status()} ${r.request().method()} ${new URL(r.url()).pathname}`); });
+            page.on('console', (m) => console.log(`[${nome}] console ${m.type()}: ${m.text().slice(0, 200)}`));
+            page.on('pageerror', (e) => console.log(`[${nome}] erro de script: ${e.message.slice(0, 200)}`));
+            page.on('requestfailed', (r) => console.log(`[${nome}] pedido falhou: ${r.url().slice(0, 120)} ${r.failure()?.errorText}`));
           }
           const estadoDe = (alvo) => alvo.evaluate(() => ({
             painel: !document.querySelector('#tela-painel').hidden,
@@ -77,11 +93,11 @@ jobs:
             menu: document.querySelectorAll('#menu button').length,
           }));
           async function entrar(alvo, nome) {
-            await alvo.waitForSelector('#tela-entrar:not([hidden])', { timeout: 30000 });
+            await alvo.waitForSelector('#tela-entrar:not([hidden])', { timeout: 20000 });
             await alvo.type('#entrar-usuario', 'adm');
             await alvo.type('#entrar-senha', '142536');
             await alvo.click('#entrar-botao');
-            const fim = Date.now() + 20000;
+            const fim = Date.now() + 15000;
             let estado = null;
             while (Date.now() < fim) {
               estado = await estadoDe(alvo);
@@ -99,10 +115,10 @@ jobs:
             const page = await nav.newPage();
             await page.setViewport({ width: 1280, height: 800 });
             vigiar(page, 'aba');
-            await page.goto(SITE + '/admin/', { waitUntil: 'load', timeout: 45000 });
+            await page.goto(SITE + '/admin/', { waitUntil: 'load', timeout: 30000 });
             const estado = await entrar(page, 'aba');
             if (estado.painel) {
-              await page.reload({ waitUntil: 'load', timeout: 45000 });
+              await page.reload({ waitUntil: 'load', timeout: 30000 });
               await espera(3000);
               console.log(`[aba] DEPOIS DE RECARREGAR: ${JSON.stringify(await estadoDe(page))}`);
               await page.click('#botao-sair');
@@ -110,7 +126,7 @@ jobs:
               console.log(`[aba] DEPOIS DE SAIR: ${JSON.stringify(await estadoDe(page))}`);
             }
             await page.close();
-          } catch (e) { console.log('[aba] FALHOU:', e.message); }
+          } catch (e) { console.log('[aba] FALHOU:', e.message.slice(0, 300)); }
 
           // B. o painel dentro de um quadro (iframe) de outro site, como numa tela de previa
           try {
@@ -119,7 +135,7 @@ jobs:
             const page = await nav.newPage();
             await page.setViewport({ width: 1280, height: 800 });
             vigiar(page, 'quadro');
-            await page.goto('http://localhost:8123/', { waitUntil: 'load', timeout: 45000 });
+            await page.goto('http://localhost:8123/', { waitUntil: 'load', timeout: 30000 });
             await espera(1500);
             const quadro = page.frames().find((f) => f.url().startsWith(SITE));
             if (!quadro) throw new Error('o quadro nao carregou: ' + page.frames().map((f) => f.url()).join(' | '));
@@ -127,8 +143,10 @@ jobs:
             if (estado.painel) { await quadro.click('#botao-sair'); await espera(1500); console.log(`[quadro] DEPOIS DE SAIR: ${JSON.stringify(await estadoDe(quadro))}`); }
             await page.close();
             srv.close();
-          } catch (e) { console.log('[quadro] FALHOU:', e.message); }
+          } catch (e) { console.log('[quadro] FALHOU:', e.message.slice(0, 300)); }
 
           await nav.close();
           EOF
-          node t.mjs
+          timeout 150 node t.mjs > saida.txt 2>&1; echo "saida do node: $?" >> saida.txt
+          nota "5 navegador (inicio)" "$(head -c 3300 saida.txt)"
+          nota "6 navegador (fim)" "$(tail -c 3300 saida.txt)"
