@@ -5,23 +5,33 @@
  * Os arquivos de ./site são a cópia exata do site original e nunca são
  * reescritos. Tudo o que muda em relação a eles é aplicado na hora de responder:
  *
- *   - o que este projeto mudou no site copiado (admin/mapa.mjs): o convite no
- *     início da página de regras, os créditos e a aba "Admin";
+ *   - o que este projeto mudou no site copiado (admin/mapa.mjs e
+ *     admin/convite-no-inicio.mjs): o site começa pelo convite, os créditos e
+ *     a aba "Admin";
  *   - o que o administrador muda pelo painel (/admin/), guardado em ./dados.
  *
  * Os arquivos que nenhuma dessas mudanças toca saem exatamente como estão no
  * disco.
  *
- * As respostas seguem o servidor original (manus.space):
+ * O site começa pelo convite, e as regras ficam em outra página:
  *
- *   /convite  e  /convite/      -> site/convite/index.html (sem redirecionar)
+ *   /                           -> o convite            (site/convite/index.html)
+ *   /regras  e  /regras/        -> a página de regras   (site/index.html)
+ *   /convite  e  /convite/      -> redireciona para /   (o endereço antigo do convite)
+ *
+ * Com essa opção desligada no painel, os endereços são os do site original:
+ * / é a página de regras, /convite e /convite/ são o convite (sem
+ * redirecionar), e /regras/ redireciona para /.
+ *
+ * O resto das respostas segue o servidor original (manus.space):
+ *
  *   /qualquer-rota (sem ponto)  -> site/index.html         (rota do aplicativo)
  *   /404                        -> site/index.html com status 404 (a página
  *                                  "não encontrada" do aplicativo)
  *   /arquivo-que-nao-existe.png -> 404 sem corpo
  *   /api/qualquer-coisa         -> 500 sem corpo (no original a API não está no ar)
  *
- * E há os endereços novos:
+ * E há os endereços do painel:
  *
  *   /admin/                     -> painel do administrador (pede usuário e senha)
  *   /admin/api/...              -> usado pelo painel
@@ -199,6 +209,15 @@ function localizar(caminhoUrl) {
     if (info) return { status: 200, arquivo: troca.arquivo, info, tipo: troca.tipo || undefined, trocada: true };
   }
 
+  // Endereços que mudam conforme o site começa ou não pelo convite: "/", "/regras/" e "/convite/".
+  const pagina = conteudo.paginaPara(relativo);
+  if (pagina?.ir) return { status: 302, ir: pagina.ir };
+  if (pagina) {
+    const arquivo = path.join(RAIZ, pagina.arquivo);
+    const info = arquivoComum(arquivo);
+    if (info) return { status: 200, arquivo, info };
+  }
+
   const candidatos = relativo.endsWith('/') ? [path.join(alvo, 'index.html')] : [alvo, path.join(alvo, 'index.html')];
   for (const arquivo of candidatos) {
     const info = arquivoComum(arquivo);
@@ -340,8 +359,9 @@ function enviarMontado(req, res, montado, { status, tipo, nota }) {
 
 async function atender(req, res) {
   let caminhoUrl;
+  let consulta;
   try {
-    caminhoUrl = new URL(req.url, 'http://localhost').pathname;
+    ({ pathname: caminhoUrl, search: consulta } = new URL(req.url, 'http://localhost'));
   } catch {
     return semCorpo(req, res, 400);
   }
@@ -353,6 +373,8 @@ async function atender(req, res) {
   if (req.method !== 'GET' && req.method !== 'HEAD') return semCorpo(req, res, 405, { Allow: 'GET, HEAD' });
 
   const achado = localizar(caminhoUrl);
+  // A página está em outro endereço. O redirecionamento é temporário (302) porque depende de uma opção do painel.
+  if (achado.ir) return semCorpo(req, res, achado.status, { Location: achado.ir + consulta });
   if (!achado.arquivo) return semCorpo(req, res, achado.status);
 
   let nota = achado.rotaDoApp ? '  (rota do aplicativo -> index.html)' : '';
@@ -390,9 +412,10 @@ if (!arquivoComum(path.join(RAIZ, 'index.html'))) {
 conteudo.carregar();
 
 servidor.listen(PORTA, HOST, () => {
+  const onde = conteudo.enderecos();
   console.log('Fronteira do Sul RP — site e painel do administrador');
-  console.log(`  Regras        : http://localhost:${PORTA}/`);
-  console.log(`  Convite       : http://localhost:${PORTA}/convite/`);
+  console.log(`  Convite       : http://localhost:${PORTA}${onde.convite}`);
+  console.log(`  Regras        : http://localhost:${PORTA}${onde.regras}`);
   console.log(`  Painel        : http://localhost:${PORTA}/admin/`);
   console.log(`  Cópia do site : ${RAIZ}`);
   console.log(`  Alterações    : ${DADOS}`);

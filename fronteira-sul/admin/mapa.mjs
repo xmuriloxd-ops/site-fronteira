@@ -9,11 +9,12 @@
  *
  * O que este projeto mudou em relação ao site copiado também está aqui:
  *   - `padrao` em um campo = o texto que o site usa no lugar do que veio na
- *     cópia (hoje, os créditos). Para o painel, esse é o texto "original" do
- *     campo: é para ele que "Voltar ao original" e "Restaurar o site original"
- *     voltam. O administrador continua podendo trocar pelo painel.
- *   - OPCOES_PADRAO, no fim do arquivo: o que vem ligado ou desligado (o
- *     convite no início da página de regras, a aba Admin...).
+ *     cópia (hoje, os créditos e o destino do botão do convite). Para o
+ *     painel, esse é o texto "original" do campo: é para ele que "Voltar ao
+ *     original" e "Restaurar o site original" voltam. O administrador continua
+ *     podendo trocar pelo painel.
+ *   - OPCOES_PADRAO, no fim do arquivo: o que vem ligado ou desligado (o site
+ *     começar pelo convite, a aba Admin...).
  *
  * Como um "local" é descrito:
  *   { arquivo: 'js', apos, chave }   texto dentro do aplicativo de regras:
@@ -43,7 +44,7 @@ export const IMAGENS = [
   {
     id: 'convite',
     rotulo: 'Imagem do convite',
-    ajuda: 'Aparece no início da página de regras, na página do convite e na prévia quando o link é colado no Discord ou no WhatsApp. O ideal é 1200 × 675.',
+    ajuda: 'Aparece na página do convite e na prévia quando o link é colado no Discord ou no WhatsApp. O ideal é 1200 × 675.',
     caminhos: ['/fronteira-sul-convite-preview.jpg'],
   },
   {
@@ -268,19 +269,28 @@ export const CAMPOS = [
   },
 
   // ───────────── Convite ─────────────
-  // Estes textos aparecem na página /convite/ e, com a opção `conviteNoInicio`
-  // ligada, também no bloco do início da página de regras (convite-no-inicio.mjs).
+  // A página do convite. Com a opção `conviteNoInicio` ligada, é a primeira do
+  // site, no endereço "/" (ver convite-no-inicio.mjs); desligada, fica em /convite/.
   { id: 'convite.sobretitulo', pagina: 'convite', grupo: 'Texto do convite', rotulo: 'Linha pequena acima do título', locais: [texto('convite', '<span class="eyebrow">', '</span>')] },
   { id: 'convite.titulo', pagina: 'convite', grupo: 'Texto do convite', rotulo: 'Título', locais: [texto('convite', '<h1 id="title">', '</h1>')] },
   { id: 'convite.texto', pagina: 'convite', grupo: 'Texto do convite', rotulo: 'Texto', tipo: 'longo', locais: [texto('convite', '<p>', '</p>')] },
-  { id: 'convite.botao', pagina: 'convite', grupo: 'Botão', rotulo: 'Texto do botão', locais: [texto('convite', '<a class="button" href="/">', '</a>')] },
+  {
+    id: 'convite.botao',
+    pagina: 'convite',
+    grupo: 'Botão',
+    rotulo: 'Texto do botão',
+    ajuda: 'É por este botão que o visitante chega às regras.',
+    locais: [texto('convite', '<a class="button" href="/">', '</a>')],
+  },
   {
     id: 'convite.botaoLink',
     pagina: 'convite',
     grupo: 'Botão',
     rotulo: 'Para onde o botão leva',
     tipo: 'link',
-    ajuda: 'Use / para as regras, ou um endereço completo começando com https://. Com /, o botão do início da página de regras desce até as regras. Clicar na imagem faz o mesmo que o botão.',
+    ajuda: 'Com /regras/, o botão abre a página de regras. Se você trocar por outro endereço (completo, começando com https://), o convite deixa de levar às regras. Clicar na imagem leva ao mesmo lugar que o botão.',
+    // "/regras/" quer dizer "a página de regras", esteja ela onde estiver (ver ehAsRegras, em convite-no-inicio.mjs).
+    padrao: '/regras/',
     locais: [attr('convite', '<a class="button" href="')],
   },
   {
@@ -376,7 +386,11 @@ export const CAMPOS = [
 
 /** Opções do site, com o valor que cada uma tem enquanto ninguém mexe. */
 export const OPCOES_PADRAO = {
-  /** Mostra o convite (imagem, texto e botão) no início da página de regras, antes de tudo. */
+  /**
+   * O site começa pelo convite: o endereço principal mostra só ele, e as regras
+   * ficam em /regras/, abertas pelo botão do convite (ver convite-no-inicio.mjs).
+   * Desligada, é como no site original: regras em "/" e convite em /convite/.
+   */
   conviteNoInicio: true,
   /** Mostra a aba "Admin" ao lado das abas da página de regras. */
   abaAdmin: true,
@@ -398,8 +412,8 @@ export const INTERRUPTORES = [
     opcao: 'conviteNoInicio',
     pagina: 'convite',
     grupo: 'Texto do convite',
-    rotulo: 'Mostrar o convite no início da página de regras',
-    ajuda: 'A imagem, o texto e o botão aparecem antes das regras. Desligado, o convite fica só na página /convite/.',
+    rotulo: 'Começar o site pelo convite',
+    ajuda: 'Ligado: quem entra no site vê só o convite, e as regras abrem pelo botão, no endereço /regras/. Desligado: o site abre direto nas regras e o convite fica em /convite/, como no site original.',
   },
   {
     opcao: 'abaAdmin',
@@ -412,16 +426,10 @@ export const INTERRUPTORES = [
   { opcao: 'mostrarCreditos', pagina: 'regras', grupo: 'Créditos (fim da página)', rotulo: 'Mostrar os créditos na página', ajuda: '' },
 ];
 
-/**
- * Identificadores que uma seção do regulamento não pode usar: os que já existem
- * na página e o "regras", que precisa continuar sem dono (/#regras abre a
- * página já nas regras; ver ANCORA_DAS_REGRAS em convite-no-inicio.mjs).
- */
+/** Identificadores que uma seção do regulamento não pode usar (já existem na página). */
 export const IDS_RESERVADOS = new Set([
   'root',
   'inicio',
-  'regras',
-  'fs-convite-titulo',
   'integridade',
   'integridade-heading',
   'autor',

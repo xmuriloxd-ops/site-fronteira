@@ -8,7 +8,7 @@ import path from 'node:path';
 import { spawn } from 'node:child_process';
 import { analisarImagem } from '../imagem.mjs';
 import { ARQUIVOS } from '../mapa.mjs';
-import { CREDITOS_DA_COPIA, GIF_MINIMO, PADRAO, RAIZ, SITE, ok, pastaTemporaria, pngSimples, resumo } from './apoio.mjs';
+import { CREDITOS_DA_COPIA, ENDERECOS, ENDERECOS_DO_ORIGINAL, GIF_MINIMO, PADRAO, RAIZ, SEM_COMECAR_PELO_CONVITE, SITE, ok, pastaTemporaria, pngSimples, resumo } from './apoio.mjs';
 
 const DADOS = pastaTemporaria();
 const resumoDe = (corpo) => crypto.createHash('sha256').update(corpo).digest('hex');
@@ -131,34 +131,56 @@ const baixar = async (caminho, opcoes) => {
   return { status: r.status, tipo: r.headers.get('content-type'), headers: r.headers, corpo: Buffer.from(await r.arrayBuffer()) };
 };
 const entrar = (usuario, senha) => api('POST', 'entrar', { json: { usuario, senha } });
+const pagina = async (caminho) => (await baixar(caminho)).corpo.toString('utf8');
+/** Pede sem seguir o redirecionamento: [status, para onde manda, tamanho do corpo]. */
+const semSeguir = async (caminho, metodo = 'GET') => {
+  const r = await fetch(BASE + caminho, { method: metodo, redirect: 'manual' });
+  return [r.status, r.headers.get('location'), (await r.arrayBuffer()).byteLength];
+};
 
 try {
   await subir();
   assert.ok(processo.saida().includes('senha inicial'), 'ao iniciar, o servidor avisa que a senha inicial está em uso');
 
+  assert.ok(processo.saida().includes(`  Convite       : http://localhost:${PORTA}/\n`), 'ao iniciar, o servidor mostra onde está o convite');
+  assert.ok(processo.saida().includes(`  Regras        : http://localhost:${PORTA}/regras/\n`), 'e onde estão as regras');
+
   // ───── o site, sem nenhuma alteração feita pelo painel
-  // A página de regras e o aplicativo dela saem com o que o projeto mudou na cópia
-  // (convite no início, créditos e aba Admin); todo o resto, byte a byte como a cópia.
-  const aplicativo = (await baixar(`/${ARQUIVOS.js}`)).corpo.toString('utf8');
+  // O site começa pelo convite: "/" é a página do convite, com o botão que leva às regras.
+  for (const caminho of ['/', '/index.html', '/?de=discord']) assert.equal(await pagina(caminho), PADRAO.convite, caminho);
+  // As regras ficam em outra página, /regras/. O aplicativo dela sai com o que o projeto mudou na cópia
+  // (funcionar em /regras/, os créditos e a aba Admin); todo o resto, byte a byte como a cópia.
+  const aplicativo = await pagina(`/${ARQUIVOS.js}`);
   assert.equal(aplicativo, PADRAO.js);
-  for (const caminho of ['/', '/index.html', '/uma-rota-qualquer', '/404']) assert.equal((await baixar(caminho)).corpo.toString('utf8'), PADRAO.index, caminho);
-  // Na página do convite, só o destino do botão muda: abre a página de regras já depois do convite.
-  for (const caminho of ['/convite', '/convite/', '/convite/index.html']) assert.equal((await baixar(caminho)).corpo.toString('utf8'), PADRAO.convite, caminho);
+  for (const caminho of ['/regras/', '/regras', '/Regras/', '/REGRAS', '/regras/?busca=rdm']) assert.equal(await pagina(caminho), PADRAO.index, caminho);
+  // Endereço que não existe é uma rota do aplicativo, como no original: ele mostra a tela "não encontrada".
+  for (const caminho of ['/uma-rota-qualquer', '/regras/outra', '/regras/index.html', '/convite/outra', '/404']) assert.equal(await pagina(caminho), PADRAO.index, caminho);
+  // O endereço antigo do convite continua valendo: leva para o início, sem perder o que vem depois do "?".
+  for (const caminho of ['/convite', '/convite/', '/convite/index.html', '/Convite/']) {
+    assert.deepEqual(await semSeguir(caminho), [302, '/', 0], caminho);
+    assert.deepEqual(await semSeguir(caminho, 'HEAD'), [302, '/', 0], `HEAD ${caminho}`);
+    assert.equal(await pagina(caminho), PADRAO.convite, `${caminho}: seguindo, chega ao convite`);
+  }
+  assert.deepEqual(await semSeguir('/convite/?de=discord&n=1'), [302, '/?de=discord&n=1', 0]);
+  assert.deepEqual(await semSeguir('/convite?'), [302, '/', 0]);
+  assert.equal((await cru('/convite/')).headers['cache-control'], 'no-cache', 'o redirecionamento depende de uma opção do painel: o navegador não pode guardá-lo');
   for (const rel of Object.values(ARQUIVOS).concat('assets/index-DMP8NyHf.css', 'favicon.ico', 'fronteira-sul-convite-preview.jpg')) {
     if (rel === ARQUIVOS.js || rel === ARQUIVOS.index || rel === ARQUIVOS.convite) continue;
     assert.equal(resumoDe((await baixar(`/${rel}`)).corpo), resumoDe(doSite(rel)), rel);
   }
   assert.ok(aplicativo.includes('href:"/admin/"'));
-  assert.ok(aplicativo.includes('className:"site-shell",children:[R.jsx("section",{className:"fs-convite"'), 'o convite abre a página de regras');
+  assert.ok(PADRAO.convite.includes('<a class="button" href="/regras/">Consultar regras oficiais</a>'), 'é pelo botão do convite que se chega às regras');
+  assert.ok(!aplicativo.includes('fs-convite') && !PADRAO.index.includes('convite-no-inicio'), 'a página de regras não traz o convite');
   assert.ok(aplicativo.includes('children:"MURILO MENDES"') && aplicativo.includes('navigator.clipboard.writeText("sgtmendes1997_29726")'));
   for (const antigo of Object.values(CREDITOS_DA_COPIA)) assert.ok(!aplicativo.includes(antigo), 'os créditos da cópia não são entregues');
   for (const [caminho, status, tipo] of [
     ['/', 200, 'text/html; charset=utf-8'],
-    ['/convite', 200, 'text/html; charset=utf-8'],
-    ['/convite/', 200, 'text/html; charset=utf-8'],
+    ['/regras', 200, 'text/html; charset=utf-8'],
+    ['/regras/', 200, 'text/html; charset=utf-8'],
     ['/uma-rota-qualquer', 200, 'text/html; charset=utf-8'],
     ['/404', 404, 'text/html; charset=utf-8'],
     ['/nao-existe.png', 404, null],
+    ['/regras/nao-existe.png', 404, null],
     ['/api/platform/config.js', 500, null],
     ['/favicon.ico', 200, 'image/webp'],
     ['/admin', 200, 'text/html; charset=utf-8'],
@@ -172,9 +194,8 @@ try {
     assert.equal(r.status, status, caminho);
     assert.equal(r.tipo, tipo, caminho);
   }
-  assert.equal((await fetch(`${BASE}/`, { method: 'POST' })).status, 405);
-  assert.equal((await fetch(`${BASE}/admin/`, { method: 'POST' })).status, 405);
-  ok('site sem alterações do painel: a cópia mais o convite no início, os créditos novos e a aba Admin; mesmas respostas do servidor original');
+  for (const caminho of ['/', '/regras/', '/convite/', '/admin/']) assert.equal((await fetch(BASE + caminho, { method: 'POST', redirect: 'manual' })).status, 405, `POST ${caminho}`);
+  ok('site sem alterações do painel: "/" é o convite, "/regras/" são as regras (créditos novos e aba Admin) e "/convite/" leva para "/"');
 
   const painel = await baixar('/admin/');
   assert.ok(painel.headers.get('content-security-policy').includes("script-src 'self'"));
@@ -248,10 +269,11 @@ try {
   r = await api('PUT', 'conteudo', { token, json: { versao: 0, textos: { 'convite.titulo': 'Título <novo> & "aspas"', 'regras.abertura.titulo1': 'RP sério.' } } });
   assert.equal(r.status, 200);
   assert.equal(r.dados.versao, 1);
-  assert.ok((await baixar('/convite/')).corpo.toString('utf8').includes('<h1 id="title">Título &lt;novo&gt; &amp; "aspas"</h1>'));
-  const aplicativoNovo = (await baixar(`/${ARQUIVOS.js}`)).corpo.toString('utf8');
+  assert.deepEqual(r.dados.enderecos, ENDERECOS, 'o painel recebe os endereços das duas páginas');
+  assert.ok((await pagina('/')).includes('<h1 id="title">Título &lt;novo&gt; &amp; "aspas"</h1>'), 'o título novo aparece no início do site');
+  const aplicativoNovo = await pagina(`/${ARQUIVOS.js}`);
   assert.ok(aplicativoNovo.includes('children:["RP sério.",'));
-  assert.ok(aplicativoNovo.includes('className:"fs-convite-titulo",children:"Título <novo> & \\"aspas\\""'), 'o convite do início acompanha o texto da página /convite/');
+  assert.equal(aplicativoNovo.length, PADRAO.js.length + 'RP sério.'.length - 'Roleplay justo.'.length, 'na página de regras só mudou o texto dela');
   assert.equal((await api('PUT', 'conteudo', { token, json: { versao: 0, textos: {} } })).status, 409);
   r = await api('PUT', 'conteudo', { token, json: { versao: 1, textos: { 'convite.titulo': 'x'.repeat(400) } } });
   assert.equal(r.status, 400);
@@ -268,9 +290,12 @@ try {
   const naoAchada = await baixar('/404');
   assert.equal(naoAchada.status, 404);
   assert.ok(naoAchada.corpo.toString('utf8').includes('<div id="root">'));
-  const cabeca = await baixar('/convite/', { method: 'HEAD' });
-  assert.equal(cabeca.status, 200);
-  assert.equal(cabeca.corpo.length, 0);
+  for (const caminho of ['/', '/regras/']) {
+    const cabeca = await baixar(caminho, { method: 'HEAD' });
+    assert.equal(cabeca.status, 200, caminho);
+    assert.equal(cabeca.corpo.length, 0, caminho);
+    assert.ok(Number(cabeca.headers.get('content-length')) > 1000, `${caminho}: o tamanho da página é anunciado, só o corpo não vem`);
+  }
   ok('página montada: compressão, 304 quando não mudou, HEAD e /404');
 
   // ───── imagens
@@ -338,7 +363,7 @@ try {
   r = await entrar('chefe', 'nova-senha-1');
   assert.equal(r.status, 200);
   const token2 = r.dados.token;
-  assert.ok((await baixar('/convite/')).corpo.toString('utf8').includes('<h1 id="title">Título &lt;novo&gt; &amp; "aspas"</h1>'));
+  assert.ok((await pagina('/')).includes('<h1 id="title">Título &lt;novo&gt; &amp; "aspas"</h1>'));
   assert.ok((await baixar('/fronteira-sul-convite-preview.jpg')).corpo.equals(jpg));
   assert.ok(!processo.saida().includes('senha inicial'));
   ok('depois de reiniciar: textos, imagem e o novo acesso continuam');
@@ -356,11 +381,47 @@ try {
   for (const rel of ['fronteira-sul-convite-preview.jpg', 'favicon.ico']) {
     assert.ok((await baixar(`/${rel}`)).corpo.equals(doSite(rel)), rel);
   }
-  assert.equal((await baixar('/convite/')).corpo.toString('utf8'), PADRAO.convite);
-  assert.equal((await baixar('/index.html')).corpo.toString('utf8'), PADRAO.index);
-  assert.equal((await baixar(`/${ARQUIVOS.js}`)).corpo.toString('utf8'), PADRAO.js);
+  assert.equal(await pagina('/'), PADRAO.convite);
+  assert.equal(await pagina('/regras/'), PADRAO.index);
+  assert.equal(await pagina(`/${ARQUIVOS.js}`), PADRAO.js);
   assert.equal((await entrar('chefe', 'nova-senha-1')).status, 200, 'restaurar o site não mexe no acesso');
   ok('histórico e "restaurar o site original" devolvem os arquivos byte a byte');
+
+  // ───── a opção "Começar o site pelo convite"
+  const marcaDoInicio = (await baixar('/')).headers.get('etag');
+  assert.equal((await fetch(`${BASE}/`, { headers: { 'If-None-Match': marcaDoInicio } })).status, 304);
+  r = await api('GET', 'conteudo', { token: token2 });
+  r = await api('PUT', 'conteudo', { token: token2, json: { versao: r.dados.versao, opcoes: { conviteNoInicio: false } } });
+  assert.equal(r.status, 200, r.texto);
+  assert.deepEqual(r.dados.enderecos, ENDERECOS_DO_ORIGINAL);
+  // Desligada, as páginas ficam onde estavam no site original, e a troca vale no pedido seguinte.
+  assert.equal((await fetch(`${BASE}/`, { headers: { 'If-None-Match': marcaDoInicio } })).status, 200, 'o navegador não fica com o convite guardado no lugar das regras');
+  for (const caminho of ['/', '/index.html', '/uma-rota-qualquer']) assert.equal(await pagina(caminho), SEM_COMECAR_PELO_CONVITE.index, caminho);
+  assert.equal(await pagina(`/${ARQUIVOS.js}`), SEM_COMECAR_PELO_CONVITE.js);
+  for (const caminho of ['/convite', '/convite/', '/convite/index.html']) {
+    assert.ok((await baixar(caminho)).corpo.equals(doSite('convite/index.html')), `${caminho}: a página do convite, byte a byte como a cópia`);
+    assert.equal((await semSeguir(caminho))[0], 200, caminho);
+  }
+  // "/regras/" continua valendo (um link para as regras serve nos dois casos): leva para "/".
+  for (const caminho of ['/regras', '/regras/', '/Regras/']) {
+    assert.deepEqual(await semSeguir(caminho), [302, '/', 0], caminho);
+    assert.equal(await pagina(caminho), SEM_COMECAR_PELO_CONVITE.index, `${caminho}: seguindo, chega às regras`);
+  }
+  assert.deepEqual(await semSeguir('/regras/?busca=rdm'), [302, '/?busca=rdm', 0]);
+  // Ligada de novo, o site volta a começar pelo convite.
+  r = await api('PUT', 'conteudo', { token: token2, json: { versao: r.dados.versao, opcoes: { conviteNoInicio: true } } });
+  assert.deepEqual(r.dados.enderecos, ENDERECOS);
+  assert.equal(await pagina('/'), PADRAO.convite);
+  assert.equal(await pagina('/regras/'), PADRAO.index);
+  assert.equal(await pagina(`/${ARQUIVOS.js}`), PADRAO.js);
+  assert.deepEqual(await semSeguir('/convite/'), [302, '/', 0]);
+  // Com o endereço do site preenchido, o mapa do site lista as duas páginas.
+  r = await api('PUT', 'conteudo', { token: token2, json: { versao: r.dados.versao, opcoes: { enderecoPublico: 'https://cidade.exemplo' } } });
+  assert.equal(r.status, 200, r.texto);
+  assert.deepEqual([...(await pagina('/sitemap.xml')).matchAll(/<loc>([^<]*)<\/loc>/g)].map((m) => m[1]), ['https://cidade.exemplo/', 'https://cidade.exemplo/regras/']);
+  assert.ok((await pagina('/')).includes('<link rel="canonical" href="https://cidade.exemplo/" />'));
+  assert.ok((await pagina('/regras/')).includes('<link rel="canonical" href="https://cidade.exemplo/regras/" />'));
+  ok('opção "Começar o site pelo convite": desligada, o site volta aos endereços do original; ligada, volta a começar pelo convite');
 
   assert.equal((await api('POST', 'sair', { token: token2 })).status, 200);
   assert.equal((await api('GET', 'sessao', { token: token2 })).status, 401);

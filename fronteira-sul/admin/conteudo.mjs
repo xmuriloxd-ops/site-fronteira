@@ -15,17 +15,28 @@ import fs from 'node:fs';
 import path from 'node:path';
 import vm from 'node:vm';
 import zlib from 'node:zlib';
-import { ATALHO_DAS_REGRAS, LINK_DAS_REGRAS, MARCA_DO_INICIO, blocoDoConvite, cabecaDoConvite } from './convite-no-inicio.mjs';
+import {
+  BASE_DAS_REGRAS,
+  BASE_ORIGINAL,
+  CLIQUE_NA_IMAGEM,
+  MARCA_DA_BASE,
+  MARCA_DA_IMAGEM,
+  MARCA_DO_VOLTAR,
+  VOLTAR_ORIGINAL,
+  VOLTAR_PARA_O_INICIO,
+  cabecaDoInicio,
+  ehAsRegras,
+  enderecos,
+  paginaDoEndereco,
+} from './convite-no-inicio.mjs';
 import { analisarImagem } from './imagem.mjs';
 import { ARQUIVOS, CAMPOS, IDS_RESERVADOS, IMAGENS, INTERRUPTORES, OPCOES_PADRAO, ORIGEM_ORIGINAL } from './mapa.mjs';
 
 const FORMATO = 1;
 const MAX_HISTORICO = 15;
 
-/** Endereço da imagem do convite dentro do site. */
+/** Endereço da imagem do convite dentro do site (as medidas dela reservam o espaço na página do convite). */
 const IMAGEM_DO_CONVITE = IMAGENS.find((img) => img.id === 'convite').caminhos[0];
-/** Endereço do logo (as medidas dele reservam o espaço na barra do topo). */
-const IMAGEM_DO_LOGO = IMAGENS.find((img) => img.id === 'logo').caminhos[0];
 
 /** A aba "Admin": entra logo depois das duas abas da página de regras. */
 const FIM_DAS_ABAS = 'children:"Regras da Polícia"})';
@@ -232,7 +243,7 @@ function limparCampo(campo, valor) {
   const max = LIMITES[campo.tipo || 'curto'];
   if (v.length > max) throw new ErroDeConteudo(`"${campo.rotulo}": o texto passou de ${max} caracteres.`);
   if (campo.tipo === 'link' && !/^(https?:\/\/[^\s]+|\/(?!\/)[^\s]*|#[^\s]*|mailto:[^\s]+|tel:[^\s]+)$/i.test(v)) {
-    throw new ErroDeConteudo(`"${campo.rotulo}": use / para a página de regras, um caminho começando com / ou um endereço começando com https://`);
+    throw new ErroDeConteudo(`"${campo.rotulo}": use /regras/ para a página de regras, um caminho começando com / ou um endereço completo começando com https://`);
   }
   if (campo.tipo === 'email' && v && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) {
     throw new ErroDeConteudo(`"${campo.rotulo}": o e-mail não parece válido.`);
@@ -392,7 +403,7 @@ export function criarConteudo({ raizSite, dirDados, aviso = () => {} }) {
   }
 
   function carimbo() {
-    return [...Object.values(ARQUIVOS), IMAGEM_DO_CONVITE, IMAGEM_DO_LOGO]
+    return [...Object.values(ARQUIVOS), IMAGEM_DO_CONVITE]
       .map((rel) => {
         try {
           const s = fs.statSync(path.join(raizSite, rel));
@@ -462,20 +473,40 @@ export function criarConteudo({ raizSite, dirDados, aviso = () => {} }) {
       return { faixas, aplicacao, cnh, original: limparPolicia({ faixas: faixas.original, aplicacao: aplicacao.original, cnh: cnh.original }) };
     });
     const abaAdmin = tentar('A aba "Admin" não pôde ser colocada na página de regras', () => unico(js, MARCA_DAS_ABAS) + FIM_DAS_ABAS.length);
-    const conviteNoInicio = tentar('O convite não pôde ser colocado no início da página de regras', () => unico(js, MARCA_DO_INICIO) + MARCA_DO_INICIO.length);
-    // Largura e altura das imagens que vieram no site (para reservar o espaço delas na página).
-    const medidasDe = (rel) => {
-      try {
-        return analisarImagem(fs.readFileSync(path.join(raizSite, rel)));
-      } catch {
-        return null; // sem a imagem original, a página só não sabe as medidas
-      }
-    };
-    const imagemDoConvite = medidasDe(IMAGEM_DO_CONVITE);
-    const imagemDoLogo = medidasDe(IMAGEM_DO_LOGO);
+    // O que precisa ser achado nos arquivos para o site começar pelo convite (ver convite-no-inicio.mjs).
+    const conviteNoInicio = tentar('O site não pôde começar pelo convite e ficou como o original, com as regras no endereço principal', () => {
+      if (textos.index == null || textos.convite == null) throw new Error('falta uma das duas páginas');
+      const base = unico(js, MARCA_DA_BASE);
+      const botao = campos.get('convite.botaoLink')?.locais.find((l) => l.arquivo === 'convite' && l.tipo === 'trecho');
+      if (!botao) throw new Error('não achei o botão na página do convite');
+      // Os dois que vêm agora são acabamento: sem a marca, o site começa pelo convite do mesmo jeito,
+      // só aquele detalhe fica de fora (e entra na lista de problemas, para quem cuida do site saber).
+      const umaVez = (texto, marca, seFaltar) => {
+        const i = texto.indexOf(marca);
+        if (i >= 0 && texto.indexOf(marca, i + 1) < 0) return i;
+        problemas.push(seFaltar);
+        return null;
+      };
+      const voltar = umaVez(js, MARCA_DO_VOLTAR, 'O botão da tela “página não encontrada” não pôde ser ajustado: ele mostra as regras em vez de voltar para o convite.');
+      const imagem = umaVez(textos.convite, MARCA_DA_IMAGEM, 'A imagem do convite não pôde ficar clicável (o botão continua levando às regras).');
+      return {
+        base,
+        // o botão da tela "não encontrada", que volta para o início do site
+        voltar: voltar == null ? null : voltar + MARCA_DO_VOLTAR.indexOf(VOLTAR_ORIGINAL),
+        // o clique na imagem do convite, que faz o mesmo que o botão
+        imagem: imagem == null ? null : imagem + MARCA_DA_IMAGEM.length,
+      };
+    });
+    // Largura e altura da imagem do convite que veio no site (para reservar o espaço dela na página).
+    let imagemDoConvite = null;
+    try {
+      imagemDoConvite = analisarImagem(fs.readFileSync(path.join(raizSite, IMAGEM_DO_CONVITE)));
+    } catch {
+      /* sem a imagem original, a página só não sabe as medidas */
+    }
 
     for (const p of problemas) aviso(p);
-    original = { marca, textos, campos, regulamento, policia, abaAdmin, conviteNoInicio, imagemDoConvite, imagemDoLogo, problemas };
+    original = { marca, textos, campos, regulamento, policia, abaAdmin, conviteNoInicio, imagemDoConvite, problemas };
     gerados.clear();
     return original;
   }
@@ -760,8 +791,21 @@ export function criarConteudo({ raizSite, dirDados, aviso = () => {} }) {
     return trocas;
   }
 
-  /** O convite no início da página de regras está ligado (e o lugar dele foi achado no aplicativo)? */
+  /** O site começa pelo convite? (A opção está ligada e o que ela precisa foi achado nos arquivos.) */
   const conviteNoInicio = () => estado.opcoes.conviteNoInicio && lerOriginal().conviteNoInicio != null;
+
+  /** Onde fica cada página agora: { inicio, convite, regras }. */
+  const enderecosDoSite = () => enderecos(conviteNoInicio());
+
+  /**
+   * O que responde em um endereço, além dos arquivos de site/: { arquivo } (caminho dentro de site/),
+   * { ir } (o navegador é mandado para esse endereço) ou null.
+   */
+  function paginaPara(caminhoUrl) {
+    const achado = paginaDoEndereco(caminhoUrl, conviteNoInicio());
+    if (!achado) return null;
+    return achado.ir ? { ir: achado.ir } : { arquivo: ARQUIVOS[achado.pagina] };
+  }
 
   function montarJs() {
     const o = lerOriginal();
@@ -776,18 +820,11 @@ export function criarConteudo({ raizSite, dirDados, aviso = () => {} }) {
       }
     }
     if (o.abaAdmin != null && estado.opcoes.abaAdmin) trocas.push({ inicio: o.abaAdmin, fim: o.abaAdmin, novo: ABA_ADMIN });
+    // Com o site começando pelo convite, a página de regras fica em /regras/ e o aplicativo precisa saber disso.
     if (conviteNoInicio()) {
-      // O bloco mostra o mesmo conteúdo da página /convite/, com a imagem que estiver valendo.
-      const medidas = estado.imagens.convite || o.imagemDoConvite || {};
-      const bloco = blocoDoConvite({
-        imagem: { endereco: IMAGEM_DO_CONVITE, descricao: textoDe('convite.imagemDescricao'), largura: medidas.largura || 0, altura: medidas.altura || 0 },
-        sobretitulo: textoDe('convite.sobretitulo'),
-        titulo: textoDe('convite.titulo'),
-        texto: textoDe('convite.texto'),
-        botao: textoDe('convite.botao'),
-        link: textoDe('convite.botaoLink') || '/',
-      });
-      trocas.push({ inicio: o.conviteNoInicio, fim: o.conviteNoInicio, novo: bloco });
+      const { base, voltar } = o.conviteNoInicio;
+      trocas.push({ inicio: base, fim: base + BASE_ORIGINAL.length, novo: BASE_DAS_REGRAS });
+      if (voltar != null) trocas.push({ inicio: voltar, fim: voltar + VOLTAR_ORIGINAL.length, novo: VOLTAR_PARA_O_INICIO });
     }
     return trocas.length ? aplicarTrocas(o.textos.js, trocas) : null;
   }
@@ -818,21 +855,34 @@ export function criarConteudo({ raizSite, dirDados, aviso = () => {} }) {
     const txt = o.textos[nome];
     if (txt == null) return null;
     let trocas = trocasDeTexto(nome);
+    const noComeco = conviteNoInicio();
+    const onde = enderecosDoSite();
 
-    // Com o convite também no início da página de regras, o botão da página /convite/ leva direto
-    // às regras; senão o visitante clicaria e veria o mesmo convite outra vez.
-    if (nome === 'convite' && conviteNoInicio() && textoDe('convite.botaoLink') === LINK_DAS_REGRAS) {
-      const local = o.campos.get('convite.botaoLink')?.locais.find((l) => l.arquivo === 'convite' && l.tipo === 'trecho');
+    if (nome === 'convite') {
+      // O botão: quando o destino quer dizer "a página de regras", vai o endereço em que ela está agora.
+      const reg = o.campos.get('convite.botaoLink');
+      const local = reg?.locais.find((l) => l.arquivo === 'convite' && l.tipo === 'trecho');
       if (local) {
+        const link = textoDe('convite.botaoLink');
+        const destinoDoBotao = ehAsRegras(link) ? onde.regras : link;
         trocas = trocas.filter((t) => t.inicio !== local.inicio || t.fim !== local.fim);
-        trocas.push({ inicio: local.inicio, fim: local.fim, novo: local.escrever(ATALHO_DAS_REGRAS) });
+        if (destinoDoBotao !== reg.original) trocas.push({ inicio: local.inicio, fim: local.fim, novo: local.escrever(destinoDoBotao) });
       }
+      // Clicar na imagem faz o mesmo que o botão.
+      if (noComeco && o.conviteNoInicio.imagem != null) trocas.push({ inicio: o.conviteNoInicio.imagem, fim: o.conviteNoInicio.imagem, novo: CLIQUE_NA_IMAGEM });
     }
 
     // Com o endereço do site preenchido, os links de compartilhamento passam a apontar para cá.
     const destino = estado.opcoes.enderecoPublico;
     if (destino && destino !== ORIGEM_ORIGINAL) {
-      for (const i of todas(txt, ORIGEM_ORIGINAL)) trocas.push({ inicio: i, fim: i + ORIGEM_ORIGINAL.length, novo: destino });
+      // O endereço da própria página (canonical e og:url) acompanha o lugar em que ela está neste site.
+      const naCopia = nome === 'convite' ? '/convite/"' : '/"';
+      const aqui = nome === 'convite' ? onde.convite : onde.regras;
+      for (const i of todas(txt, ORIGEM_ORIGINAL)) {
+        const fim = i + ORIGEM_ORIGINAL.length;
+        if (noComeco && txt.startsWith(naCopia, fim)) trocas.push({ inicio: i, fim: fim + naCopia.length - 1, novo: destino + aqui });
+        else trocas.push({ inicio: i, fim, novo: destino });
+      }
       const imagem = estado.imagens.convite;
       if (imagem) {
         // Imagem nova ganha um endereço novo, para o Discord e o WhatsApp buscarem de novo.
@@ -853,7 +903,7 @@ export function criarConteudo({ raizSite, dirDados, aviso = () => {} }) {
 
     // O que entra no fim do <head>. O CSS do administrador vem por último, para poder mudar o resto.
     const noHead = [];
-    if (nome === 'index' && conviteNoInicio()) noHead.push(cabecaDoConvite(IMAGEM_DO_CONVITE, estado.imagens.logo || o.imagemDoLogo));
+    if (nome === 'convite' && noComeco) noHead.push(cabecaDoInicio(estado.imagens.convite || o.imagemDoConvite));
     const css = cssDaPagina(nome);
     if (css) noHead.push(`<style id="ajustes-do-admin">\n${css}\n</style>`);
     const fimDoHead = txt.indexOf('</head>');
@@ -893,7 +943,14 @@ export function criarConteudo({ raizSite, dirDados, aviso = () => {} }) {
     const o = lerOriginal();
     const destino = estado.opcoes.enderecoPublico;
     if (o.textos[nome] == null || !destino || destino === ORIGEM_ORIGINAL || !o.textos[nome].includes(ORIGEM_ORIGINAL)) return null;
-    return o.textos[nome].split(ORIGEM_ORIGINAL).join(destino);
+    let texto = o.textos[nome].split(ORIGEM_ORIGINAL).join(destino);
+    // O mapa do site que veio na cópia só lista o endereço principal, que era o das regras.
+    // Com o site começando pelo convite, a página de regras entra na lista com o endereço novo.
+    if (nome === 'sitemap' && conviteNoInicio()) {
+      const fim = texto.lastIndexOf('</urlset>');
+      if (fim >= 0) texto = `${texto.slice(0, fim)}<url>\n<loc>${destino}${enderecosDoSite().regras}</loc>\n</url>\n${texto.slice(fim)}`;
+    }
+    return texto;
   }
 
   const NOME_POR_ARQUIVO = new Map(Object.entries(ARQUIVOS).map(([nome, rel]) => [rel, nome]));
@@ -954,6 +1011,8 @@ export function criarConteudo({ raizSite, dirDados, aviso = () => {} }) {
       opcoes: { ...estado.opcoes },
       opcoesPadrao: { ...OPCOES_PADRAO },
       interruptores: INTERRUPTORES,
+      // Onde cada página está agora (para os links "Ver regras" e "Ver convite" do painel).
+      enderecos: enderecosDoSite(),
       imagens: IMAGENS.map((img) => {
         const reg = estado.imagens[img.id];
         return {
@@ -976,6 +1035,8 @@ export function criarConteudo({ raizSite, dirDados, aviso = () => {} }) {
     salvar,
     descrever,
     gerar,
+    paginaPara,
+    enderecos: enderecosDoSite,
     imagemPara,
     trocarImagem,
     removerImagem,

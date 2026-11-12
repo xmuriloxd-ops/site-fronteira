@@ -5,7 +5,6 @@ import os from 'node:os';
 import path from 'node:path';
 import zlib from 'node:zlib';
 import { fileURLToPath } from 'node:url';
-import { blocoDoConvite, cabecaDoConvite } from '../convite-no-inicio.mjs';
 import { ARQUIVOS } from '../mapa.mjs';
 
 /** A pasta fronteira-sul/. */
@@ -42,44 +41,118 @@ export const ABA_ADMIN =
 
 export const IMAGEM_DO_CONVITE = '/fronteira-sul-convite-preview.jpg';
 
-/** O convite do início da página de regras, com os textos da página /convite/ da cópia. */
-export const BLOCO_DO_CONVITE = blocoDoConvite({
-  imagem: { endereco: IMAGEM_DO_CONVITE, descricao: lerOUnico(COPIA.convite, /<img class="poster" src="[^"]*" alt="([^"]*)"/), largura: 1200, altura: 675 },
-  sobretitulo: lerOUnico(COPIA.convite, /<span class="eyebrow">([^<]*)<\/span>/),
-  titulo: lerOUnico(COPIA.convite, /<h1 id="title">([^<]*)<\/h1>/),
-  texto: lerOUnico(COPIA.convite, /<p>([^<]*)<\/p>/),
-  botao: lerOUnico(COPIA.convite, /<a class="button" href="[^"]*">([^<]*)<\/a>/),
-  link: lerOUnico(COPIA.convite, /<a class="button" href="([^"]*)">/),
-});
+// ───── o site começa pelo convite (ver ../convite-no-inicio.mjs)
+/** Onde fica cada página numa instalação nova, e com a opção "Começar o site pelo convite" desligada. */
+export const ENDERECOS = { inicio: '/', convite: '/', regras: '/regras/' };
+export const ENDERECOS_DO_ORIGINAL = { inicio: '/', convite: '/convite/', regras: '/' };
 
-/** O que entra no <head> da página de regras junto com o convite (o logo da cópia tem 1200 × 676). */
-export const CABECA_DO_CONVITE = cabecaDoConvite(IMAGEM_DO_CONVITE, { largura: 1200, altura: 676 });
+/**
+ * O que muda no aplicativo de regras para ele funcionar em /regras/: a raiz
+ * dos endereços (vazia na cópia) e o botão "Go Home" da tela "não encontrada",
+ * que passa a abrir o início do site de verdade. Escritos aqui por extenso, e
+ * não importados, para o teste notar se alguém mexer neles sem querer.
+ */
+export const BASE_NA_COPIA = 'base:"",ssrPath:';
+export const BASE_ENTREGUE = 'base:/^\\/regras(\\/|$)/i.test(location.pathname)?"/regras":"",ssrPath:';
+export const VOLTAR_NA_COPIA = 'const r=()=>{a("/")}';
+export const VOLTAR_ENTREGUE = 'const r=()=>{location.assign("/")}';
+
+/** Na página do convite: clicar na imagem faz o mesmo que o botão. */
+export const CLIQUE_NA_IMAGEM = ` onclick="var b=document.querySelector('a.button');if(b)b.click()"`;
+
+/**
+ * O que entra no <head> do convite quando ele é o início do site: as regras
+ * de visual que fazem o convite, com o botão, caber na tela (a imagem da cópia
+ * tem 1200 × 675, proporção 1,7778).
+ *
+ * Também por extenso. Estes testes não abrem um navegador: o que garante que
+ * o convite cabe na tela são as medições descritas no LEIA-ME.md, feitas com
+ * estas regras exatamente como estão aqui. Quem mudar uma delas precisa medir
+ * de novo.
+ */
+export const CABECA_DO_INICIO = [
+  '<style id="convite-no-inicio">',
+  'main{--tela:100vh;',
+  '--ao-lado:calc((var(--tela) - 2*clamp(16px,4vw,48px) - 185px)*1.7778);',
+  '--embaixo:calc((var(--tela) - 2*clamp(16px,4vw,48px) - 261px)*1.7778);',
+  '--largura:max(clamp(0px,(var(--ao-lado) - 600px)*99999,var(--ao-lado)),var(--embaixo));',
+  'container-type:inline-size;width:min(100%,1100px,max(300px,var(--largura)))}',
+  '@media (max-width:680px){main{--largura:var(--embaixo)}}',
+  '.poster{width:min(100%,max(120px,var(--largura)));margin-left:auto;margin-right:auto}',
+  '@supports (width:1cqw){h1{font-size:clamp(20px,min(3vw,3.3cqw),30px)}}',
+  '@container (max-width:600px){.message{align-items:stretch;flex-direction:column;padding:18px}.button{width:100%}}',
+  '@media (min-width:480px) and (max-height:479px),(min-width:640px) and (max-height:618px) and (min-aspect-ratio:4/3){',
+  'body{padding-top:16px;padding-bottom:16px}',
+  'main{display:flex;align-items:center;gap:16px;width:min(100%,1100px)}',
+  '.poster{flex:none;width:min(60%,calc(100% - 256px),calc((var(--tela) - 34px)*1.7778));margin:0}',
+  '.message{flex:1;min-width:0;margin-top:0;align-items:stretch;flex-direction:column;padding:18px}',
+  'h1{text-wrap:balance}',
+  '.button{width:100%}',
+  '}',
+  '@supports (height:100svh){body{min-height:100svh}main{--tela:100svh}}',
+  '.poster{cursor:pointer;aspect-ratio:auto 1200/675}',
+  '.eyebrow:empty,h1:empty,p:empty,.button:empty{display:none}',
+  '</style>',
+].join('\n');
 
 /** A regra que esconde uma linha dos créditos (3 = telefone, 4 = e-mail). */
 export const esconderLinha = (n) => `.author-details > .contact-row:nth-child(${n}){display:none!important}`;
 
 /**
  * O que uma instalação nova entrega: a cópia mais o que este projeto mudou
- * nela — o convite no início da página de regras, os créditos e a aba Admin.
- * Na página /convite/, só muda o destino do botão: ele passa a abrir a página
- * de regras já depois do convite. É montado aqui com trocas simples de texto,
- * sem passar pelo conteudo.mjs. Os arquivos que não aparecem aqui saem iguais
- * aos da cópia.
+ * nela.
+ *
+ *   - o aplicativo de regras: a raiz dos endereços (para ele funcionar em
+ *     /regras/), o botão da tela "não encontrada", a aba Admin e os créditos;
+ *   - a página de regras: só as linhas vazias dos créditos, escondidas;
+ *   - a página do convite, que passa a ser o início do site: o botão leva a
+ *     /regras/, a imagem é clicável e o <head> ganha as regras de visual.
+ *
+ * É montado aqui com trocas simples de texto, sem passar pelo conteudo.mjs.
+ * Os arquivos que não aparecem aqui saem iguais aos da cópia.
  */
 export const PADRAO = (() => {
   let js = COPIA.js;
-  js = trocarOUnico(js, /className:"site-shell",children:\[/, (achado) => achado + BLOCO_DO_CONVITE);
+  js = trocarOUnico(js, /base:"",ssrPath:/, () => BASE_ENTREGUE);
+  js = trocarOUnico(js, /const r=\(\)=>\{a\("\/"\)\}/, () => VOLTAR_ENTREGUE);
   js = trocarOUnico(js, /children:"Regras da Polícia"\}\)(?=\]\}\))/, (achado) => achado + ABA_ADMIN);
   js = trocarOUnico(js, /(className:"author-name",children:)"[^"]*"/, (_, antes) => `${antes}"MURILO MENDES"`);
   js = trocarOUnico(js, /(className:"text-button",onClick:ne,children:\[)"[^"]*"/, (_, antes) => `${antes}"sgtmendes1997_29726"`);
   js = trocarOUnico(js, /(navigator\.clipboard\.writeText\()"[^"]*"/, (_, antes) => `${antes}"sgtmendes1997_29726"`);
   js = trocarOUnico(js, /href:"tel:[^"]*",children:"[^"]*"/, () => 'href:"tel:",children:""');
   js = trocarOUnico(js, /href:"mailto:[^"]*",children:"[^"]*"/, () => 'href:"mailto:",children:""');
-  const noHead = `${CABECA_DO_CONVITE}\n<style id="ajustes-do-admin">\n${esconderLinha(3)}\n${esconderLinha(4)}\n</style>`;
-  const index = trocarOUnico(COPIA.index, /<\/head>/, (achado) => noHead + achado);
-  const convite = trocarOUnico(COPIA.convite, /<a class="button" href="\/">/, () => '<a class="button" href="/#regras">');
+  const index = trocarOUnico(COPIA.index, /<\/head>/, (achado) => `<style id="ajustes-do-admin">\n${esconderLinha(3)}\n${esconderLinha(4)}\n</style>${achado}`);
+  let convite = trocarOUnico(COPIA.convite, /<a class="button" href="\/">/, () => '<a class="button" href="/regras/">');
+  convite = trocarOUnico(convite, /<img class="poster"/, (achado) => achado + CLIQUE_NA_IMAGEM);
+  convite = trocarOUnico(convite, /<\/head>/, (achado) => CABECA_DO_INICIO + achado);
   return { js, index, convite };
 })();
+
+/**
+ * O que é entregue com a opção "Começar o site pelo convite" desligada: as
+ * páginas ficam onde estavam no site original. O aplicativo volta a ter a raiz
+ * e o botão da cópia, e a página do convite é a da cópia, sem tirar nem pôr
+ * (null). A aba Admin e os créditos continuam.
+ */
+export const SEM_COMECAR_PELO_CONVITE = {
+  js: PADRAO.js.replace(BASE_ENTREGUE, BASE_NA_COPIA).replace(VOLTAR_ENTREGUE, VOLTAR_NA_COPIA),
+  index: PADRAO.index,
+  convite: null,
+};
+
+/** Uma cópia de site/ em uma pasta temporária, para testar o que acontece quando um arquivo vem diferente. */
+export function copiaDoSite(alterar = {}) {
+  const pasta = pastaTemporaria();
+  fs.cpSync(SITE, pasta, { recursive: true });
+  for (const [nome, mudar] of Object.entries(alterar)) {
+    const arquivo = path.join(pasta, ARQUIVOS[nome]);
+    const antes = fs.readFileSync(arquivo, 'utf8');
+    const depois = mudar(antes);
+    assert.notEqual(depois, antes, `a alteração de ${nome} não mudou nada`);
+    fs.writeFileSync(arquivo, depois);
+  }
+  return pasta;
+}
 
 const temporarias = [];
 /** Pasta vazia, apagada sozinha quando o teste termina. */

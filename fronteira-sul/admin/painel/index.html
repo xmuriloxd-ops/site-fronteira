@@ -38,8 +38,9 @@
           <span>Painel do administrador</span>
         </a>
         <nav class="topo-links" aria-label="Ver o site">
-          <a href="/" data-sair-do-painel>Ver regras</a>
-          <a href="/convite/" data-sair-do-painel>Ver convite</a>
+          <!-- Os endereços mudam conforme o site começa ou não pelo convite: o painel.js acerta os dois. -->
+          <a href="/regras/" data-ver="regras" data-sair-do-painel>Ver regras</a>
+          <a href="/" data-ver="convite" data-sair-do-painel>Ver convite</a>
           <span id="topo-usuario" class="topo-usuario"></span>
           <button id="botao-sair" class="botao pequeno" type="button">Sair</button>
         </nav>

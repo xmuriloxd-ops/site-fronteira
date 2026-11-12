@@ -498,7 +498,7 @@ function blocoDaSecao(secao, i, redesenhar) {
 // ───────────────────────────── aba: página de regras ─────────────────────────────
 function abaRegras() {
   return [
-    ...cabecalho('Página de regras', 'Os textos fixos da página: topo, abertura, índice, destaque e créditos. O texto das regras fica em “Regulamento”; o convite que aparece no início da página, em “Convite”.'),
+    ...cabecalho('Página de regras', 'Os textos fixos da página: topo, abertura, índice, destaque e créditos. O texto das regras fica em “Regulamento”.'),
     ...gruposDeCampos('regras'),
   ];
 }
@@ -645,7 +645,7 @@ function blocoDaFaixa(faixa, i, redesenhar) {
 // ───────────────────────────── aba: convite ─────────────────────────────
 function abaConvite() {
   const paraImagens = h('p', { class: 'texto' }, 'Para trocar a foto do convite, vá em ', h('button', { type: 'button', class: 'link', text: 'Imagens', onclick: () => irPara('imagens') }), '.');
-  return [...cabecalho('Convite', 'O convite aparece em dois lugares: no início da página de regras e na página /convite/. Aqui ficam o texto, o botão e a descrição da imagem.'), ...gruposDeCampos('convite', { Imagem: paraImagens })];
+  return [...cabecalho('Convite', 'A página do convite: a imagem, o texto e o botão que leva às regras. Com a primeira opção abaixo ligada, é por ela que o site começa.'), ...gruposDeCampos('convite', { Imagem: paraImagens })];
 }
 
 // ───────────────────────────── aba: imagens ─────────────────────────────
@@ -911,6 +911,8 @@ function desenhar({ manterPosicao = false } = {}) {
   $('menu').replaceChildren(...ABAS.map((a) => h('button', { type: 'button', text: a.nome, 'aria-current': a.id === aba ? 'page' : null, onclick: () => irPara(a.id) })));
   $('menu').querySelector('[aria-current]')?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
   $('topo-usuario').textContent = sessao.usuario;
+  // "Ver regras" e "Ver convite": onde cada página está agora (muda com a opção "Começar o site pelo convite").
+  for (const link of document.querySelectorAll('[data-ver]')) link.setAttribute('href', servidor.enderecos[link.dataset.ver]);
 
   const recados = [];
   if (sessao.senhaInicial && aba !== 'acesso') {
