@@ -498,7 +498,7 @@ function blocoDaSecao(secao, i, redesenhar) {
 // ───────────────────────────── aba: página de regras ─────────────────────────────
 function abaRegras() {
   return [
-    ...cabecalho('Página de regras', 'Os textos fixos da página: topo, abertura, índice, destaque e créditos. O texto das regras fica em “Regulamento”.'),
+    ...cabecalho('Página de regras', 'Os textos fixos da página: topo, abas, link para voltar ao convite, abertura, índice, destaque e créditos. O texto das regras fica em “Regulamento”.'),
     ...gruposDeCampos('regras'),
   ];
 }

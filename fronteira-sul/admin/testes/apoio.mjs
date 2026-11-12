@@ -95,50 +95,95 @@ export const CABECA_DO_INICIO = [
   '</style>',
 ].join('\n');
 
+/**
+ * O link de volta ao convite, que a página de regras ganha quando o site
+ * começa por ele: uma seta e o texto, dentro de uma caixa. O aplicativo recebe
+ * o elemento duas vezes (na barra do topo, para telas estreitas, e na linha
+ * das abas), e a página recebe as regras de visual que mostram um de cada vez.
+ *
+ * Também por extenso: onde o link aparece em cada largura de tela, sem tirar
+ * nada do lugar, foi conferido no navegador com este elemento e estas regras
+ * exatamente como estão aqui (ver LEIA-ME.md).
+ */
+export const LINK_DE_VOLTA =
+  'R.jsx("span",{className:"voltar-ao-convite",children:R.jsxs("a",{className:"view-tab",href:"/",children:[' +
+  'R.jsxs("svg",{width:14,height:14,viewBox:"0 0 24 24",fill:"none",stroke:"currentColor",strokeWidth:2,strokeLinecap:"round",strokeLinejoin:"round","aria-hidden":"true",' +
+  'children:[R.jsx("path",{d:"m12 19-7-7 7-7"}),R.jsx("path",{d:"M19 12H5"})]}),' +
+  '"Voltar ao convite"]})})';
+/** O mesmo link com outro texto. */
+export const linkDeVolta = (texto) => LINK_DE_VOLTA.replace('"Voltar ao convite"', () => JSON.stringify(texto));
+
+export const ESTILO_DO_LINK_DE_VOLTA = [
+  '<style id="voltar-ao-convite">',
+  '.voltar-ao-convite{display:flex;justify-content:flex-end}',
+  '.voltar-ao-convite>a{display:flex;align-items:center;gap:7px;flex:0 1 auto;min-width:0;overflow-wrap:anywhere;text-decoration:none}',
+  '.voltar-ao-convite svg{flex:none}',
+  '.view-tabs>.voltar-ao-convite{flex:1 1 0}',
+  '.topbar>.voltar-ao-convite{display:none}',
+  '@media (max-width:700px){',
+  '.view-tabs>.voltar-ao-convite{display:none}',
+  '.topbar{display:grid;grid-template-columns:auto minmax(0,1fr);column-gap:0}',
+  '.topbar>.topbar-tools{grid-column:1/-1}',
+  '.topbar>.voltar-ao-convite{display:flex;align-self:center}',
+  '}',
+  '</style>',
+].join('\n');
+
 /** A regra que esconde uma linha dos créditos (3 = telefone, 4 = e-mail). */
 export const esconderLinha = (n) => `.author-details > .contact-row:nth-child(${n}){display:none!important}`;
 
 /**
- * O que uma instalação nova entrega: a cópia mais o que este projeto mudou
- * nela.
+ * O que o site entrega sem nada salvo pelo painel: a cópia mais o que este
+ * projeto mudou nela.
  *
  *   - o aplicativo de regras: a raiz dos endereços (para ele funcionar em
- *     /regras/), o botão da tela "não encontrada", a aba Admin e os créditos;
- *   - a página de regras: só as linhas vazias dos créditos, escondidas;
+ *     /regras/), o botão da tela "não encontrada", o link de volta ao convite
+ *     (na barra do topo e na linha das abas), a aba Admin e os créditos;
+ *   - a página de regras: as regras de visual do link de volta e as linhas
+ *     vazias dos créditos, escondidas;
  *   - a página do convite, que passa a ser o início do site: o botão leva a
  *     /regras/, a imagem é clicável e o <head> ganha as regras de visual.
  *
  * É montado aqui com trocas simples de texto, sem passar pelo conteudo.mjs.
  * Os arquivos que não aparecem aqui saem iguais aos da cópia.
+ *
+ * `comecaPeloConvite: false` é a opção "Começar o site pelo convite"
+ * desligada: as páginas ficam onde estavam no site original. O aplicativo
+ * volta a ter a raiz e o botão da cópia, não há link de volta, e a página do
+ * convite é a da cópia, sem tirar nem pôr (null). A aba Admin e os créditos
+ * continuam. `textoDoLink` é o texto do link de volta; vazio, ele não entra.
  */
-export const PADRAO = (() => {
+function oQueOSiteEntrega({ comecaPeloConvite = true, textoDoLink = 'Voltar ao convite' } = {}) {
+  const link = comecaPeloConvite && textoDoLink ? linkDeVolta(textoDoLink) : null;
   let js = COPIA.js;
-  js = trocarOUnico(js, /base:"",ssrPath:/, () => BASE_ENTREGUE);
-  js = trocarOUnico(js, /const r=\(\)=>\{a\("\/"\)\}/, () => VOLTAR_ENTREGUE);
-  js = trocarOUnico(js, /children:"Regras da Polícia"\}\)(?=\]\}\))/, (achado) => achado + ABA_ADMIN);
+  if (comecaPeloConvite) {
+    js = trocarOUnico(js, /base:"",ssrPath:/, () => BASE_ENTREGUE);
+    js = trocarOUnico(js, /const r=\(\)=>\{a\("\/"\)\}/, () => VOLTAR_ENTREGUE);
+  }
+  if (link) js = trocarOUnico(js, /R\.jsxs\("div",\{"data-loc":"client\/src\/pages\/Home\.tsx:285",className:"topbar-tools"/, (achado) => `${link},${achado}`);
+  js = trocarOUnico(js, /children:"Regras da Polícia"\}\)(?=\]\}\))/, (achado) => achado + (link ? `,${link}` : '') + ABA_ADMIN);
   js = trocarOUnico(js, /(className:"author-name",children:)"[^"]*"/, (_, antes) => `${antes}"MURILO MENDES"`);
   js = trocarOUnico(js, /(className:"text-button",onClick:ne,children:\[)"[^"]*"/, (_, antes) => `${antes}"sgtmendes1997_29726"`);
   js = trocarOUnico(js, /(navigator\.clipboard\.writeText\()"[^"]*"/, (_, antes) => `${antes}"sgtmendes1997_29726"`);
   js = trocarOUnico(js, /href:"tel:[^"]*",children:"[^"]*"/, () => 'href:"tel:",children:""');
   js = trocarOUnico(js, /href:"mailto:[^"]*",children:"[^"]*"/, () => 'href:"mailto:",children:""');
-  const index = trocarOUnico(COPIA.index, /<\/head>/, (achado) => `<style id="ajustes-do-admin">\n${esconderLinha(3)}\n${esconderLinha(4)}\n</style>${achado}`);
+  const noHead = `${link ? `${ESTILO_DO_LINK_DE_VOLTA}\n` : ''}<style id="ajustes-do-admin">\n${esconderLinha(3)}\n${esconderLinha(4)}\n</style>`;
+  const index = trocarOUnico(COPIA.index, /<\/head>/, (achado) => noHead + achado);
+  if (!comecaPeloConvite) return { js, index, convite: null };
   let convite = trocarOUnico(COPIA.convite, /<a class="button" href="\/">/, () => '<a class="button" href="/regras/">');
   convite = trocarOUnico(convite, /<img class="poster"/, (achado) => achado + CLIQUE_NA_IMAGEM);
   convite = trocarOUnico(convite, /<\/head>/, (achado) => CABECA_DO_INICIO + achado);
   return { js, index, convite };
-})();
+}
 
-/**
- * O que é entregue com a opção "Começar o site pelo convite" desligada: as
- * páginas ficam onde estavam no site original. O aplicativo volta a ter a raiz
- * e o botão da cópia, e a página do convite é a da cópia, sem tirar nem pôr
- * (null). A aba Admin e os créditos continuam.
- */
-export const SEM_COMECAR_PELO_CONVITE = {
-  js: PADRAO.js.replace(BASE_ENTREGUE, BASE_NA_COPIA).replace(VOLTAR_ENTREGUE, VOLTAR_NA_COPIA),
-  index: PADRAO.index,
-  convite: null,
-};
+/** Uma instalação nova. */
+export const PADRAO = oQueOSiteEntrega();
+/** Com a opção "Começar o site pelo convite" desligada. */
+export const SEM_COMECAR_PELO_CONVITE = oQueOSiteEntrega({ comecaPeloConvite: false });
+/** Com o texto do link de volta vazio: a página de regras não tem o link. */
+export const SEM_O_LINK_DE_VOLTA = oQueOSiteEntrega({ textoDoLink: '' });
+/** Com outro texto no link de volta. */
+export const comOLinkDeVolta = (texto) => oQueOSiteEntrega({ textoDoLink: texto });
 
 /** Uma cópia de site/ em uma pasta temporária, para testar o que acontece quando um arquivo vem diferente. */
 export function copiaDoSite(alterar = {}) {

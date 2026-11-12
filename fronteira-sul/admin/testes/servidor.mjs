@@ -8,7 +8,24 @@ import path from 'node:path';
 import { spawn } from 'node:child_process';
 import { analisarImagem } from '../imagem.mjs';
 import { ARQUIVOS } from '../mapa.mjs';
-import { CREDITOS_DA_COPIA, ENDERECOS, ENDERECOS_DO_ORIGINAL, GIF_MINIMO, PADRAO, RAIZ, SEM_COMECAR_PELO_CONVITE, SITE, ok, pastaTemporaria, pngSimples, resumo } from './apoio.mjs';
+import {
+  CREDITOS_DA_COPIA,
+  ENDERECOS,
+  ENDERECOS_DO_ORIGINAL,
+  ESTILO_DO_LINK_DE_VOLTA,
+  GIF_MINIMO,
+  LINK_DE_VOLTA,
+  PADRAO,
+  RAIZ,
+  SEM_COMECAR_PELO_CONVITE,
+  SEM_O_LINK_DE_VOLTA,
+  SITE,
+  comOLinkDeVolta,
+  ok,
+  pastaTemporaria,
+  pngSimples,
+  resumo,
+} from './apoio.mjs';
 
 const DADOS = pastaTemporaria();
 const resumoDe = (corpo) => crypto.createHash('sha256').update(corpo).digest('hex');
@@ -149,7 +166,7 @@ try {
   // O site começa pelo convite: "/" é a página do convite, com o botão que leva às regras.
   for (const caminho of ['/', '/index.html', '/?de=discord']) assert.equal(await pagina(caminho), PADRAO.convite, caminho);
   // As regras ficam em outra página, /regras/. O aplicativo dela sai com o que o projeto mudou na cópia
-  // (funcionar em /regras/, os créditos e a aba Admin); todo o resto, byte a byte como a cópia.
+  // (funcionar em /regras/, o link de volta ao convite, os créditos e a aba Admin); todo o resto, byte a byte como a cópia.
   const aplicativo = await pagina(`/${ARQUIVOS.js}`);
   assert.equal(aplicativo, PADRAO.js);
   for (const caminho of ['/regras/', '/regras', '/Regras/', '/REGRAS', '/regras/?busca=rdm']) assert.equal(await pagina(caminho), PADRAO.index, caminho);
@@ -171,6 +188,8 @@ try {
   assert.ok(aplicativo.includes('href:"/admin/"'));
   assert.ok(PADRAO.convite.includes('<a class="button" href="/regras/">Consultar regras oficiais</a>'), 'é pelo botão do convite que se chega às regras');
   assert.ok(!aplicativo.includes('fs-convite') && !PADRAO.index.includes('convite-no-inicio'), 'a página de regras não traz o convite');
+  assert.equal(aplicativo.split(LINK_DE_VOLTA).length - 1, 2, 'a página de regras tem o link de volta ao convite (um para telas estreitas, outro para as largas)');
+  assert.ok(LINK_DE_VOLTA.includes('href:"/"') && PADRAO.index.includes(ESTILO_DO_LINK_DE_VOLTA), 'ele leva ao início do site, e a página recebe as regras de visual dele');
   assert.ok(aplicativo.includes('children:"MURILO MENDES"') && aplicativo.includes('navigator.clipboard.writeText("sgtmendes1997_29726")'));
   for (const antigo of Object.values(CREDITOS_DA_COPIA)) assert.ok(!aplicativo.includes(antigo), 'os créditos da cópia não são entregues');
   for (const [caminho, status, tipo] of [
@@ -195,7 +214,7 @@ try {
     assert.equal(r.tipo, tipo, caminho);
   }
   for (const caminho of ['/', '/regras/', '/convite/', '/admin/']) assert.equal((await fetch(BASE + caminho, { method: 'POST', redirect: 'manual' })).status, 405, `POST ${caminho}`);
-  ok('site sem alterações do painel: "/" é o convite, "/regras/" são as regras (créditos novos e aba Admin) e "/convite/" leva para "/"');
+  ok('site sem alterações do painel: "/" é o convite, "/regras/" são as regras (link de volta ao convite, créditos novos e aba Admin) e "/convite/" leva para "/"');
 
   const painel = await baixar('/admin/');
   assert.ok(painel.headers.get('content-security-policy').includes("script-src 'self'"));
@@ -386,6 +405,27 @@ try {
   assert.equal(await pagina(`/${ARQUIVOS.js}`), PADRAO.js);
   assert.equal((await entrar('chefe', 'nova-senha-1')).status, 200, 'restaurar o site não mexe no acesso');
   ok('histórico e "restaurar o site original" devolvem os arquivos byte a byte');
+
+  // ───── o link de volta ao convite, na página de regras
+  // O texto muda pelo painel, na hora, e vazio tira o link.
+  r = await api('GET', 'conteudo', { token: token2 });
+  assert.deepEqual(r.dados.textos, {});
+  assert.equal(r.dados.campos.find((f) => f.id === 'regras.voltar.texto').original, 'Voltar ao convite');
+  r = await api('PUT', 'conteudo', { token: token2, json: { versao: r.dados.versao, textos: { 'regras.voltar.texto': 'Início' } } });
+  assert.equal(r.status, 200, r.texto);
+  assert.equal(await pagina(`/${ARQUIVOS.js}`), comOLinkDeVolta('Início').js);
+  assert.equal(await pagina('/regras/'), PADRAO.index);
+  r = await api('PUT', 'conteudo', { token: token2, json: { versao: r.dados.versao, textos: { 'regras.voltar.texto': '' } } });
+  assert.equal(r.status, 200, r.texto);
+  assert.equal(await pagina(`/${ARQUIVOS.js}`), SEM_O_LINK_DE_VOLTA.js);
+  assert.equal(await pagina('/regras/'), SEM_O_LINK_DE_VOLTA.index);
+  assert.ok(!(await pagina('/regras/')).includes('voltar-ao-convite') && !(await pagina(`/${ARQUIVOS.js}`)).includes('voltar-ao-convite'));
+  assert.equal(await pagina('/'), PADRAO.convite, 'a página do convite não muda com o link');
+  r = await api('PUT', 'conteudo', { token: token2, json: { versao: r.dados.versao, textos: {} } });
+  assert.equal(r.status, 200, r.texto);
+  assert.equal(await pagina(`/${ARQUIVOS.js}`), PADRAO.js);
+  assert.equal(await pagina('/regras/'), PADRAO.index);
+  ok('link de volta ao convite: pelo painel, o texto muda na hora, e vazio tira o link da página de regras');
 
   // ───── a opção "Começar o site pelo convite"
   const marcaDoInicio = (await baixar('/')).headers.get('etag');

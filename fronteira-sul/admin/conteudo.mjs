@@ -19,14 +19,17 @@ import {
   BASE_DAS_REGRAS,
   BASE_ORIGINAL,
   CLIQUE_NA_IMAGEM,
+  ESTILO_DO_LINK_DE_VOLTA,
   MARCA_DA_BASE,
   MARCA_DA_IMAGEM,
+  MARCA_DO_TOPO,
   MARCA_DO_VOLTAR,
   VOLTAR_ORIGINAL,
   VOLTAR_PARA_O_INICIO,
   cabecaDoInicio,
   ehAsRegras,
   enderecos,
+  linkDeVolta,
   paginaDoEndereco,
 } from './convite-no-inicio.mjs';
 import { analisarImagem } from './imagem.mjs';
@@ -38,7 +41,7 @@ const MAX_HISTORICO = 15;
 /** Endereço da imagem do convite dentro do site (as medidas dela reservam o espaço na página do convite). */
 const IMAGEM_DO_CONVITE = IMAGENS.find((img) => img.id === 'convite').caminhos[0];
 
-/** A aba "Admin": entra logo depois das duas abas da página de regras. */
+/** A aba "Admin": entra logo depois das duas abas da página de regras (e do link de volta ao convite, quando ele existe). */
 const FIM_DAS_ABAS = 'children:"Regras da Polícia"})';
 const MARCA_DAS_ABAS = `${FIM_DAS_ABAS}]})`;
 const ABA_ADMIN =
@@ -438,7 +441,8 @@ export function criarConteudo({ raizSite, dirDados, aviso = () => {} }) {
         if (valores.size > 1) throw new Error('o original usa textos diferentes nos lugares deste campo');
         // `original` é o que está no arquivo copiado; `padrao`, o que o site mostra enquanto
         // o administrador não mexe (igual ao original, a não ser que o projeto tenha mudado).
-        const original = locais[0].valor;
+        // Um campo sem `locais` é um texto que o projeto acrescenta: na cópia ele não existe.
+        const original = locais.length ? locais[0].valor : '';
         let padrao = original;
         if (campo.padrao !== undefined) {
           try {
@@ -472,7 +476,8 @@ export function criarConteudo({ raizSite, dirDados, aviso = () => {} }) {
       const cnh = resolverLista(js, ',h0=[', '],PA="');
       return { faixas, aplicacao, cnh, original: limparPolicia({ faixas: faixas.original, aplicacao: aplicacao.original, cnh: cnh.original }) };
     });
-    const abaAdmin = tentar('A aba "Admin" não pôde ser colocada na página de regras', () => unico(js, MARCA_DAS_ABAS) + FIM_DAS_ABAS.length);
+    // O ponto logo depois das duas abas. É onde entram a aba "Admin" e, na versão para telas largas, o link de volta ao convite.
+    const depoisDasAbas = tentar('A aba "Admin" não pôde ser colocada na página de regras', () => unico(js, MARCA_DAS_ABAS) + FIM_DAS_ABAS.length);
     // O que precisa ser achado nos arquivos para o site começar pelo convite (ver convite-no-inicio.mjs).
     const conviteNoInicio = tentar('O site não pôde começar pelo convite e ficou como o original, com as regras no endereço principal', () => {
       if (textos.index == null || textos.convite == null) throw new Error('falta uma das duas páginas');
@@ -497,6 +502,10 @@ export function criarConteudo({ raizSite, dirDados, aviso = () => {} }) {
         imagem: imagem == null ? null : imagem + MARCA_DA_IMAGEM.length,
       };
     });
+    // O link de volta ao convite tem dois lugares na página de regras (ver convite-no-inicio.mjs). Como os
+    // acabamentos acima: sem achar um dos lugares, o link só não entra ali, e o problema entra na lista.
+    if (depoisDasAbas == null) problemas.push('O link de volta ao convite não pôde ser colocado ao lado das abas da página de regras, onde ele aparece no computador.');
+    const antesDasFerramentas = tentar('O link de volta ao convite não pôde ser colocado na barra do topo da página de regras, onde ele aparece no celular', () => unico(js, MARCA_DO_TOPO));
     // Largura e altura da imagem do convite que veio no site (para reservar o espaço dela na página).
     let imagemDoConvite = null;
     try {
@@ -506,7 +515,7 @@ export function criarConteudo({ raizSite, dirDados, aviso = () => {} }) {
     }
 
     for (const p of problemas) aviso(p);
-    original = { marca, textos, campos, regulamento, policia, abaAdmin, conviteNoInicio, imagemDoConvite, problemas };
+    original = { marca, textos, campos, regulamento, policia, depoisDasAbas, antesDasFerramentas, conviteNoInicio, imagemDoConvite, problemas };
     gerados.clear();
     return original;
   }
@@ -807,6 +816,18 @@ export function criarConteudo({ raizSite, dirDados, aviso = () => {} }) {
     return achado.ir ? { ir: achado.ir } : { arquivo: ARQUIVOS[achado.pagina] };
   }
 
+  /**
+   * O link de volta ao convite que a página de regras mostra: { texto, destino }. É null quando ela não
+   * tem o link: o site não começa pelo convite, o administrador deixou o texto vazio ou o aplicativo
+   * veio diferente e nenhum dos dois lugares do link foi achado.
+   */
+  function linkParaOConvite() {
+    const o = lerOriginal();
+    if (!conviteNoInicio() || (o.depoisDasAbas == null && o.antesDasFerramentas == null)) return null;
+    const texto = textoDe('regras.voltar.texto');
+    return texto ? { texto, destino: enderecosDoSite().convite } : null;
+  }
+
   function montarJs() {
     const o = lerOriginal();
     if (o.textos.js == null) return null;
@@ -819,7 +840,15 @@ export function criarConteudo({ raizSite, dirDados, aviso = () => {} }) {
         trocas.push({ inicio: o.policia[parte].inicio, fim: o.policia[parte].fim, novo: JSON.stringify(estado.policia[parte]) });
       }
     }
-    if (o.abaAdmin != null && estado.opcoes.abaAdmin) trocas.push({ inicio: o.abaAdmin, fim: o.abaAdmin, novo: ABA_ADMIN });
+    // O link de volta ao convite entra em dois lugares: na linha das abas e na barra do topo, depois do logo.
+    const volta = linkParaOConvite();
+    const elementoDaVolta = volta ? linkDeVolta(volta.texto, volta.destino) : null;
+    if (o.depoisDasAbas != null) {
+      // Na linha das abas, nesta ordem: o link de volta e a aba Admin.
+      const novo = (elementoDaVolta ? `,${elementoDaVolta}` : '') + (estado.opcoes.abaAdmin ? ABA_ADMIN : '');
+      if (novo) trocas.push({ inicio: o.depoisDasAbas, fim: o.depoisDasAbas, novo });
+    }
+    if (elementoDaVolta && o.antesDasFerramentas != null) trocas.push({ inicio: o.antesDasFerramentas, fim: o.antesDasFerramentas, novo: `${elementoDaVolta},` });
     // Com o site começando pelo convite, a página de regras fica em /regras/ e o aplicativo precisa saber disso.
     if (conviteNoInicio()) {
       const { base, voltar } = o.conviteNoInicio;
@@ -904,6 +933,7 @@ export function criarConteudo({ raizSite, dirDados, aviso = () => {} }) {
     // O que entra no fim do <head>. O CSS do administrador vem por último, para poder mudar o resto.
     const noHead = [];
     if (nome === 'convite' && noComeco) noHead.push(cabecaDoInicio(estado.imagens.convite || o.imagemDoConvite));
+    if (nome === 'index' && linkParaOConvite()) noHead.push(ESTILO_DO_LINK_DE_VOLTA);
     const css = cssDaPagina(nome);
     if (css) noHead.push(`<style id="ajustes-do-admin">\n${css}\n</style>`);
     const fimDoHead = txt.indexOf('</head>');

@@ -27,13 +27,13 @@ Numa instalação nova, sem nada salvo pelo painel, o site difere do original em
 1. **O site começa pelo convite.** No original, o endereço principal (`/`) era a página de regras e o convite ficava em `/convite/`. Aqui, quem entra no site vê só o convite: a imagem, o texto ("CONVITE OFICIAL", "Uma nova história começa aqui.", "Conheça a cidade, confira as regras oficiais e prepare-se para o roleplay.") e o botão "Consultar regras oficiais". As regras ficam em outra página, `/regras/`, e é por esse botão que se chega a elas.
    - Clicar na imagem faz o mesmo que o botão.
    - O convite inteiro, com o botão, cabe na tela sem rolar. Para isso a imagem encolhe em telas baixas (notebooks) e fica ao lado do texto em telas mais baixas ainda (celular deitado). Nas telas em que o convite original já cabia com folga, a página é igual à original. Os limites e as medições estão em "Como foi conferido".
-   - A página de regras é a do original, sem o convite. Ela não tem um botão para voltar ao convite: volta-se pelo "voltar" do navegador.
+   - A página de regras é a do original, sem o convite. No topo dela há um link "Voltar ao convite". No computador ele fica na linha das abas, à esquerda da aba Admin; em telas de até 700 pixels de largura (celular em pé), fica na barra do topo, à direita do logo. O link não tira do lugar nada do que a página já tinha. Para mudar o texto ou tirar o link: painel > Página de regras > "Link para voltar ao convite".
    - Para mandar alguém direto para as regras, o link é `/regras/`.
    - `/convite/`, o endereço antigo do convite, continua valendo: leva para `/`.
    - Um endereço que não existe mostra a tela "página não encontrada" do site, como no original. O botão dela ("Go Home") leva ao início, que é o convite.
    - Para voltar aos endereços do original (regras em `/`, convite em `/convite/`): painel > Convite > "Começar o site pelo convite". Com a opção desligada, `/regras/` leva para `/`, então um link para as regras vale nos dois casos.
 2. **Créditos ("Quem criou"), no fim da página de regras.** Nome: MURILO MENDES. Discord: `sgtmendes1997_29726`. As linhas de telefone e de e-mail estão vazias e por isso não aparecem. Para mudar ou preencher: painel > Página de regras > "Créditos (fim da página)".
-3. **Aba Admin**, na página de regras, à direita de "Regras da Polícia".
+3. **Aba Admin**, na página de regras, no fim da linha das abas.
 
 No painel, "original" quer dizer esse estado, e não a cópia: "Voltar ao original" e "Restaurar o site original" voltam para o site começando pelo convite e para os créditos acima.
 
@@ -59,7 +59,7 @@ Não abra os `.html` com dois cliques. As páginas pedem os arquivos por caminho
 
 ### Como entrar
 
-Na página de regras (`/regras/`) há uma aba **Admin**, à direita de "Regras da Polícia". Ela leva para `/admin/`, que pede usuário e senha. O endereço `/admin/` também pode ser digitado direto.
+Na página de regras (`/regras/`) há uma aba **Admin**, no fim da linha das abas. Ela leva para `/admin/`, que pede usuário e senha. O endereço `/admin/` também pode ser digitado direto.
 
 | | Valor inicial |
 |---|---|
@@ -75,7 +75,7 @@ Se esquecer a senha: apague o arquivo `dados/acesso.json` e reinicie o servidor.
 | Seção do painel | O que tem |
 |---|---|
 | Regulamento | As seções da aba "Regulamento geral": criar, excluir, mudar a ordem, o título e o texto. |
-| Página de regras | Os textos fixos da página: topo, abas, abertura, índice, destaque, créditos (nome, Discord, telefone, e-mail), página "não encontrada". Também liga e desliga a aba Admin, o destaque e os créditos. |
+| Página de regras | Os textos fixos da página: topo, abas, link para voltar ao convite, abertura, índice, destaque, créditos (nome, Discord, telefone, e-mail), página "não encontrada". Também liga e desliga a aba Admin, o destaque e os créditos. |
 | Regras da Polícia | Textos da aba, grupos de multas (infração, valor, pontos) e as duas listas. |
 | Convite | Textos do convite, o botão e para onde ele leva. Também liga e desliga a opção de o site começar pelo convite. |
 | Imagens | Imagem do convite, logo e ícone da aba do navegador (PNG, JPG, WebP ou GIF, até 8 MB). |
@@ -121,8 +121,8 @@ Essa pasta não vai para o Git (está no `.gitignore`): ela existe só no comput
 |---|---|
 | `servidor.mjs` | O servidor. Entrega os arquivos de `site/` aplicando o que este projeto mudou e as alterações do painel, e responde como o servidor original. |
 | `admin/painel/` | A tela do painel (`index.html`, `painel.css`, `painel.js`). |
-| `admin/mapa.mjs` | Lista de tudo o que o painel deixa editar e onde cada texto fica nos arquivos de `site/`. Também guarda o que este projeto mudou na cópia: os créditos e o destino do botão do convite (`padrao`) e o que vem ligado (`OPCOES_PADRAO`). |
-| `admin/convite-no-inicio.mjs` | O site começar pelo convite: em que endereço fica cada página, o que muda no aplicativo de regras para ele funcionar em `/regras/` e as regras de visual que fazem o convite caber na tela. |
+| `admin/mapa.mjs` | Lista de tudo o que o painel deixa editar e onde cada texto fica nos arquivos de `site/`. Também guarda o que este projeto mudou na cópia: os créditos, o destino do botão do convite e o texto do link de volta ao convite (`padrao`), e o que vem ligado (`OPCOES_PADRAO`). |
+| `admin/convite-no-inicio.mjs` | O site começar pelo convite: em que endereço fica cada página, o que muda no aplicativo de regras para ele funcionar em `/regras/`, o link de volta ao convite e as regras de visual que fazem o convite caber na tela. |
 | `admin/conteudo.mjs` | Guarda as alterações e monta as páginas com elas. |
 | `admin/acesso.mjs` | Login, sessões e limite de tentativas. O usuário e a senha iniciais estão no começo deste arquivo. |
 | `admin/api.mjs`, `admin/imagem.mjs` | Os endereços que o painel usa e a conferência das imagens enviadas. |
@@ -146,6 +146,7 @@ Só é preciso para o que o painel não cobre, como a estrutura das páginas. Ed
   - As regras contam com a altura do cartão do texto como ele é hoje (`CARTAO_AO_LADO` e `CARTAO_EMBAIXO`, no mesmo arquivo). Se você mudar à mão o tamanho das letras ou os espaços do cartão, ajuste esses dois números.
   - Os testes automáticos guardam essas regras por extenso (`admin/testes/apoio.mjs`) e falham se elas mudarem. É de propósito: eles não abrem um navegador, e o que garante que o convite cabe na tela são as medições de "Como foi conferido". Depois de mudar as regras, confira a página em vários tamanhos de janela (as ferramentas de desenvolvedor do navegador têm um modo para isso) e atualize o texto do teste.
 - Endereço de cada página (`/`, `/regras/`, `/convite/`): também em `admin/convite-no-inicio.mjs`.
+- Link de volta ao convite, na página de regras: o elemento e as regras de visual dele estão em `admin/convite-no-inicio.mjs` (`linkDeVolta` e `ESTILO_DO_LINK_DE_VOLTA`). O texto que vem numa instalação nova está em `admin/mapa.mjs`. Os testes também guardam o elemento e as regras por extenso, pelo mesmo motivo: depois de mudar, confira a página de regras em telas largas e estreitas e atualize o texto do teste.
 - Créditos e o que vem ligado numa instalação nova: `admin/mapa.mjs` (procure por `padrao` e por `OPCOES_PADRAO`); reinicie o servidor depois.
 - Regras: o site original só publica a versão compilada desta página, não o código-fonte. O aplicativo está em `site/assets/index-FbaU4KfD.js` (poucas linhas, todas enormes: use a busca do editor) e o visual em `site/assets/index-DMP8NyHf.css`.
 
@@ -153,7 +154,7 @@ Três cuidados:
 
 - Uma aspa ou vírgula errada no arquivo `.js` deixa a página em branco. Este comando devolve o original: `git checkout -- fronteira-sul/site/assets/index-FbaU4KfD.js`
 - O painel acha cada texto pelo que está escrito em volta dele no arquivo. Se uma edição à mão apagar esse trecho, o painel avisa que aquele campo não pode mais ser editado; o resto continua funcionando. Um texto alterado pelo painel vale mais que o do arquivo.
-- Para a página de regras funcionar em `/regras/`, o servidor troca dois trechos do aplicativo na hora de entregar (estão descritos em `admin/convite-no-inicio.mjs`). Se uma edição à mão apagar o primeiro deles, o site volta aos endereços do original, com as regras em `/`, e o painel avisa.
+- Para a página de regras funcionar em `/regras/`, o servidor troca dois trechos do aplicativo na hora de entregar (estão descritos em `admin/convite-no-inicio.mjs`). Se uma edição à mão apagar o primeiro deles, o site volta aos endereços do original, com as regras em `/`, e o painel avisa. O link de volta ao convite e a aba Admin também entram em pontos marcados do aplicativo (depois do logo e depois das duas abas). Se uma edição apagar um desses pontos, o que entraria ali fica de fora, e o painel avisa.
 
 ## O que ainda aponta para o site original
 
@@ -186,6 +187,8 @@ Opções ao iniciar o servidor (todas opcionais):
 | `SILENCIOSO=1` | Não escreve cada pedido no terminal. |
 
 ## Como foi conferido
+
+As datas desta seção são do horário de Brasília.
 
 ### A cópia
 
@@ -234,6 +237,16 @@ Em tela de computador (1440×900):
 - Começa pela barra do topo, como no original. As duas abas, a tabela de multas, a busca, o índice, o logo do topo e a aba Admin funcionam como antes.
 - Os créditos mostram MURILO MENDES e o Discord novo; as linhas de telefone e de e-mail não aparecem; nenhum dado dos créditos antigos aparece neles.
 
+**O link de volta ao convite**, conferido em 12/11/2026, no mesmo navegador e do mesmo jeito:
+
+- A página de regras foi medida em 193 larguras de janela, de 320 a 2560 pixels, ao lado de uma cópia dela sem o link. Até 700 pixels de largura, o link aparece na barra do topo, à direita do logo; acima disso, na linha das abas, antes da aba Admin. Em todas as larguras há um link só à vista, com o texto em uma linha e sem encostar em nada.
+- Em todas elas, cada elemento que a página já tinha ficou na mesma posição e com o mesmo tamanho que na página sem o link, e a altura da página é a mesma.
+- Em 14 tamanhos de tela, de 320×568 a 2560×1440, com o mouse ou com o toque, o link leva ao convite. Em tela de computador (1440×900), o "voltar" e o "avançar" do navegador desfazem e refazem cada passo.
+- Pelo teclado, o Tab chega ao link logo depois da aba ativa, e Enter abre o convite. Ctrl+clique abre o convite em outra aba. Com a aba "Regras da Polícia" aberta, o link continua no mesmo lugar.
+- A tela "página não encontrada" não tem o link: o botão dela já leva ao convite.
+- No painel: trocar o texto muda o link nas duas posições. Com o texto vazio, o link some, e os arquivos entregues são byte a byte os de antes de o link existir. Com "Começar o site pelo convite" desligado, a página de regras não tem o link. Sem a aba Admin, o link fica na ponta direita da linha das abas.
+- Com um texto de 57 letras, contando os espaços (o original tem 17), em janelas de 701 e de 320 pixels de largura: o link quebra em linhas sem passar por cima de nada, e as abas e a barra do topo não mudam de tamanho.
+
 **No painel:**
 
 - A aba Admin da página de regras leva ao login. Os links "Ver regras" e "Ver convite" apontam para `/regras/` e `/`.
@@ -251,6 +264,7 @@ Em tela de computador (1440×900):
 
 - Não foi testado em Firefox, em Safari, nem em um celular de verdade (só no modo celular do Chromium, que não tem as barras do navegador).
 - O navegador de teste escreve com a letra Open Sans. Cada aparelho usa a letra do próprio sistema, com outra largura, e as linhas podem quebrar em outro ponto. As regras de visual contam com o parágrafo em duas linhas (e, com o botão embaixo do texto, também o título). Se num aparelho o texto quebrar em mais linhas que isso, a página pode precisar de rolagem em telas baixas.
+- O link de volta ao convite foi medido com a mesma letra. Em 320 pixels de largura sobram 12 pixels entre ele e o logo: com uma letra mais larga, ou com um texto mais comprido, o texto do link quebra em mais de uma linha e continua no mesmo lugar, à direita do logo.
 - As medidas valem para os textos originais. Com textos bem mais compridos o cartão cresce, e a página pode precisar de rolagem em telas baixas. Num teste com um título de 79 letras e um texto de 169 (os originais têm 30 e 74), em oito tamanhos de tela, a página passou a rolar em cinco: 1366×650, 1366×768, 1440×900, 360×560 e 844×390. O botão continuou inteiro à vista em quatro deles e ficou cortado em 844×390 (celular deitado). Depois de mudar os textos, vale abrir "Ver convite" e conferir.
 
 ### O painel
@@ -265,13 +279,14 @@ node fronteira-sul/admin/testes/todos.mjs
 
 Eles usam pastas temporárias e não mexem em `site/` nem em `dados/`. Conferem, entre outras coisas:
 
-- Cada um dos 93 campos de texto, trocado sozinho, muda só o próprio trecho, e o aplicativo continua válido. Textos com aspas, barras, tags e emoji não quebram a página nem viram HTML.
+- Cada um dos 94 campos de texto, trocado sozinho, muda só o próprio trecho, e o aplicativo continua válido. Textos com aspas, barras, tags e emoji não quebram a página nem viram HTML.
 - Login, sessões, limite de tentativas e troca de usuário e senha; a senha antiga para de valer.
 - Depois de reiniciar o servidor, o conteúdo, as imagens e o novo acesso continuam.
 - O site começando pelo convite: o que responde em cada endereço, o que cada página recebe, o botão com cada tipo de destino e a troca da imagem. Com a opção desligada, tudo como no original. Se um arquivo de `site/` vier diferente e a troca de endereços não puder ser feita, o site fica como o original e o painel avisa.
 - As regras de visual do convite: são, letra por letra, as que foram medidas no navegador; com outra imagem, só muda nelas o que depende do formato da imagem.
+- O link de volta ao convite: entra na página de regras nos dois lugares, com o texto do painel; vazio, não entra; e só existe enquanto o site começa pelo convite. O elemento e as regras de visual são, letra por letra, os que foram conferidos no navegador.
 - Os créditos novos: nada dos créditos da cópia é entregue em nenhum arquivo.
 - Histórico e "restaurar o site original", que devolve os arquivos byte a byte ao estado de uma instalação nova.
 - Sem login, os pedidos para ler ou alterar o conteúdo são recusados, e arquivos fora de `site/` e da tela do painel não são entregues.
 
-Além disso, em 11/11/2026 o painel foi usado de ponta a ponta no Chromium, em tela de computador (1440×900) e de celular (390×844): entrar pela aba Admin, mudar regulamento, textos fixos, multas, convite, imagens, endereço de compartilhamento e opções, conferindo cada mudança no site aberto como visitante; trocar usuário e senha; duas pessoas salvando ao mesmo tempo; sessão que cai no meio de uma edição. O roteiro foi repetido depois de o site passar a começar pelo convite, com as regras em `/regras/`. Ele precisa de um navegador e não está no repositório.
+Além disso, em 11/11/2026 o painel foi usado de ponta a ponta no Chromium, em tela de computador (1440×900) e de celular (390×844): entrar pela aba Admin, mudar regulamento, textos fixos, multas, convite, imagens, endereço de compartilhamento e opções, conferindo cada mudança no site aberto como visitante; trocar usuário e senha; duas pessoas salvando ao mesmo tempo; sessão que cai no meio de uma edição. O roteiro foi repetido depois de o site passar a começar pelo convite, com as regras em `/regras/`, e de novo em 12/11/2026, depois de a página de regras ganhar o link de volta ao convite. Ele precisa de um navegador e não está no repositório.

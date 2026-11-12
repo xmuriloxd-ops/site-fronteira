@@ -13,6 +13,9 @@
  *     painel, esse é o texto "original" do campo: é para ele que "Voltar ao
  *     original" e "Restaurar o site original" voltam. O administrador continua
  *     podendo trocar pelo painel.
+ *   - Um campo sem `locais` é um texto que não existe na cópia: é o projeto
+ *     que acrescenta à página (hoje, o link de volta ao convite). Quem escreve
+ *     esse texto na página é o conteudo.mjs.
  *   - OPCOES_PADRAO, no fim do arquivo: o que vem ligado ou desligado (o site
  *     começar pelo convite, a aba Admin...).
  *
@@ -91,6 +94,19 @@ export const CAMPOS = [
   // ───────────── Abas ─────────────
   { id: 'regras.abas.geral', pagina: 'regras', grupo: 'Abas', rotulo: 'Aba do regulamento', locais: [js(H(376))] },
   { id: 'regras.abas.policia', pagina: 'regras', grupo: 'Abas', rotulo: 'Aba da polícia', locais: [js(H(391))] },
+
+  // ───────────── Link de volta ao convite ─────────────
+  // Não existe na cópia: entra na página de regras quando o site começa pelo
+  // convite (ver linkDeVolta, em convite-no-inicio.mjs). Por isso não tem `locais`.
+  {
+    id: 'regras.voltar.texto',
+    pagina: 'regras',
+    grupo: 'Link para voltar ao convite',
+    rotulo: 'Texto do link',
+    ajuda: 'Fica no topo da página de regras e leva de volta ao convite: ao lado da aba Admin no computador, ao lado do logo no celular. Deixe vazio para tirar o link. Ele só aparece enquanto o site começa pelo convite.',
+    padrao: 'Voltar ao convite',
+    locais: [],
+  },
 
   // ───────────── Abertura ─────────────
   { id: 'regras.abertura.sobretitulo', pagina: 'regras', grupo: 'Abertura', rotulo: 'Linha pequena acima do título', locais: [js(H(417), '}),')] },
@@ -388,8 +404,9 @@ export const CAMPOS = [
 export const OPCOES_PADRAO = {
   /**
    * O site começa pelo convite: o endereço principal mostra só ele, e as regras
-   * ficam em /regras/, abertas pelo botão do convite (ver convite-no-inicio.mjs).
-   * Desligada, é como no site original: regras em "/" e convite em /convite/.
+   * ficam em /regras/, abertas pelo botão do convite, com um link para voltar a
+   * ele (ver convite-no-inicio.mjs). Desligada, é como no site original: regras
+   * em "/" e convite em /convite/.
    */
   conviteNoInicio: true,
   /** Mostra a aba "Admin" ao lado das abas da página de regras. */
@@ -413,7 +430,7 @@ export const INTERRUPTORES = [
     pagina: 'convite',
     grupo: 'Texto do convite',
     rotulo: 'Começar o site pelo convite',
-    ajuda: 'Ligado: quem entra no site vê só o convite, e as regras abrem pelo botão, no endereço /regras/. Desligado: o site abre direto nas regras e o convite fica em /convite/, como no site original.',
+    ajuda: 'Ligado: quem entra no site vê só o convite; as regras abrem pelo botão, no endereço /regras/, e têm um link para voltar ao convite. Desligado: o site abre direto nas regras e o convite fica em /convite/, como no site original.',
   },
   {
     opcao: 'abaAdmin',

@@ -17,13 +17,18 @@ import {
   CREDITOS_DA_COPIA,
   ENDERECOS,
   ENDERECOS_DO_ORIGINAL,
+  ESTILO_DO_LINK_DE_VOLTA,
+  LINK_DE_VOLTA,
   PADRAO,
   SEM_COMECAR_PELO_CONVITE,
+  SEM_O_LINK_DE_VOLTA,
   SITE,
   VOLTAR_ENTREGUE,
   VOLTAR_NA_COPIA,
+  comOLinkDeVolta,
   copiaDoSite,
   esconderLinha,
+  linkDeVolta,
   ok,
   pastaTemporaria,
   pngSimples,
@@ -163,6 +168,21 @@ function dadoDoOriginal(abre, fecha) {
   assert.ok(!IDS_RESERVADOS.has('regras'), '"regras" voltou a ser um nome livre para uma seção do regulamento');
   ok('a página de regras não traz o convite e funciona em /regras/; a tela "não encontrada" continua em /404');
 
+  // Da página de regras volta-se ao convite por um link no topo dela.
+  assert.equal(vezes(js, LINK_DE_VOLTA), 2, 'o aplicativo recebe o link duas vezes: uma para telas estreitas, outra para as largas');
+  assert.equal(vezes(js, 'voltar-ao-convite'), 2, 'e mais nenhuma');
+  assert.equal(vezes(js, `alt:"Logo Fronteira do Sul RP"})}),${LINK_DE_VOLTA},R.jsxs("div",{"data-loc":"client/src/pages/Home.tsx:285",className:"topbar-tools"`), 1, 'na barra do topo, entre o logo e as ferramentas');
+  assert.equal(vezes(js, `children:"Regras da Polícia"}),${LINK_DE_VOLTA}${ABA_ADMIN}]})`), 1, 'na linha das abas, depois das duas abas e antes da aba Admin');
+  assert.ok(LINK_DE_VOLTA.startsWith('R.jsx("span",{className:"voltar-ao-convite",children:R.jsxs("a",{className:"view-tab",href:"/",') && LINK_DE_VOLTA.endsWith(',"Voltar ao convite"]})})'), 'é um link para o início do site, com o texto "Voltar ao convite"');
+  assert.equal(vezes(index, ESTILO_DO_LINK_DE_VOLTA), 1, 'a página de regras recebe as regras de visual do link');
+  assert.ok(index.includes(`${ESTILO_DO_LINK_DE_VOLTA}\n<style id="ajustes-do-admin">`), 'antes das do administrador, que podem mudar o resto');
+  assert.ok(ESTILO_DO_LINK_DE_VOLTA.includes('.topbar>.voltar-ao-convite{display:none}') && ESTILO_DO_LINK_DE_VOLTA.includes('@media (max-width:700px){\n.view-tabs>.voltar-ao-convite{display:none}'), 'que mostram um dos dois de cada vez');
+  assert.equal(vezes(COPIA.js + COPIA.index + COPIA.convite + convite, 'voltar-ao-convite'), 0, 'o link não existe na cópia nem entra na página do convite');
+  const noPainelOLink = d.campos.find((f) => f.id === 'regras.voltar.texto');
+  assert.deepEqual([noPainelOLink.pagina, noPainelOLink.grupo, noPainelOLink.rotulo, noPainelOLink.original], ['regras', 'Link para voltar ao convite', 'Texto do link', 'Voltar ao convite'], 'o texto do link muda pelo painel, em "Página de regras"');
+  assert.ok(noPainelOLink.ajuda.includes('Deixe vazio para tirar o link'));
+  ok('a página de regras tem um link de volta ao convite: na barra do topo e na linha das abas, antes da aba Admin');
+
   // Os créditos pedidos; telefone e e-mail não aparecem.
   const creditos = js.slice(js.indexOf('className:"author-card"'), js.indexOf('className:"closing-note"'));
   for (const trecho of [
@@ -213,6 +233,8 @@ function dadoDoOriginal(abre, fecha) {
   const { c } = novo(pastaTemporaria());
   const d = c.descrever();
   let versao = 0;
+  // Campos sem lugar na cópia: é o projeto que acrescenta o texto à página. Em que arquivo ele entra, e quantas vezes.
+  const ACRESCENTADOS = { 'regras.voltar.texto': { js: 2 } };
   for (const campo of CAMPOS) {
     const info = d.campos.find((f) => f.id === campo.id);
     const marca = campo.id.replace(/\W/g, '');
@@ -224,7 +246,12 @@ function dadoDoOriginal(abre, fecha) {
     versao = r.versao;
     assert.deepEqual(r.textos, { [campo.id]: valor });
 
-    const arquivosDoCampo = new Set(campo.locais.map((l) => l.arquivo));
+    // Quantos lugares o campo tem em cada arquivo.
+    const lugaresEm = campo.locais.length ? {} : ACRESCENTADOS[campo.id];
+    assert.ok(lugaresEm, `${campo.id}: um campo sem lugar na cópia precisa dizer aqui onde o texto entra`);
+    assert.equal(!campo.locais.length, campo.id in ACRESCENTADOS, campo.id);
+    for (const l of campo.locais) lugaresEm[l.arquivo] = (lugaresEm[l.arquivo] || 0) + (l.chaves ? l.chaves.length : 1);
+    const arquivosDoCampo = new Set(Object.keys(lugaresEm));
     // Uma linha que vem escondida (campo vazio) volta a aparecer quando o campo ganha texto.
     const apareceALinha = info.escondeSeVazio && info.original === '';
     let achados = 0;
@@ -247,11 +274,10 @@ function dadoDoOriginal(abre, fecha) {
       if (nome === 'manifesto') JSON.parse(t);
       // Só os trechos do campo mudaram: o tamanho do arquivo bate com a troca.
       if (nome !== 'manifesto' && campo.tipo !== 'telefone') {
-        const lugares = campo.locais.filter((l) => l.arquivo === nome).length;
-        assert.equal(t.length, (padrao ?? COPIA[nome]).length + lugares * (valor.length - info.original.length), `${campo.id}: tamanho de ${nome}`);
+        assert.equal(t.length, (padrao ?? COPIA[nome]).length + lugaresEm[nome] * (valor.length - info.original.length), `${campo.id}: tamanho de ${nome}`);
       }
     }
-    const esperados = campo.locais.reduce((soma, l) => soma + (l.chaves ? l.chaves.length : 1), 0);
+    const esperados = Object.values(lugaresEm).reduce((soma, n) => soma + n, 0);
     assert.equal(achados, esperados, `${campo.id}: lugares trocados`);
     // Os textos do convite ficam na página do convite, e só nela: a página de regras não muda com eles.
     if (campo.id.startsWith('convite.')) assert.deepEqual([...arquivosDoCampo], ['convite'], `${campo.id}: só a página do convite`);
@@ -284,8 +310,10 @@ function dadoDoOriginal(abre, fecha) {
   const js = texto(c, 'js');
   conferirSintaxe(js);
   const contarTags = (t) => (t.match(/<[a-zA-Z/!]/g) || []).length;
-  // Na página do convite, as únicas tags a mais são as do <style> que entra quando ela é o início do site.
-  const tagsEsperadas = { index: contarTags(COPIA.index), convite: contarTags(COPIA.convite) + contarTags(CABECA_DO_INICIO) };
+  // As únicas tags a mais são as dos <style> do projeto: na página de regras, o do link de volta ao convite;
+  // na do convite, o que entra quando ela é o início do site.
+  const tagsEsperadas = { index: contarTags(COPIA.index) + contarTags(ESTILO_DO_LINK_DE_VOLTA), convite: contarTags(COPIA.convite) + contarTags(CABECA_DO_INICIO) };
+  assert.equal(contarTags(ESTILO_DO_LINK_DE_VOLTA), 2);
   assert.equal(contarTags(CABECA_DO_INICIO), 2);
   for (const nome of ['index', 'convite']) {
     const html = texto(c, nome);
@@ -301,6 +329,9 @@ function dadoDoOriginal(abre, fecha) {
   }
   assert.equal(vezes(convite, `<img class="poster"${CLIQUE_NA_IMAGEM} src="/fronteira-sul-convite-preview.jpg" alt="${comoAtributo}`), 1, 'a descrição da imagem entra como atributo');
   assert.deepEqual(botaoDoConvite(convite)[0], 'https://exemplo.com/a?b=1&amp;c=&quot;2&quot;');
+  // O texto do link de volta entra no aplicativo como texto do JavaScript, nos dois lugares.
+  assert.equal(vezes(js, linkDeVolta(esperado)), 2);
+  assert.ok(linkDeVolta(esperado).endsWith(`,${JSON.stringify(esperado)}]})})`));
   assert.ok(js.includes('href:"tel:45999990000"'));
   assert.ok(js.includes('"mailto:a.b+c@exemplo.com.br"'));
   const manifesto = JSON.parse(texto(c, 'manifesto'));
@@ -444,7 +475,9 @@ const pastaQueFica = pastaTemporaria();
     assert.ok(index.includes(regra), regra);
   }
   assert.ok(index.includes('body{color:red}<\\/style><script>alert(1)<\\/script>'), 'o CSS extra não consegue fechar o <style>');
-  assert.equal(vezes(index, '</style>'), vezes(COPIA.index, '</style>') + 1, 'na página de regras, só o <style> dos ajustes');
+  assert.equal(vezes(index, '</style>'), vezes(COPIA.index, '</style>') + 2, 'na página de regras, o <style> do link de volta ao convite e o dos ajustes');
+  const ordemNasRegras = ['<style id="voltar-ao-convite">', '<style id="ajustes-do-admin">', '</head>'].map((trecho) => index.indexOf(trecho));
+  assert.ok(ordemNasRegras.every((posicao, n) => posicao >= 0 && (n === 0 || posicao > ordemNasRegras[n - 1])), 'o CSS do administrador vem por último');
   assert.equal(vezes(index, '<script'), vezes(COPIA.index, '<script') + 1, 'só aparece como texto dentro do <style>');
   let convite = texto(c, 'convite');
   assert.ok(convite.includes('body{color:red}<\\/style><script>alert(1)<\\/script>'));
@@ -548,6 +581,7 @@ const pastaQueFica = pastaTemporaria();
   assert.equal(vezes(texto(c, 'js'), BASE_NA_COPIA), 1);
   assert.equal(vezes(texto(c, 'js'), VOLTAR_NA_COPIA), 1);
   assert.equal(texto(c, 'index'), SEM_COMECAR_PELO_CONVITE.index);
+  assert.ok(!(texto(c, 'js') + texto(c, 'index')).includes('voltar-ao-convite'), 'e a página de regras fica sem o link de volta: ela é o início do site');
   assert.equal(c.gerar('convite/index.html'), null, 'a página do convite volta a ser a da cópia, sem tirar nem pôr (o botão leva a "/")');
   // Os endereços voltam a ser os do site original; "/regras/" continua valendo e leva para "/".
   for (const endereco of ['/', '/index.html', '/convite', '/convite/', '/convite/index.html', '/regras/outra', '/404']) assert.equal(c.paginaPara(endereco), null, endereco);
@@ -686,6 +720,85 @@ const pastaQueFica = pastaTemporaria();
   assert.deepEqual(botaoDoConvite(convite2), ['/regras/', 'Consultar regras oficiais']);
   assert.ok(!convite2.includes('onclick=') && convite2.includes('<style id="convite-no-inicio">'));
   ok('sem achar o botão da tela "não encontrada" ou a imagem do convite, só esse detalhe fica de fora, e o painel avisa');
+}
+
+// ───── 8. o link de volta ao convite, na página de regras
+{
+  const { c } = novo(pastaTemporaria());
+  // O texto muda pelo painel, nos dois lugares; mais nada muda.
+  let r = c.salvar({ versao: 0, textos: { 'regras.voltar.texto': 'Início' } });
+  assert.equal(texto(c, 'js'), comOLinkDeVolta('Início').js);
+  assert.equal(vezes(texto(c, 'js'), linkDeVolta('Início')), 2);
+  assert.ok(linkDeVolta('Início').endsWith(',"Início"]})})') && linkDeVolta('Início').includes('href:"/"'));
+  assert.equal(texto(c, 'index'), PADRAO.index);
+  assert.equal(texto(c, 'convite'), PADRAO.convite);
+
+  // Texto vazio: o link não entra, nem as regras de visual dele.
+  r = c.salvar({ versao: r.versao, textos: { 'regras.voltar.texto': '   ' } });
+  assert.deepEqual(r.textos, { 'regras.voltar.texto': '' });
+  assert.equal(texto(c, 'js'), SEM_O_LINK_DE_VOLTA.js);
+  assert.equal(texto(c, 'index'), SEM_O_LINK_DE_VOLTA.index);
+  assert.ok(!(texto(c, 'js') + texto(c, 'index')).includes('voltar-ao-convite'));
+  assert.equal(vezes(texto(c, 'index'), '</style>'), vezes(COPIA.index, '</style>') + 1, 'fica só o <style> dos ajustes');
+  assert.equal(texto(c, 'convite'), PADRAO.convite);
+
+  // Sem a aba Admin, o link continua: é o último da linha das abas.
+  r = c.salvar({ versao: r.versao, textos: {}, opcoes: { abaAdmin: false } });
+  const semAdmin = texto(c, 'js');
+  assert.equal(semAdmin, PADRAO.js.replace(ABA_ADMIN, ''));
+  assert.equal(vezes(semAdmin, `children:"Regras da Polícia"}),${LINK_DE_VOLTA}]})`), 1);
+  assert.equal(vezes(semAdmin, LINK_DE_VOLTA), 2);
+  conferirSintaxe(semAdmin);
+  assert.equal(texto(c, 'index'), PADRAO.index);
+
+  // O link só existe enquanto o site começa pelo convite. Com as páginas nos lugares do original,
+  // a página de regras é o início do site: não há para onde voltar, mesmo com um texto salvo.
+  r = c.salvar({ versao: r.versao, textos: { 'regras.voltar.texto': 'Início' }, opcoes: { abaAdmin: true, conviteNoInicio: false } });
+  assert.equal(texto(c, 'js'), SEM_COMECAR_PELO_CONVITE.js);
+  assert.equal(texto(c, 'index'), SEM_COMECAR_PELO_CONVITE.index);
+  r = c.salvar({ versao: r.versao, opcoes: { conviteNoInicio: true } });
+  assert.equal(texto(c, 'js'), comOLinkDeVolta('Início').js, 'ligando de novo, o link volta com o texto que estava salvo');
+  assert.equal(texto(c, 'index'), PADRAO.index);
+
+  // "Restaurar o site original" devolve o texto do projeto.
+  assert.deepEqual(c.restaurarOriginal().textos, {});
+  assert.equal(texto(c, 'js'), PADRAO.js);
+  ok('link de volta: o texto muda pelo painel; vazio, o link não entra; ele só existe enquanto o site começa pelo convite');
+
+  // Aplicativo diferente do esperado: sem achar um dos dois lugares, o link só não entra ali, e o painel avisa.
+  const mexerNoTopo = (js) => js.replace('className:"topbar-tools"', 'className:"topbar-tools "');
+  const mexerNasAbas = (js) => js.replace('children:"Regras da Polícia"})]})', 'children:"Regras da Polícia"}) ]})');
+  const noTopo = `${LINK_DE_VOLTA},R.jsxs("div",{"data-loc":"client/src/pages/Home.tsx:285"`;
+  const nasAbas = `children:"Regras da Polícia"}),${LINK_DE_VOLTA}`;
+
+  const semTopo = novo(pastaTemporaria(), copiaDoSite({ js: mexerNoTopo })).c;
+  let d = semTopo.descrever();
+  assert.equal(d.problemas.length, 1, d.problemas.join(' | '));
+  assert.ok(d.problemas[0].startsWith('O link de volta ao convite não pôde ser colocado na barra do topo da página de regras, onde ele aparece no celular:'), d.problemas[0]);
+  let js = texto(semTopo, 'js');
+  assert.deepEqual([vezes(js, LINK_DE_VOLTA), vezes(js, noTopo), vezes(js, nasAbas + ABA_ADMIN)], [1, 0, 1], 'o link da linha das abas continua');
+  assert.ok(texto(semTopo, 'index').includes(ESTILO_DO_LINK_DE_VOLTA));
+  conferirSintaxe(js);
+
+  const semAbas = novo(pastaTemporaria(), copiaDoSite({ js: mexerNasAbas })).c;
+  d = semAbas.descrever();
+  assert.equal(d.problemas.length, 2, d.problemas.join(' | '));
+  assert.ok(d.problemas[0].startsWith('A aba "Admin" não pôde ser colocada na página de regras:'), d.problemas[0]);
+  assert.ok(d.problemas[1].startsWith('O link de volta ao convite não pôde ser colocado ao lado das abas da página de regras, onde ele aparece no computador'), d.problemas[1]);
+  js = texto(semAbas, 'js');
+  assert.deepEqual([vezes(js, LINK_DE_VOLTA), vezes(js, noTopo), vezes(js, nasAbas), vezes(js, ABA_ADMIN)], [1, 1, 0, 0], 'o link da barra do topo continua');
+  assert.ok(texto(semAbas, 'index').includes(ESTILO_DO_LINK_DE_VOLTA));
+  conferirSintaxe(js);
+
+  const semOsDois = novo(pastaTemporaria(), copiaDoSite({ js: (t) => mexerNasAbas(mexerNoTopo(t)) })).c;
+  d = semOsDois.descrever();
+  assert.equal(d.problemas.length, 3, d.problemas.join(' | '));
+  assert.deepEqual(d.enderecos, ENDERECOS, 'o site começa pelo convite do mesmo jeito');
+  js = texto(semOsDois, 'js');
+  assert.ok(!js.includes('voltar-ao-convite') && !texto(semOsDois, 'index').includes('voltar-ao-convite'), 'sem lugar nenhum para o link, as regras de visual dele também não entram');
+  assert.equal(vezes(js, BASE_ENTREGUE), 1);
+  conferirSintaxe(js);
+  ok('sem achar um dos lugares do link de volta no aplicativo, ele só não entra ali, e o painel avisa');
 }
 
 resumo();

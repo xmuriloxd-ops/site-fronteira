@@ -11,6 +11,9 @@
  *   /regras/     a página de regras   (site/index.html e o aplicativo dela)
  *   /convite/    leva para "/"        (o endereço antigo do convite continua valendo)
  *
+ * Da página de regras volta-se ao convite por um link no topo dela (ver
+ * linkDeVolta, mais abaixo).
+ *
  * Os arquivos de ../site não mudam: o servidor faz a troca na hora de
  * responder, e só enquanto a opção `conviteNoInicio` (mapa.mjs) estiver
  * ligada. Desligada, as páginas ficam onde estavam no site original, e
@@ -92,6 +95,61 @@ export const MARCA_DA_IMAGEM = '<img class="poster"';
  * É um atributo da imagem; entra logo depois de MARCA_DA_IMAGEM.
  */
 export const CLIQUE_NA_IMAGEM = ` onclick="var b=document.querySelector('a.button');if(b)b.click()"`;
+
+/**
+ * O link de volta ao convite, na página de regras.
+ *
+ * Com o convite em outra página, a página de regras ganha um link para voltar
+ * a ele: uma seta e o texto "Voltar ao convite" (o texto muda pelo painel;
+ * vazio, o link não entra). O aplicativo recebe dois elementos iguais, e as
+ * regras de visual mostram um de cada vez:
+ *
+ *   - na linha das abas, à direita, antes da aba Admin;
+ *   - em telas de até 700px de largura, onde essa linha não tem espaço, na
+ *     barra do topo, à direita do logo. (700px é a largura em que a própria
+ *     página troca o desenho da barra do topo.)
+ *
+ * O link usa o visual das abas (a classe "view-tab" da página) e vem dentro
+ * de uma caixa, "voltar-ao-convite", que ocupa só o espaço que já estava
+ * livre: nada do que havia na página sai do lugar. Com um texto comprido, é o
+ * link que quebra em linhas.
+ *
+ * MARCA_DO_TOPO é o trecho do aplicativo onde começam as ferramentas da barra
+ * do topo (aparece uma vez só): o link entra logo antes dele, depois do logo.
+ * Na linha das abas, entra no mesmo ponto que a aba Admin (ver conteudo.mjs).
+ */
+export const MARCA_DO_TOPO = 'R.jsxs("div",{"data-loc":"client/src/pages/Home.tsx:285",className:"topbar-tools"';
+
+/**
+ * O link dentro da caixa dele, escrito do jeito que o aplicativo escreve os
+ * elementos: a seta (um desenho, que leitores de tela ignoram) e o texto.
+ * `texto` e `destino` entram como textos do JavaScript, nunca como código.
+ */
+export const linkDeVolta = (texto, destino) =>
+  `R.jsx("span",{className:"voltar-ao-convite",children:R.jsxs("a",{className:"view-tab",href:${JSON.stringify(destino)},children:[` +
+  'R.jsxs("svg",{width:14,height:14,viewBox:"0 0 24 24",fill:"none",stroke:"currentColor",strokeWidth:2,strokeLinecap:"round",strokeLinejoin:"round","aria-hidden":"true",' +
+  'children:[R.jsx("path",{d:"m12 19-7-7 7-7"}),R.jsx("path",{d:"M19 12H5"})]}),' +
+  `${JSON.stringify(texto)}]})})`;
+
+/** As regras de visual do link de volta; entram no <head> da página de regras. */
+export const ESTILO_DO_LINK_DE_VOLTA = `<style id="voltar-ao-convite">\n${[
+  // a caixa: o link fica encostado à direita dela
+  '.voltar-ao-convite{display:flex;justify-content:flex-end}',
+  // o link: a seta e o texto, lado a lado; se a caixa for estreita para o texto, ele quebra em linhas
+  '.voltar-ao-convite>a{display:flex;align-items:center;gap:7px;flex:0 1 auto;min-width:0;overflow-wrap:anywhere;text-decoration:none}',
+  '.voltar-ao-convite svg{flex:none}',
+  // Na linha das abas, a caixa ocupa o espaço livre entre as abas e a aba Admin, que continua na ponta.
+  '.view-tabs>.voltar-ao-convite{flex:1 1 0}',
+  '.topbar>.voltar-ao-convite{display:none}',
+  // Até 700px: some da linha das abas e aparece na barra do topo. A primeira linha da barra passa a ter
+  // duas colunas (o logo e a caixa do link); as ferramentas continuam na linha de baixo, com a largura toda.
+  '@media (max-width:700px){',
+  '.view-tabs>.voltar-ao-convite{display:none}',
+  '.topbar{display:grid;grid-template-columns:auto minmax(0,1fr);column-gap:0}',
+  '.topbar>.topbar-tools{grid-column:1/-1}',
+  '.topbar>.voltar-ao-convite{display:flex;align-self:center}',
+  '}',
+].join('\n')}\n</style>`;
 
 // Medidas da página original do convite (site/convite/index.html), em px.
 const ENTRE = 24; // entre a imagem e o cartão do texto: 22px de espaço, mais as bordas da imagem
