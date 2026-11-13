@@ -235,6 +235,8 @@ O andamento aparece na aba Actions do repositório. Quando dá certo, o resumo d
 
 Para publicar de novo sem mudar nada: Actions > "Deploy · GitHub Pages" > Run workflow.
 
+**Uma publicação feita por outro ramo tira este site do ar.** O ramo `arena/06f46c0d-projetos-cidades2` também dispara a publicação, com o arquivo de fluxo que está nele, e ele não tem esta pasta. Uma mudança enviada para lá publica só o outro site, e a Fronteira do Sul fica fora do ar até a próxima publicação pela `main`. Para voltar, rode o fluxo pela `main` (o "Run workflow" acima). Para impedir, nas configurações do repositório, em Environments > github-pages, limite à `main` os ramos que podem publicar.
+
 **Como mudar o site publicado:**
 
 1. Faça a mudança pelo painel, onde o servidor roda (a prévia, ou `node fronteira-sul/servidor.mjs` no seu computador).
@@ -429,7 +431,7 @@ Os passos da Fronteira do Sul no fluxo do Pages foram rodados fora do GitHub, co
 **O que não foi conferido:**
 
 - O GitHub Pages de verdade. O servidor de teste imita o que se conhece do comportamento dele. Depois de cada publicação, o próprio fluxo compara o que está no ar com o que foi gravado.
-- O fluxo rodando no GitHub. Até 12/11/2026 ele não tinha passado do passo "Configurar Pages", porque o Pages estava desligado. As condições que decidem quais passos rodam (`if:`) e os valores que o Pages entrega a eles só existem lá.
+- O fluxo no GitHub, do passo "Configurar Pages" em diante. Até 12/11/2026 o Pages estava desligado e o fluxo parava nesse passo: gravar, publicar e conferir nunca rodaram lá. Os valores que o Pages entrega a esses passos só existem lá.
 - Firefox, Safari e celulares de verdade.
 - Como o Discord e o WhatsApp mostram a prévia do link no endereço novo.
 

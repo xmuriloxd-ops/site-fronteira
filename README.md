@@ -132,6 +132,8 @@ fallback de rotas. Não altera os dados locais.
 
 ```
 .github/workflows/           deploy automático no GitHub Pages
+fronteira-sul/               outro site, independente deste (Fronteira do Sul RP),
+                             publicado junto no Pages — ver fronteira-sul/LEIA-ME.md
 scripts/verificar-deploy.mjs  smoke de produção usado por check:deploy
 server.ts                    Express: API, auth opcional, persistência JSON, estáticos/Vite
 src/App.tsx                  shell, abas, regras de protocolo e envio
