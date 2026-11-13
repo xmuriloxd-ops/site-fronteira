@@ -21,6 +21,11 @@ entregas/
 # Pacotes de download gerados
 /downloads/
 
-# Fronteira do Sul: o que o administrador muda pelo painel (textos, imagens
-# enviadas e o acesso). Fica só no servidor onde o site roda.
-fronteira-sul/dados/
+# Fronteira do Sul: o que o administrador muda pelo painel fica em
+# fronteira-sul/dados/. Os textos, as opções (conteudo.json) e as imagens
+# enviadas vão para o repositório: é deles que sai o site publicado. O acesso
+# do painel (usuário e senha) e o histórico ficam só onde o servidor roda.
+fronteira-sul/dados/*
+!fronteira-sul/dados/conteudo.json
+!fronteira-sul/dados/imagens/
+fronteira-sul/dados/imagens/*.tmp

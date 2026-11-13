@@ -9,6 +9,12 @@
  *   3. o que o administrador alterou pelo painel (dados/conteudo.json).
  *
  * "Restaurar o original" é deixar de aplicar a camada 3.
+ *
+ * O servidor entrega o que sai daqui. Para publicar o site em uma hospedagem
+ * de arquivos, que não roda o servidor, o exportar.mjs grava as mesmas
+ * páginas em uma pasta; ele pede a montagem com `publicacao` (ver
+ * criarConteudo), que tira a entrada do painel e, quando o site fica dentro
+ * de uma pasta do endereço, põe a pasta na frente dos endereços do site.
  */
 import crypto from 'node:crypto';
 import fs from 'node:fs';
@@ -16,7 +22,6 @@ import path from 'node:path';
 import vm from 'node:vm';
 import zlib from 'node:zlib';
 import {
-  BASE_DAS_REGRAS,
   BASE_ORIGINAL,
   CLIQUE_NA_IMAGEM,
   ESTILO_DO_LINK_DE_VOLTA,
@@ -25,15 +30,21 @@ import {
   MARCA_DA_BASE,
   MARCA_DA_IMAGEM,
   MARCA_DO_FIM_DO_CONVITE,
+  MARCA_DO_NAO_ENCONTRADO,
   MARCA_DO_TOPO,
   MARCA_DO_VOLTAR,
+  NAO_ENCONTRADO_ORIGINAL,
+  PASTA_VALIDA,
   VOLTAR_ORIGINAL,
-  VOLTAR_PARA_O_INICIO,
+  baseDoAplicativo,
   cabecaDoInicio,
   ehAsRegras,
   enderecos,
   linkDeVolta,
+  linkDoIcone,
+  naoEncontradoNaPasta,
   paginaDoEndereco,
+  voltarParaOInicio,
 } from './convite-no-inicio.mjs';
 import { analisarImagem } from './imagem.mjs';
 import { ARQUIVOS, CAMPOS, IDS_RESERVADOS, IMAGENS, INTERRUPTORES, OPCOES_PADRAO, ORIGEM_ORIGINAL } from './mapa.mjs';
@@ -394,8 +405,58 @@ const igual = (a, b) => JSON.stringify(a) === JSON.stringify(b);
 const copiar = (v) => JSON.parse(JSON.stringify(v));
 const tem = (objeto, chave) => Object.prototype.hasOwnProperty.call(objeto, chave);
 
+/** O ícone da aba do navegador, que o navegador procura sozinho neste endereço. */
+const ICONE = '/favicon.ico';
+/** Endereços do próprio site dentro de uma página: valor de href ou src que começa com uma barra só. */
+const ENDERECO_DO_SITE = /\s(?:href|src)="(?=\/(?!\/))/g;
+/** Um endereço dentro do site (e não um endereço completo, uma âncora, um e-mail ou um telefone). */
+const ehDoSite = (endereco) => /^\/(?!\/)/.test(endereco);
+
+/**
+ * Confere e arruma o pedido de publicação (ver criarConteudo): devolve
+ * { pasta, endereco } ou null.
+ */
+function limparPublicacao(entrada) {
+  if (entrada == null) return null;
+  const pasta = String(entrada.pasta ?? '');
+  if (!PASTA_VALIDA.test(pasta)) throw new Error(`Pasta inválida: "${pasta}". Escreva como /projeto/site: começa com barra, não termina com barra, e cada nome só tem letras, números, ponto, hífen, sublinhado e til.`);
+  let endereco = String(entrada.endereco ?? '').trim();
+  if (endereco) {
+    let u = null;
+    try {
+      u = new URL(endereco);
+    } catch {
+      /* cai no erro abaixo */
+    }
+    if (!u || (u.protocol !== 'https:' && u.protocol !== 'http:') || (u.pathname !== '/' && u.pathname !== '') || u.search || u.hash) {
+      throw new Error(`Endereço inválido: "${endereco}". Escreva só o começo, como https://usuario.github.io (a pasta vai separada).`);
+    }
+    endereco = u.origin;
+  }
+  return { pasta, endereco };
+}
+
 // ───────────────────────────── o conteúdo ─────────────────────────────
-export function criarConteudo({ raizSite, dirDados, aviso = () => {} }) {
+/**
+ * `publicacao` é para gravar o site em arquivos (exportar.mjs), e não para o
+ * servidor. Com ela:
+ *
+ *   - o site sai sem a entrada do painel (a aba e a etiqueta "Admin"), seja
+ *     qual for a opção salva: numa hospedagem de arquivos o painel não existe;
+ *   - `pasta` ("/projeto/site", ou vazia para a raiz) entra na frente de cada
+ *     endereço do próprio site (ver "O site dentro de uma pasta", em
+ *     convite-no-inicio.mjs);
+ *   - `endereco` ("https://usuario.github.io") é onde o site vai ficar, e vale
+ *     no lugar do "Endereço do site" do painel nos links de compartilhamento.
+ *
+ * Sem `publicacao`, nada disso se aplica.
+ */
+export function criarConteudo({ raizSite, dirDados, aviso = () => {}, publicacao = null }) {
+  const pedido = limparPublicacao(publicacao);
+  /** A pasta do endereço em que o site fica; vazia na raiz (e sempre no servidor). */
+  const PASTA = pedido?.pasta || '';
+  /** Um endereço do site, com a pasta na frente. */
+  const naPasta = (endereco) => PASTA + endereco;
   const arquivoDados = path.join(dirDados, 'conteudo.json');
   const dirImagens = path.join(dirDados, 'imagens');
   const dirHistorico = path.join(dirDados, 'historico');
@@ -511,6 +572,14 @@ export function criarConteudo({ raizSite, dirDados, aviso = () => {} }) {
         admin: fimDoConvite == null ? null : fimDoConvite + MARCA_DO_FIM_DO_CONVITE.length,
       };
     });
+    // O que precisa ser achado no aplicativo para o site funcionar dentro de uma pasta do endereço
+    // (ver convite-no-inicio.mjs). Só é procurado quando a publicação pede uma pasta.
+    const dentroDaPasta = !PASTA
+      ? null
+      : tentar(`O site não pôde ser preparado para a pasta ${PASTA}`, () => ({
+          base: unico(js, MARCA_DA_BASE),
+          naoEncontrado: unico(js, MARCA_DO_NAO_ENCONTRADO) + MARCA_DO_NAO_ENCONTRADO.indexOf(NAO_ENCONTRADO_ORIGINAL),
+        }));
     // O link de volta ao convite tem dois lugares na página de regras (ver convite-no-inicio.mjs). Como os
     // acabamentos acima: sem achar um dos lugares, o link só não entra ali, e o problema entra na lista.
     if (depoisDasAbas == null) problemas.push('O link de volta ao convite não pôde ser colocado ao lado das abas da página de regras, onde ele aparece no computador.');
@@ -524,7 +593,7 @@ export function criarConteudo({ raizSite, dirDados, aviso = () => {} }) {
     }
 
     for (const p of problemas) aviso(p);
-    original = { marca, textos, campos, regulamento, policia, depoisDasAbas, antesDasFerramentas, conviteNoInicio, imagemDoConvite, problemas };
+    original = { marca, textos, campos, regulamento, policia, depoisDasAbas, antesDasFerramentas, conviteNoInicio, dentroDaPasta, imagemDoConvite, problemas };
     gerados.clear();
     return original;
   }
@@ -812,8 +881,20 @@ export function criarConteudo({ raizSite, dirDados, aviso = () => {} }) {
   /** O site começa pelo convite? (A opção está ligada e o que ela precisa foi achado nos arquivos.) */
   const conviteNoInicio = () => estado.opcoes.conviteNoInicio && lerOriginal().conviteNoInicio != null;
 
-  /** Onde fica cada página agora: { inicio, convite, regras }. */
+  /** Onde fica cada página agora: { inicio, convite, regras }. São endereços dentro do site, sem a pasta. */
   const enderecosDoSite = () => enderecos(conviteNoInicio());
+
+  /** As páginas mostram a entrada do painel? (A opção está ligada, e não é uma publicação em arquivos, que não tem painel.) */
+  const entradaDoPainel = () => estado.opcoes.abaAdmin && !pedido;
+
+  /**
+   * O endereço completo em que o site fica, para os links de compartilhamento: o da publicação ou, sem ele,
+   * o "Endereço do site" do painel, mais a pasta. Vazio quando ninguém disse qual é.
+   */
+  function enderecoDeFora() {
+    const origem = pedido?.endereco || estado.opcoes.enderecoPublico;
+    return origem ? origem + PASTA : '';
+  }
 
   /**
    * O que responde em um endereço, além dos arquivos de site/: { arquivo } (caminho dentro de site/),
@@ -887,12 +968,26 @@ export function criarConteudo({ raizSite, dirDados, aviso = () => {} }) {
     return trocas;
   }
 
+  /**
+   * As trocas que põem a pasta no começo de cada um destes endereços, onde ele aparece inteiro entre
+   * aspas no arquivo original (como em trocasDeVersao: a versão entra no fim do endereço, a pasta no começo).
+   */
+  function trocasDePasta(txt, lista) {
+    const trocas = [];
+    for (const endereco of lista) {
+      for (const i of todas(txt, `"${endereco}"`)) trocas.push({ inicio: i + 1, fim: i + 1, novo: PASTA });
+    }
+    return trocas;
+  }
+
   function montarJs() {
     const o = lerOriginal();
     if (o.textos.js == null) return null;
     const trocas = trocasDeTexto('js');
     // O logo trocado pelo painel é pedido com a versão dele no endereço.
     trocas.push(...trocasDeVersao(o.textos.js, versoesDasImagens()));
+    // Dentro de uma pasta, os endereços das imagens que o aplicativo mostra começam por ela.
+    if (PASTA) trocas.push(...trocasDePasta(o.textos.js, IMAGENS.flatMap((img) => img.caminhos)));
     if (o.regulamento && estado.regulamento) {
       trocas.push({ inicio: o.regulamento.inicio, fim: o.regulamento.fim, novo: JSON.stringify(estado.regulamento) });
     }
@@ -903,18 +998,26 @@ export function criarConteudo({ raizSite, dirDados, aviso = () => {} }) {
     }
     // O link de volta ao convite entra em dois lugares: na linha das abas e na barra do topo, depois do logo.
     const volta = linkParaOConvite();
-    const elementoDaVolta = volta ? linkDeVolta(volta.texto, volta.destino) : null;
+    const elementoDaVolta = volta ? linkDeVolta(volta.texto, naPasta(volta.destino)) : null;
     if (o.depoisDasAbas != null) {
       // Na linha das abas, nesta ordem: o link de volta e a aba Admin.
-      const novo = (elementoDaVolta ? `,${elementoDaVolta}` : '') + (estado.opcoes.abaAdmin ? ABA_ADMIN : '');
+      const novo = (elementoDaVolta ? `,${elementoDaVolta}` : '') + (entradaDoPainel() ? ABA_ADMIN : '');
       if (novo) trocas.push({ inicio: o.depoisDasAbas, fim: o.depoisDasAbas, novo });
     }
     if (elementoDaVolta && o.antesDasFerramentas != null) trocas.push({ inicio: o.antesDasFerramentas, fim: o.antesDasFerramentas, novo: `${elementoDaVolta},` });
-    // Com o site começando pelo convite, a página de regras fica em /regras/ e o aplicativo precisa saber disso.
-    if (conviteNoInicio()) {
-      const { base, voltar } = o.conviteNoInicio;
-      trocas.push({ inicio: base, fim: base + BASE_ORIGINAL.length, novo: BASE_DAS_REGRAS });
-      if (voltar != null) trocas.push({ inicio: voltar, fim: voltar + VOLTAR_ORIGINAL.length, novo: VOLTAR_PARA_O_INICIO });
+    // Onde o aplicativo procura as telas. Com o site começando pelo convite, a página de regras fica em
+    // /regras/; dentro de uma pasta, tudo fica depois dela. Nos dois casos o aplicativo precisa saber.
+    const noComeco = conviteNoInicio();
+    const raiz = baseDoAplicativo(PASTA, noComeco);
+    const ondeEstaARaiz = noComeco ? o.conviteNoInicio.base : o.dentroDaPasta?.base;
+    if (raiz != null && ondeEstaARaiz != null) trocas.push({ inicio: ondeEstaARaiz, fim: ondeEstaARaiz + BASE_ORIGINAL.length, novo: raiz });
+    if (noComeco && o.conviteNoInicio.voltar != null) {
+      const { voltar } = o.conviteNoInicio;
+      trocas.push({ inicio: voltar, fim: voltar + VOLTAR_ORIGINAL.length, novo: voltarParaOInicio(PASTA) });
+    }
+    if (PASTA && o.dentroDaPasta) {
+      const { naoEncontrado } = o.dentroDaPasta;
+      trocas.push({ inicio: naoEncontrado, fim: naoEncontrado + NAO_ENCONTRADO_ORIGINAL.length, novo: naoEncontradoNaPasta(PASTA) });
     }
     return trocas.length ? aplicarTrocas(o.textos.js, trocas) : null;
   }
@@ -948,15 +1051,19 @@ export function criarConteudo({ raizSite, dirDados, aviso = () => {} }) {
     const noComeco = conviteNoInicio();
     const onde = enderecosDoSite();
     // A etiqueta "Admin" no canto do convite: junto com a aba "Admin" da página de regras, e só com o convite no início do site.
-    const adminNoCanto = nome === 'convite' && noComeco && estado.opcoes.abaAdmin && o.conviteNoInicio.admin != null;
+    const adminNoCanto = nome === 'convite' && noComeco && entradaDoPainel() && o.conviteNoInicio.admin != null;
+    /** Onde está, no arquivo, o destino do botão do convite (o único endereço da página que o painel muda). */
+    let botao = null;
 
     if (nome === 'convite') {
       // O botão: quando o destino quer dizer "a página de regras", vai o endereço em que ela está agora.
       const reg = o.campos.get('convite.botaoLink');
       const local = reg?.locais.find((l) => l.arquivo === 'convite' && l.tipo === 'trecho');
       if (local) {
+        botao = local;
         const link = textoDe('convite.botaoLink');
-        const destinoDoBotao = ehAsRegras(link) ? onde.regras : link;
+        let destinoDoBotao = ehAsRegras(link) ? onde.regras : link;
+        if (ehDoSite(destinoDoBotao)) destinoDoBotao = naPasta(destinoDoBotao);
         trocas = trocas.filter((t) => t.inicio !== local.inicio || t.fim !== local.fim);
         if (destinoDoBotao !== reg.original) trocas.push({ inicio: local.inicio, fim: local.fim, novo: local.escrever(destinoDoBotao) });
       }
@@ -965,8 +1072,18 @@ export function criarConteudo({ raizSite, dirDados, aviso = () => {} }) {
       if (adminNoCanto) trocas.push({ inicio: o.conviteNoInicio.admin, fim: o.conviteNoInicio.admin, novo: LINK_DO_ADMIN });
     }
 
+    // Dentro de uma pasta, cada endereço do próprio site que a página já trazia passa a começar por ela.
+    // (O destino do botão do convite foi resolvido acima, com o que o painel diz.)
+    if (PASTA) {
+      for (const achado of txt.matchAll(ENDERECO_DO_SITE)) {
+        const i = achado.index + achado[0].length;
+        if (botao && i >= botao.inicio && i <= botao.fim) continue;
+        trocas.push({ inicio: i, fim: i, novo: PASTA });
+      }
+    }
+
     // Com o endereço do site preenchido, os links de compartilhamento passam a apontar para cá.
-    const destino = estado.opcoes.enderecoPublico;
+    const destino = enderecoDeFora();
     if (destino && destino !== ORIGEM_ORIGINAL) {
       // O endereço da própria página (canonical e og:url) acompanha o lugar em que ela está neste site.
       const naCopia = nome === 'convite' ? '/convite/"' : '/"';
@@ -1004,6 +1121,11 @@ export function criarConteudo({ raizSite, dirDados, aviso = () => {} }) {
 
     // O que entra no fim do <head>. O CSS do administrador vem por último, para poder mudar o resto.
     const noHead = [];
+    if (PASTA) {
+      // Onde está o ícone da aba (dentro de uma pasta o navegador não o acha sozinho), com a versão se ele foi trocado.
+      const versaoDoIcone = new Map(comVersao).get(ICONE);
+      noHead.push(linkDoIcone(naPasta(ICONE) + (versaoDoIcone ? `?v=${versaoDoIcone}` : '')));
+    }
     if (nome === 'convite' && noComeco) noHead.push(cabecaDoInicio(estado.imagens.convite || o.imagemDoConvite));
     if (adminNoCanto) noHead.push(ESTILO_DO_LINK_DO_ADMIN);
     if (nome === 'index' && linkParaOConvite()) noHead.push(ESTILO_DO_LINK_DE_VOLTA);
@@ -1023,7 +1145,11 @@ export function criarConteudo({ raizSite, dirDados, aviso = () => {} }) {
       // No original este endereço só responde erro; sem ele a página funciona igual.
       const plataforma = '<script src="/api/platform/config.js"></script>';
       const p = txt.indexOf(plataforma);
-      if (p >= 0 && (inicio < 0 || p + plataforma.length <= inicio)) trocas.push({ inicio: p, fim: p + plataforma.length, novo: '' });
+      if (p >= 0 && (inicio < 0 || p + plataforma.length <= inicio)) {
+        const fimDaPlataforma = p + plataforma.length;
+        trocas = trocas.filter((t) => t.fim <= p || t.inicio >= fimDaPlataforma);
+        trocas.push({ inicio: p, fim: fimDaPlataforma, novo: '' });
+      }
     }
     return trocas.length ? aplicarTrocas(txt, trocas) : null;
   }
@@ -1050,12 +1176,22 @@ export function criarConteudo({ raizSite, dirDados, aviso = () => {} }) {
         }
       }
     }
+    // Dentro de uma pasta: o começo do site, o alcance dele e os ícones ficam depois dela.
+    if (PASTA) {
+      json ||= JSON.parse(o.textos.manifesto);
+      for (const chave of ['id', 'start_url', 'scope']) {
+        if (typeof json[chave] === 'string' && ehDoSite(json[chave])) json[chave] = naPasta(json[chave]);
+      }
+      for (const icone of Array.isArray(json.icons) ? json.icons : []) {
+        if (icone && typeof icone.src === 'string' && ehDoSite(icone.src)) icone.src = naPasta(icone.src);
+      }
+    }
     return json ? JSON.stringify(json) : null;
   }
 
   function montarComEndereco(nome) {
     const o = lerOriginal();
-    const destino = estado.opcoes.enderecoPublico;
+    const destino = enderecoDeFora();
     if (o.textos[nome] == null || !destino || destino === ORIGEM_ORIGINAL || !o.textos[nome].includes(ORIGEM_ORIGINAL)) return null;
     let texto = o.textos[nome].split(ORIGEM_ORIGINAL).join(destino);
     // O mapa do site que veio na cópia só lista o endereço principal, que era o das regras.

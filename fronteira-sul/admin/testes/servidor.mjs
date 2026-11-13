@@ -3,9 +3,7 @@ import assert from 'node:assert/strict';
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import http from 'node:http';
-import net from 'node:net';
 import path from 'node:path';
-import { spawn } from 'node:child_process';
 import { analisarImagem } from '../imagem.mjs';
 import { ARQUIVOS } from '../mapa.mjs';
 import {
@@ -23,9 +21,12 @@ import {
   SEM_O_LINK_DE_VOLTA,
   SITE,
   comOLinkDeVolta,
+  iniciar,
   ok,
+  parar,
   pastaTemporaria,
   pngSimples,
+  portaLivre,
   resumo,
   versaoDaImagem,
   versaoDe,
@@ -72,47 +73,10 @@ const siteAntes = retratoDoSite();
   ok('imagens: tipo e tamanho lidos do conteúdo (PNG, JPG, GIF, WebP); SVG, HTML e PDF não passam');
 }
 
-// ───── servidor
-const portaLivre = () =>
-  new Promise((resolver) => {
-    const s = net.createServer();
-    s.listen(0, '127.0.0.1', () => {
-      const { port } = s.address();
-      s.close(() => resolver(port));
-    });
-  });
+// ───── servidor (portaLivre, iniciar e parar estão no apoio: outros testes também sobem o servidor)
 const PORTA = await portaLivre();
 const BASE = `http://127.0.0.1:${PORTA}`;
 let processo = null;
-
-/** Sobe um servidor e espera ele responder. `registro: true` liga a lista de pedidos que ele escreve no terminal. */
-async function iniciar(porta, dados, { registro = false } = {}) {
-  // Só as variáveis do teste: nada do ambiente de quem roda muda o resultado.
-  const env = { ...process.env, PORT: String(porta), HOST: '127.0.0.1', DADOS_DIR: dados, SILENCIOSO: '1' };
-  for (const nome of ['SITE_DIR', 'ADMIN_USUARIO', 'ADMIN_SENHA', 'CONFIAR_NO_PROXY', ...(registro ? ['SILENCIOSO'] : [])]) delete env[nome];
-  const p = spawn(process.execPath, [path.join(RAIZ, 'servidor.mjs')], { env, stdio: ['ignore', 'pipe', 'pipe'] });
-  let saida = '';
-  p.stdout.on('data', (d) => (saida += d));
-  p.stderr.on('data', (d) => (saida += d));
-  p.saida = () => saida;
-  for (let i = 0; i < 200; i++) {
-    if (p.exitCode !== null) break;
-    try {
-      await fetch(`http://127.0.0.1:${porta}/robots.txt`);
-      return p;
-    } catch {
-      await new Promise((r) => setTimeout(r, 50));
-    }
-  }
-  throw new Error(`o servidor não subiu:\n${saida}`);
-}
-
-async function parar(p) {
-  if (!p || p.exitCode !== null) return;
-  const fim = new Promise((r) => p.once('exit', r));
-  p.kill('SIGTERM');
-  await fim;
-}
 
 async function subir() {
   processo = await iniciar(PORTA, DADOS);

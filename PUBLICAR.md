@@ -183,6 +183,15 @@ repositório) e publica só o `dist/` estático. Nesse modo **não há servidor*
 Para dados compartilhados entre vários agentes, use a opção A ou B
 (servidor com `dados-corregedoria-pmpr.json` em volume).
 
+Na mesma publicação vai o site **Fronteira do Sul RP** (pasta
+`fronteira-sul/`), em
+`https://xmuriloxd-ops.github.io/projetos-cidades2/fronteira-sul/`. Um
+repositório tem um site só no Pages, e por isso os dois saem juntos: o
+workflow roda os testes daquela pasta, grava o site dela em
+`dist/fronteira-sul/` e confere o que foi ao ar. Se esses testes
+falharem, nada é publicado e o que já estava no ar continua. Detalhes
+em `fronteira-sul/LEIA-ME.md`, "Como publicar".
+
 ---
 
 ## 7. Conferindo a instalação

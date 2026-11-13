@@ -2,9 +2,11 @@
 import assert from 'node:assert/strict';
 import crypto from 'node:crypto';
 import fs from 'node:fs';
+import net from 'node:net';
 import os from 'node:os';
 import path from 'node:path';
 import zlib from 'node:zlib';
+import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { ARQUIVOS } from '../mapa.mjs';
 
@@ -236,6 +238,136 @@ export const SEM_O_LINK_DE_VOLTA = oQueOSiteEntrega({ textoDoLink: '' });
 export const comOLinkDeVolta = (texto) => oQueOSiteEntrega({ textoDoLink: texto });
 /** Com a opção "Mostrar “Admin” para os visitantes" desligada: sem a aba nas regras e sem a etiqueta no convite. */
 export const SEM_A_ENTRADA_DO_ADMIN = oQueOSiteEntrega({ entradaDoAdmin: false });
+/** Com as duas opções desligadas: as páginas onde estavam no site original, e sem a aba Admin. */
+export const SEM_COMECAR_PELO_CONVITE_NEM_ADMIN = oQueOSiteEntrega({ comecaPeloConvite: false, entradaDoAdmin: false });
+
+// ───── o site gravado em arquivos (ver ../../exportar.mjs)
+/**
+ * A página que fica no lugar de um endereço que leva a outro. O servidor
+ * manda o navegador de "/convite/" para "/"; uma hospedagem de arquivos não
+ * faz isso, e o endereço antigo recebe esta página, que leva ao novo.
+ */
+export const paginaQueLeva = (destino) =>
+  [
+    '<!doctype html>',
+    '<html lang="pt-BR">',
+    '<head>',
+    '<meta charset="UTF-8">',
+    '<meta name="robots" content="noindex">',
+    '<title>Fronteira do Sul RP</title>',
+    `<meta http-equiv="refresh" content="0; url=${destino}">`,
+    `<script>location.replace("${destino}"+location.search+location.hash)</script>`,
+    '</head>',
+    '<body>',
+    `<a href="${destino}">Continuar</a>`,
+    '</body>',
+    '</html>',
+    '',
+  ].join('\n');
+
+/** Troca todas as vezes em que `antes` aparece em `texto`, conferindo quantas são. */
+function trocarTodas(texto, antes, depois, vezes) {
+  const partes = texto.split(antes);
+  assert.equal(partes.length - 1, vezes, `esperava achar ${vezes} vez(es): ${antes}`);
+  return partes.join(depois);
+}
+
+/**
+ * O site dentro de uma pasta do endereço ("/projeto/site"), como numa
+ * hospedagem que publica cada projeto em uma pasta. Cada endereço do próprio
+ * site passa a começar pela pasta; nada mais muda.
+ *
+ * Recebe o que o site entrega na raiz ({ js, index, convite }, como em
+ * oQueOSiteEntrega) e devolve o mesmo dentro da pasta, mais a lista de ícones
+ * (`manifesto`). Também por extenso, com trocas simples de texto:
+ *
+ *   - no aplicativo: a raiz dos endereços, o endereço da tela "não
+ *     encontrada", o botão dela (quando o site começa pelo convite), os dois
+ *     endereços do logo e o destino do link de volta ao convite;
+ *   - na página de regras: o aplicativo (com a versão dele, que mudou), o
+ *     estilo, a lista de ícones e o endereço da plataforma original;
+ *   - na página do convite: a imagem, a lista de ícones e o destino do botão;
+ *   - nas duas: onde fica o ícone da aba, que na raiz o navegador acha
+ *     sozinho.
+ *
+ * `comecaPeloConvite: false` é a opção desligada: `esperado.convite` vem null
+ * (a página é a da cópia) e as regras ficam no começo da pasta.
+ */
+export function naPasta(esperado, pasta, { comecaPeloConvite = true, semAPlataforma = false } = {}) {
+  // (a pasta dentro de uma expressão regular: as barras e os pontos levam uma barra invertida na frente)
+  const emExpressao = pasta.replace(/[/.]/g, (c) => `\\${c}`);
+  let js = esperado.js;
+  js = comecaPeloConvite
+    ? trocarTodas(js, 'base:/^\\/regras(\\/|$)/i.test(location.pathname)?"/regras":"",ssrPath:', `base:/^${emExpressao}\\/regras(\\/|$)/i.test(location.pathname)?"${pasta}/regras":"${pasta}",ssrPath:`, 1)
+    : trocarTodas(js, 'base:"",ssrPath:', `base:"${pasta}",ssrPath:`, 1);
+  js = trocarTodas(js, ',tg="/404";function ', `,tg="${pasta}/404";function `, 1);
+  if (comecaPeloConvite) js = trocarTodas(js, 'const r=()=>{location.assign("/")}', `const r=()=>{location.assign("${pasta}/")}`, 1);
+  js = trocarOUnico(js, /"(\/manus-storage\/fronteira-sul-logo_1b1b4c2d\.webp(?:\?v=[0-9a-f]{12})?)"/, (_, endereco) => `"${pasta}${endereco}"`);
+  js = trocarOUnico(js, /"(\/fronteira-sul-logo\.webp(?:\?v=[0-9a-f]{12})?)"/, (_, endereco) => `"${pasta}${endereco}"`);
+  const linkDeVolta = 'className:"voltar-ao-convite",children:R.jsxs("a",{className:"view-tab",href:"/",';
+  js = trocarTodas(js, linkDeVolta, linkDeVolta.replace('href:"/"', `href:"${pasta}/"`), js.includes(linkDeVolta) ? 2 : 0);
+
+  // Onde fica o ícone da aba: entra no <head> antes do que o projeto já punha ali (ou sozinho, se não havia nada).
+  const comOIcone = (html) => trocarOUnico(html, /(<link rel="manifest" href=")(\/__manus\/pwa\/manifest\.webmanifest" crossorigin="use-credentials" \/>)(<\/head>)?/, (_, antes, lista, fim) => {
+    const versao = /"src":"\/favicon\.ico(\?v=[0-9a-f]{12})"/.exec(esperado.manifesto || '')?.[1] || '';
+    return `${antes}${pasta}${lista}<link rel="icon" href="${pasta}/favicon.ico${versao}">${fim || '\n'}`;
+  });
+
+  let index = esperado.index;
+  index = trocarOUnico(index, /(<script type="module" crossorigin src=")(\/assets\/index-FbaU4KfD\.js)(?:\?v=[A-Za-z0-9_-]{10})?(">)/, (_, antes, endereco, depois) => `${antes}${pasta}${endereco}?v=${versaoDe(js)}${depois}`);
+  index = trocarTodas(index, '<link rel="stylesheet" crossorigin href="/assets/index-DMP8NyHf.css">', `<link rel="stylesheet" crossorigin href="${pasta}/assets/index-DMP8NyHf.css">`, 1);
+  index = trocarTodas(index, '<script src="/api/platform/config.js"></script>', `<script src="${pasta}/api/platform/config.js"></script>`, semAPlataforma ? 0 : 1);
+  index = comOIcone(index);
+
+  let convite = esperado.convite ?? COPIA.convite;
+  convite = trocarOUnico(convite, /(<img class="poster"[^>]* src=")(\/fronteira-sul-convite-preview\.jpg(?:\?v=[0-9a-f]{12})?")/, (_, antes, endereco) => `${antes}${pasta}${endereco}`);
+  convite = trocarOUnico(convite, /(<a class="button" href=")(\/[^"/][^"]*|\/)(">)/, (_, antes, destino, depois) => `${antes}${pasta}${destino}${depois}`);
+  convite = comOIcone(convite);
+
+  let manifesto = esperado.manifesto ?? COPIA.manifesto;
+  for (const chave of ['id', 'start_url', 'scope']) manifesto = trocarTodas(manifesto, `"${chave}":"/"`, `"${chave}":"${pasta}/"`, 1);
+  manifesto = trocarTodas(manifesto, '"src":"/favicon.ico', `"src":"${pasta}/favicon.ico`, 2);
+  return { js, index, convite, manifesto };
+}
+
+// ───── o servidor de verdade, para os testes que falam com ele por HTTP
+export const portaLivre = () =>
+  new Promise((resolver) => {
+    const s = net.createServer();
+    s.listen(0, '127.0.0.1', () => {
+      const { port } = s.address();
+      s.close(() => resolver(port));
+    });
+  });
+
+/** Sobe um servidor e espera ele responder. `registro: true` liga a lista de pedidos que ele escreve no terminal. */
+export async function iniciar(porta, dados, { registro = false } = {}) {
+  // Só as variáveis do teste: nada do ambiente de quem roda muda o resultado.
+  const env = { ...process.env, PORT: String(porta), HOST: '127.0.0.1', DADOS_DIR: dados, SILENCIOSO: '1' };
+  for (const nome of ['SITE_DIR', 'ADMIN_USUARIO', 'ADMIN_SENHA', 'CONFIAR_NO_PROXY', ...(registro ? ['SILENCIOSO'] : [])]) delete env[nome];
+  const p = spawn(process.execPath, [path.join(RAIZ, 'servidor.mjs')], { env, stdio: ['ignore', 'pipe', 'pipe'] });
+  let saida = '';
+  p.stdout.on('data', (d) => (saida += d));
+  p.stderr.on('data', (d) => (saida += d));
+  p.saida = () => saida;
+  for (let i = 0; i < 200; i++) {
+    if (p.exitCode !== null) break;
+    try {
+      await fetch(`http://127.0.0.1:${porta}/robots.txt`);
+      return p;
+    } catch {
+      await new Promise((r) => setTimeout(r, 50));
+    }
+  }
+  throw new Error(`o servidor não subiu:\n${saida}`);
+}
+
+export async function parar(p) {
+  if (!p || p.exitCode !== null) return;
+  const fim = new Promise((r) => p.once('exit', r));
+  p.kill('SIGTERM');
+  await fim;
+}
 
 /** Uma cópia de site/ em uma pasta temporária, para testar o que acontece quando um arquivo vem diferente. */
 export function copiaDoSite(alterar = {}) {

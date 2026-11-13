@@ -18,7 +18,7 @@ Ele parte de uma cópia exata do site publicado em <https://fronteirasul-fmudazp
 | 2. O que este projeto mudou | `admin/mapa.mjs` e `admin/convite-no-inicio.mjs` | O site começar pelo convite, os créditos e a entrada do painel ("Admin") nas duas páginas. Vale em toda instalação. |
 | 3. O que o administrador muda | `dados/` | Tudo o que é salvo pelo painel. |
 
-Esta pasta é independente do sistema PCPR que está no restante do repositório. Um não usa nada do outro.
+Esta pasta é independente do outro site que está no restante do repositório. Um não usa nada do outro. Os dois saem juntos na publicação do GitHub Pages, cada um no seu endereço (ver "Como publicar").
 
 ## O que mudou em relação ao site original
 
@@ -109,7 +109,7 @@ Na pasta `fronteira-sul/dados/`, criada na primeira vez que algo é salvo:
 | `dados/historico/` | As 15 versões anteriores do `conteudo.json`. |
 | `dados/acesso.json` | O usuário e a senha do painel. A senha não fica escrita: só o resultado de um cálculo feito com ela (scrypt). |
 
-Essa pasta não vai para o Git (está no `.gitignore`): ela existe só no computador ou servidor onde o site roda. Para levar o conteúdo para outro lugar, copie a pasta. Para guardar em outro local, inicie o servidor com `DADOS_DIR=/caminho/da/pasta`.
+Os dois primeiros vão para o Git: é deles que sai o site publicado no GitHub Pages (ver "Como publicar"). O histórico e o acesso não vão (estão no `.gitignore`): existem só no computador ou servidor onde o painel roda. Para levar tudo para outro lugar, copie a pasta. Para guardar em outro local, inicie o servidor com `DADOS_DIR=/caminho/da/pasta`.
 
 ### Proteções
 
@@ -143,13 +143,15 @@ Por que isso existe: até 12/11/2026 o painel mandava a sessão em um cabeçalho
 | Arquivo | O que é |
 |---|---|
 | `servidor.mjs` | O servidor. Entrega os arquivos de `site/` aplicando o que este projeto mudou e as alterações do painel, e responde como o servidor original. |
+| `exportar.mjs` | Grava em uma pasta o site como o servidor o entrega, sem o painel, para uma hospedagem que só guarda arquivos (o GitHub Pages). |
+| `conferir-publicado.mjs` | Pede ao site que está no ar cada arquivo gravado pelo `exportar.mjs` e compara byte a byte. |
 | `admin/painel/` | A tela do painel (`index.html`, `painel.css`, `painel.js`). |
 | `admin/mapa.mjs` | Lista de tudo o que o painel deixa editar e onde cada texto fica nos arquivos de `site/`. Também guarda o que este projeto mudou na cópia: os créditos, o destino do botão do convite e o texto do link de volta ao convite (`padrao`), e o que vem ligado (`OPCOES_PADRAO`). |
-| `admin/convite-no-inicio.mjs` | O site começar pelo convite: em que endereço fica cada página, o que muda no aplicativo de regras para ele funcionar em `/regras/`, o link de volta ao convite, a etiqueta Admin do convite e as regras de visual que fazem o convite caber na tela. |
+| `admin/convite-no-inicio.mjs` | O site começar pelo convite: em que endereço fica cada página, o que muda no aplicativo de regras para ele funcionar em `/regras/`, o link de volta ao convite, a etiqueta Admin do convite e as regras de visual que fazem o convite caber na tela. No fim, o que muda quando o site é publicado dentro de uma pasta do endereço. |
 | `admin/conteudo.mjs` | Guarda as alterações e monta as páginas com elas. |
 | `admin/acesso.mjs` | Login, sessões e limite de tentativas. O usuário e a senha iniciais estão no começo deste arquivo. |
 | `admin/api.mjs`, `admin/imagem.mjs` | Os endereços que o painel usa (e a forma de falar com eles: só POST, com a sessão dentro do pedido) e a conferência das imagens enviadas. |
-| `admin/testes/` | Testes automáticos do painel. Rodam com `node fronteira-sul/admin/testes/todos.mjs`. |
+| `admin/testes/` | Testes automáticos do painel e da publicação. Rodam com `node fronteira-sul/admin/testes/todos.mjs`. |
 | `site/convite/index.html` | A página do convite inteira: textos, botão e visual (o CSS fica no bloco `<style>`). É a primeira página do site. |
 | `site/fronteira-sul-convite-preview.jpg` | Imagem do convite (1200×675). |
 | `site/index.html` | "Casca" da página de regras: título, descrição e as chamadas para os dois arquivos abaixo. |
@@ -185,14 +187,81 @@ Três cuidados:
 A cópia traz junto o que a hospedagem original (Manus) colocava nas páginas. Os dois primeiros itens se resolvem pelo painel:
 
 - O selo "Made with Manus" no canto da tela e os scripts de estatística (Manus, Plausible e Amplitude). Com internet, as visitas feitas à cópia são enviadas para esses serviços. Para tirar: painel > Avançado.
-- Os endereços oficiais das páginas (`canonical`, `og:url`, `og:image`, `twitter:image`), o `robots.txt` e o `sitemap.xml` apontam para `fronteirasul-fmudazpm.manus.space`. Ao colar o link da cópia, a imagem de prévia ainda vem do site original. Para trocar: painel > Compartilhamento > "Endereço onde este site está publicado". Com esse endereço preenchido, o convite é anunciado em `/` e as regras em `/regras/`, e o `sitemap.xml` lista as duas páginas.
+- Os endereços oficiais das páginas (`canonical`, `og:url`, `og:image`, `twitter:image`), o `robots.txt` e o `sitemap.xml` apontam para `fronteirasul-fmudazpm.manus.space`. Ao colar o link da cópia, a imagem de prévia ainda vem do site original. Para trocar: painel > Compartilhamento > "Endereço onde este site está publicado". Com esse endereço preenchido, o convite é anunciado em `/` e as regras em `/regras/`, e o `sitemap.xml` lista as duas páginas. Na publicação do GitHub Pages isso é feito sozinho: o endereço é o do próprio Pages.
 - A página de regras pede `/api/platform/config.js`. No site original esse endereço responde com erro 500; a cópia responde com o mesmo erro e a página funciona do mesmo jeito. Ao tirar o selo da Manus pelo painel, esse pedido também sai.
 
 ## Como publicar
 
-O site precisa do `servidor.mjs` rodando, então a hospedagem tem que rodar Node.js (18 ou mais novo): `node fronteira-sul/servidor.mjs`.
+Há dois jeitos, e um não impede o outro:
 
-Não publique a pasta `site/` sozinha numa hospedagem só de arquivos estáticos. Ela é a cópia do site original como ele era: com as regras no endereço principal e o convite em `/convite/`, com os créditos antigos, sem a aba Admin, sem o painel e sem nada do que foi alterado por ele.
+| | No GitHub Pages | Com o servidor |
+|---|---|---|
+| O que vai ao ar | O convite e as regras | O convite, as regras e o painel |
+| O painel | Não vai. As mudanças são feitas no painel onde o servidor roda, e o site é publicado de novo | Funciona no próprio site |
+| Custo | Grátis | Depende da hospedagem, que precisa rodar Node.js e ter um disco permanente |
+
+Nos dois casos, não publique a pasta `site/` sozinha. Ela é a cópia do site original como ele era: com as regras no endereço principal e o convite em `/convite/`, com os créditos antigos e sem nada do que foi alterado pelo painel.
+
+### No GitHub Pages
+
+O site fica em:
+
+- Convite: <https://xmuriloxd-ops.github.io/projetos-cidades2/fronteira-sul/>
+- Regras: <https://xmuriloxd-ops.github.io/projetos-cidades2/fronteira-sul/regras/>
+
+O endereço `https://xmuriloxd-ops.github.io/projetos-cidades2/` é do outro site do repositório. Um repositório tem um site só no Pages, e por isso os dois saem na mesma publicação.
+
+**O que precisa ser feito uma vez**, nas configurações do repositório no GitHub. Só o dono do repositório consegue:
+
+1. Deixar o repositório público. Em Settings, na parte "Danger Zone", que fica no fim da página: ao lado de "Change repository visibility", clicar em Change visibility, escolher a opção pública e confirmar. O GitHub pede para clicar em "I have read and understand these effects" e depois em "Make this repository public". Numa conta gratuita do GitHub, o Pages só funciona em repositório público; numa conta paga ele funciona também em repositório privado, e este passo não é necessário.
+2. Ligar o Pages. Em Settings > Pages, na parte "Build and deployment", em Source, escolher GitHub Actions.
+
+Com o repositório público, qualquer pessoa pode ver:
+
+- o código e o histórico dos dois sites, e os registros das execuções na aba Actions;
+- o usuário e a senha iniciais do painel, que estão em `admin/acesso.mjs` e neste guia;
+- os arquivos de `site/` como vieram do site original, com os créditos de quem o criou.
+
+O site publicado não leva o painel nem os créditos do site original. Troque a senha do painel antes de hospedar o servidor em qualquer lugar, e não use a senha inicial em mais nada.
+
+**Como a publicação acontece.** A cada mudança na versão principal do repositório (`main`), o fluxo `.github/workflows/deploy-pages.yml` roda sozinho:
+
+1. Roda os testes desta pasta. Se algum falhar, nada é publicado, nem do outro site, e o que já estava no ar continua.
+2. Grava o site com o `exportar.mjs`, dentro da pasta `/fronteira-sul` do site do Pages.
+3. Publica junto com o outro site.
+4. Confere o que foi ao ar com o `conferir-publicado.mjs`: os arquivos têm de ter sido gravados para o endereço em que ficaram, e cada um, pedido ao site, tem de voltar byte a byte igual. Logo depois de publicar o Pages pode demorar a entregar os arquivos novos, então a conferência tenta de novo por até 5 minutos antes de dar erro.
+
+O andamento aparece na aba Actions do repositório. Quando dá certo, o resumo da execução mostra os endereços do convite e das regras. Quando um desses passos falha, a execução fica marcada com erro e o motivo aparece no resumo dela, em "Annotations", com o título "Fronteira do Sul RP". Enquanto o Pages não estiver ligado, o erro que aparece é "Nada foi publicado · o GitHub Pages está ligado?", com o que fazer.
+
+Para publicar de novo sem mudar nada: Actions > "Deploy · GitHub Pages" > Run workflow.
+
+**Como mudar o site publicado:**
+
+1. Faça a mudança pelo painel, onde o servidor roda (a prévia, ou `node fronteira-sul/servidor.mjs` no seu computador).
+2. O que foi salvo fica em `dados/conteudo.json` e em `dados/imagens/`. Mande esses arquivos para a `main` do repositório.
+
+A publicação sai em seguida. Até lá, a mudança aparece só onde o servidor roda.
+
+**O que é diferente do site com o servidor:**
+
+- Não há painel, nem a aba e a etiqueta "Admin". A opção "Mostrar “Admin” para os visitantes" não vale para a publicação.
+- `/convite/`, o endereço antigo do convite, é uma página pequena que leva ao começo do site. O servidor manda o navegador direto.
+- Um endereço que não existe mostra a página "não encontrada" do GitHub, e não a do site. A do site continua existindo em `/404`.
+- As duas páginas dizem onde fica o ícone da aba. Na raiz de um endereço o navegador acha o ícone sozinho; dentro de uma pasta, não.
+- Os links de compartilhamento (a prévia que o Discord e o WhatsApp mostram) e o `sitemap.xml` usam o endereço do Pages, mesmo sem o "Endereço onde este site está publicado" preenchido no painel.
+
+**Para gravar o site à mão**, num computador, para olhar o resultado ou para levar a outra hospedagem de arquivos:
+
+```bash
+node fronteira-sul/exportar.mjs --saida /tmp/site --pasta /projetos-cidades2/fronteira-sul --endereco https://xmuriloxd-ops.github.io
+node fronteira-sul/conferir-publicado.mjs --arquivos /tmp/site --endereco https://xmuriloxd-ops.github.io/projetos-cidades2/fronteira-sul
+```
+
+Sem `--pasta`, o site sai pronto para a raiz de um endereço. O `exportar.mjs` não grava nada se a cópia em `site/` estiver diferente do esperado, se o `conteudo.json` estiver ilegível ou se faltar uma imagem enviada pelo painel. O segundo comando só dá certo depois que o site estiver no ar.
+
+### Com o servidor
+
+A hospedagem tem que rodar Node.js (18 ou mais novo): `node fronteira-sul/servidor.mjs`.
 
 Antes de colocar no ar:
 
@@ -333,6 +402,36 @@ Eles usam pastas temporárias e não mexem em `site/` nem em `dados/`. Conferem,
 Além disso, em 11/11/2026 o painel foi usado de ponta a ponta no Chromium, em tela de computador (1440×900) e de celular (390×844): entrar pela aba Admin, mudar regulamento, textos fixos, multas, convite, imagens, endereço de compartilhamento e opções, conferindo cada mudança no site aberto como visitante; trocar usuário e senha; duas pessoas salvando ao mesmo tempo; sessão que cai no meio de uma edição. O roteiro foi repetido depois de o site passar a começar pelo convite, com as regras em `/regras/`, e de novo em 12/11/2026, depois de a página de regras ganhar o link de volta ao convite. Ele precisa de um navegador e não está no repositório.
 
 Nessas três vezes o navegador de teste abriu o servidor direto, sem nada no caminho. Por isso o defeito do login pela tela de prévia, descrito a seguir, não apareceu.
+
+### A publicação em arquivos
+
+Os testes automáticos da publicação estão em `admin/testes/exportacao.mjs` e rodam junto com os outros. Conferem, entre outras coisas:
+
+- Na raiz de um endereço, cada arquivo gravado é, byte a byte, o que o servidor entrega no mesmo endereço com a entrada do Admin desligada. A comparação é feita com o servidor de verdade, por HTTP, em três situações: instalação nova; com textos, opções e imagens salvos pelo painel; e com a opção "Começar o site pelo convite" desligada.
+- Dentro de uma pasta, o que muda em relação à raiz está escrito por extenso no teste, e nada mais muda: os endereços nas duas páginas, no aplicativo e na lista de ícones, o ícone da aba e os links de compartilhamento.
+- O aplicativo gravado continua sendo JavaScript válido e procura as regras em `<pasta>/regras/` e a tela "não encontrada" em `<pasta>/404`.
+- Nada do painel nem dos créditos da cópia vai para os arquivos.
+- A exportação para, sem gravar nada, quando a cópia em `site/` vem diferente, quando o `conteudo.json` está ilegível e quando falta uma imagem enviada pelo painel. Ela não mexe na pasta de dados.
+- O `conferir-publicado.mjs` aponta um arquivo com conteúdo diferente (mesmo que do mesmo tamanho) e um arquivo que falta, e tenta de novo enquanto a hospedagem ainda entrega a publicação anterior.
+- Ele recusa, antes de pedir qualquer coisa, arquivos gravados para outra pasta do endereço: mais rasa, mais funda, de nome parecido ou nenhuma. Nesse caso todos os arquivos estariam no ar, iguais aos gravados, e as páginas não os achariam.
+
+Em 12/11/2026 o site gravado para a pasta `/projetos-cidades2/fronteira-sul` foi aberto no Chromium 153 atrás de um servidor de teste que responde como o GitHub Pages de um repositório: o site dentro da pasta do repositório, pasta sem a barra do fim redirecionada, `nome` respondendo por `nome.html`, página "não encontrada" própria, maiúsculas diferentes de minúsculas. Em três situações (instalação nova; "Começar o site pelo convite" desligado; textos, a imagem do convite e o logo trocados pelo painel, com o selo da Manus retirado), em tela de computador (1440×900) e de celular (390×844):
+
+- O convite e a página de regras mostram o mesmo texto que no servidor aberto na raiz, e os elementos medidos (a imagem, o cartão, os textos e o botão do convite; a barra do topo, as abas, o título e a busca das regras) têm a mesma posição e o mesmo tamanho.
+- Funcionam dentro da pasta: o botão, o clique na imagem, o link "Voltar ao convite", as abas das regras, `/regras` sem a barra, o endereço antigo `/convite/` (mantendo o que vem depois do `?`) e a tela "não encontrada" em `/404`, com o botão voltando ao começo.
+- Tudo o que as páginas pedem ao próprio site fica dentro da pasta. O único pedido que volta com erro é `/api/platform/config.js`, o endereço da plataforma original, que no site original também só responde erro.
+- Com o selo e as estatísticas da Manus retirados pelo painel, as páginas não fazem nenhum pedido a outro site e nada aparece no console. Sem retirar, elas pedem scripts a `files.manuscdn.com`, `plausible.io` e `manus-analytics.com`, como o site original.
+
+O outro site do repositório, montado com o mesmo comando que o fluxo do Pages usa, sai byte a byte igual com e sem esta pasta no repositório. Com os dois no mesmo conjunto de arquivos que o fluxo monta, cada um abre no seu endereço, um depois do outro, e o outro site não pede nada desta pasta.
+
+Os passos da Fronteira do Sul no fluxo do Pages foram rodados fora do GitHub, com o mesmo roteiro que está no arquivo do fluxo e com o servidor de teste no lugar do Pages, em seis casos: tudo certo; um teste falhando; o `conteudo.json` ilegível; a pasta informada diferente da pasta da publicação; a publicação anterior ainda no ar; e nada no ar. No primeiro, o site sai gravado para o endereço informado e a execução termina com os endereços do convite e das regras no resumo. Nos outros cinco, o passo certo falha, os seguintes não rodam e o motivo sai na anotação de erro.
+
+**O que não foi conferido:**
+
+- O GitHub Pages de verdade. O servidor de teste imita o que se conhece do comportamento dele. Depois de cada publicação, o próprio fluxo compara o que está no ar com o que foi gravado.
+- O fluxo rodando no GitHub. Até 12/11/2026 ele não tinha passado do passo "Configurar Pages", porque o Pages estava desligado. As condições que decidem quais passos rodam (`if:`) e os valores que o Pages entrega a eles só existem lá.
+- Firefox, Safari e celulares de verdade.
+- Como o Discord e o WhatsApp mostram a prévia do link no endereço novo.
 
 ### O painel atrás de um intermediário
 

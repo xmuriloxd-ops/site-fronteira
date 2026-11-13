@@ -14,6 +14,7 @@ const TESTES = [
   ['conteudo.mjs', 'Conteúdo: guardar as alterações e montar as páginas'],
   ['acesso.mjs', 'Acesso: login, sessões e limite de tentativas'],
   ['servidor.mjs', 'Servidor: páginas, painel e imagens por HTTP'],
+  ['exportacao.mjs', 'Publicação: o site gravado em arquivos, na raiz e dentro de uma pasta'],
 ];
 
 let falhas = 0;

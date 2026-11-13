@@ -20,6 +20,11 @@
  * "/regras/" leva para "/": um link para as regras vale nos dois casos.
  *
  * Quem aplica o que está aqui é o conteudo.mjs.
+ *
+ * Os endereços deste arquivo são os do site na raiz de um endereço
+ * ("https://meusite.com.br/"). Quando o site é publicado dentro de uma pasta
+ * ("https://usuario.github.io/projeto/site/"), o que muda está no fim do
+ * arquivo, em "O site dentro de uma pasta".
  */
 
 /** Onde fica cada página: com o site começando pelo convite, ou como no site original. */
@@ -57,21 +62,24 @@ export function paginaDoEndereco(caminho, comecaPeloConvite) {
  *      (Com a raiz fixa em "/regras", o aplicativo não desenharia nada fora
  *      dela: "/404" ficaria em branco.)
  *      MARCA_DA_BASE é o trecho onde a opção está (aparece uma vez só);
- *      BASE_ORIGINAL é o começo dele, trocado por BASE_DAS_REGRAS.
+ *      BASE_ORIGINAL é o começo dele, trocado pelo que baseDoAplicativo()
+ *      devolve.
  *
  *   2. O botão "Go Home" da tela "não encontrada". No original ele mostra as
  *      regras sem recarregar a página, porque elas eram o início do site. Agora
  *      o início é o convite, que é outro arquivo: o botão passa a abrir "/" de
  *      verdade. MARCA_DO_VOLTAR é o trecho desse botão (aparece uma vez só);
- *      VOLTAR_ORIGINAL é a parte dele trocada por VOLTAR_PARA_O_INICIO.
+ *      VOLTAR_ORIGINAL é a parte dele trocada pelo que voltarParaOInicio()
+ *      devolve.
+ *
+ * As duas funções estão no fim do arquivo, em "O site dentro de uma pasta":
+ * são elas que escrevem o que entra no aplicativo, com a pasta ou sem ela.
  */
 export const MARCA_DA_BASE = 'base:"",ssrPath:';
 export const BASE_ORIGINAL = 'base:""';
-export const BASE_DAS_REGRAS = 'base:/^\\/regras(\\/|$)/i.test(location.pathname)?"/regras":""';
 
 export const MARCA_DO_VOLTAR = 'const r=()=>{a("/")}';
 export const VOLTAR_ORIGINAL = 'a("/")';
-export const VOLTAR_PARA_O_INICIO = 'location.assign("/")';
 
 /**
  * No campo "para onde o botão leva", estes valores querem dizer "a página de
@@ -300,3 +308,86 @@ export function cabecaDoInicio(imagem = null) {
   ];
   return `<style id="convite-no-inicio">\n${css.join('\n')}\n</style>`;
 }
+
+// ───────────────────────────── o site dentro de uma pasta ─────────────────────────────
+/**
+ * O site dentro de uma pasta.
+ *
+ * O site original fica na raiz do endereço, e tudo nele conta com isso: as
+ * páginas pedem "/assets/...", o botão do convite leva a "/", o aplicativo de
+ * regras procura as telas a partir de "/". Uma hospedagem como o GitHub Pages
+ * publica o site dentro de uma pasta do endereço
+ * ("https://usuario.github.io/projeto/site/"), e ali "/assets/..." é de outro
+ * site. Na cópia publicada, cada endereço do próprio site passa a começar pela
+ * pasta (ver exportar.mjs e, no conteudo.mjs, "publicacao").
+ *
+ * `pasta` é a pasta sem a barra do fim ("/projeto/site"); vazia quer dizer
+ * a raiz, e então nada muda em relação ao resto deste arquivo.
+ *
+ * No aplicativo de regras mudam três coisas:
+ *
+ *   1. A raiz dos endereços (a mesma opção do roteador de que o começo deste
+ *      arquivo fala). Passa a ser a pasta e, na página de regras de um site
+ *      que começa pelo convite, a pasta mais "/regras".
+ *   2. O endereço da tela "página não encontrada". O aplicativo recarrega a
+ *      página nesse endereço quando chega a uma tela que não existe; é um
+ *      endereço completo, que não passa pela raiz do roteador. Na cópia é
+ *      "/404", que numa pasta cairia fora do site.
+ *      MARCA_DO_NAO_ENCONTRADO é o trecho onde ele está (aparece uma vez só);
+ *      NAO_ENCONTRADO_ORIGINAL é a parte dele que é trocada.
+ *   3. O botão "Go Home" dessa tela, que abre o início do site: a pasta mais
+ *      "/".
+ */
+export const PASTA_VALIDA = /^(\/(?!\.+(\/|$))[A-Za-z0-9._~-]+)*$/; // (um trecho só de pontos, como "..", não é nome de pasta)
+
+/** A pasta escrita dentro de uma expressão regular do JavaScript (entre barras). */
+const pastaEmRegex = (pasta) => pasta.replace(/[^A-Za-z0-9_~-]/g, '\\$&');
+
+/**
+ * O que entra no lugar de BASE_ORIGINAL, ou null quando a raiz da cópia vale
+ * como está (site na raiz do endereço, com as regras em "/").
+ */
+export function baseDoAplicativo(pasta, comecaPeloConvite) {
+  if (comecaPeloConvite) return `base:/^${pastaEmRegex(pasta)}\\/regras(\\/|$)/i.test(location.pathname)?${JSON.stringify(`${pasta}/regras`)}:${JSON.stringify(pasta)}`;
+  return pasta ? `base:${JSON.stringify(pasta)}` : null;
+}
+
+export const MARCA_DO_NAO_ENCONTRADO = ',tg="/404";function ';
+export const NAO_ENCONTRADO_ORIGINAL = '"/404"';
+export const naoEncontradoNaPasta = (pasta) => JSON.stringify(`${pasta}/404`);
+
+/** O que entra no lugar de VOLTAR_ORIGINAL quando o site começa pelo convite. */
+export const voltarParaOInicio = (pasta) => `location.assign(${JSON.stringify(`${pasta}/`)})`;
+
+/**
+ * Sem a pasta, o navegador procura sozinho o ícone da aba em "/favicon.ico",
+ * e as páginas da cópia contam com isso: não dizem onde ele está. Numa pasta,
+ * esse endereço é de outro site. As duas páginas passam a dizer onde o ícone
+ * fica; entra no <head>.
+ */
+export const linkDoIcone = (endereco) => `<link rel="icon" href="${endereco}">`;
+
+/**
+ * A página que fica no lugar de um endereço que leva a outro. O servidor
+ * responde a "/convite/" mandando o navegador para "/" (ver paginaDoEndereco).
+ * Uma hospedagem de arquivos não faz isso: o endereço antigo recebe esta
+ * página, que leva ao novo assim que abre e mantém o que vinha depois do
+ * "?" e do "#". Sem JavaScript, vale a linha "refresh"; sem ela, o link.
+ */
+export const paginaQueLeva = (destino) =>
+  [
+    '<!doctype html>',
+    '<html lang="pt-BR">',
+    '<head>',
+    '<meta charset="UTF-8">',
+    '<meta name="robots" content="noindex">',
+    '<title>Fronteira do Sul RP</title>',
+    `<meta http-equiv="refresh" content="0; url=${destino}">`,
+    `<script>location.replace(${JSON.stringify(destino)}+location.search+location.hash)</script>`,
+    '</head>',
+    '<body>',
+    `<a href="${destino}">Continuar</a>`,
+    '</body>',
+    '</html>',
+    '',
+  ].join('\n');
