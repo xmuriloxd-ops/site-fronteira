@@ -3,6 +3,15 @@
 # Modo estático: sem servidor, as denúncias ficam em cada navegador
 # (localStorage) e o envio ao Discord sai direto do navegador.
 # Para dados compartilhados, suba a versão com servidor (PUBLICAR.md).
+#
+# Na mesma publicação vai o site Fronteira do Sul RP (pasta fronteira-sul/),
+# dentro de /fronteira-sul/: o convite e as regras, sem o painel. Um
+# repositório tem um site só no Pages, e por isso os dois saem juntos:
+#
+#   https://<usuario>.github.io/projetos-cidades2/                 este projeto
+#   https://<usuario>.github.io/projetos-cidades2/fronteira-sul/   Fronteira do Sul RP
+#
+# Ver fronteira-sul/LEIA-ME.md, "Como publicar".
 name: Deploy · GitHub Pages
 
 on:
@@ -46,8 +55,39 @@ jobs:
       - name: Build estático
         run: npx vite build --base=/projetos-cidades2/
 
+      # ── Fronteira do Sul RP (pasta fronteira-sul/): os testes rodam antes de
+      # qualquer publicação. Se algo não estiver como o esperado, nada é publicado.
+      # (O que cada passo da Fronteira do Sul escreve fica também num arquivo: se
+      # o passo falhar, o último passo deste fluxo mostra o motivo no resumo da
+      # execução.)
+      - name: Fronteira do Sul · testes
+        id: fs_testes
+        run: |
+          set -o pipefail
+          node fronteira-sul/admin/testes/todos.mjs 2>&1 | tee "$RUNNER_TEMP/fronteira-sul.txt"
+
       - name: Configurar Pages
+        id: pages
         uses: actions/configure-pages@v5
+
+      # O passo acima falha enquanto o Pages não estiver ligado no repositório.
+      # O aviso dele vem em inglês; este diz o que fazer.
+      - name: O GitHub Pages está ligado?
+        if: failure() && steps.pages.conclusion == 'failure'
+        run: |
+          echo "::error title=Nada foi publicado · o GitHub Pages está ligado?::O passo Configurar Pages falhou. É o que acontece enquanto o GitHub Pages não está ligado neste repositório. Para ligar, abra Settings > Pages e, em Build and deployment > Source, escolha GitHub Actions. Numa conta gratuita do GitHub, antes disso o repositório precisa ser público (Settings > Danger Zone > Change visibility). Depois, rode este fluxo de novo em Actions > Deploy · GitHub Pages > Run workflow."
+
+      # ── Fronteira do Sul RP: entra em dist/fronteira-sul, ao lado do site acima.
+      # A pasta e o endereço vêm do próprio Pages: com um domínio próprio
+      # configurado no repositório, o site sai com os endereços dele.
+      - name: Fronteira do Sul · gravar o site
+        id: fs_gravar
+        env:
+          PASTA_DO_PAGES: ${{ steps.pages.outputs.base_path }}
+          ORIGEM_DO_PAGES: ${{ steps.pages.outputs.origin }}
+        run: |
+          set -o pipefail
+          node fronteira-sul/exportar.mjs --saida dist/fronteira-sul --pasta "$PASTA_DO_PAGES/fronteira-sul" --endereco "$ORIGEM_DO_PAGES" 2>&1 | tee "$RUNNER_TEMP/fronteira-sul.txt"
 
       - name: Enviar artefato
         uses: actions/upload-pages-artifact@v3
@@ -57,3 +97,43 @@ jobs:
       - name: Publicar
         id: deployment
         uses: actions/deploy-pages@v4
+
+      # Pede ao site no ar cada arquivo gravado e compara byte a byte. Logo depois
+      # de publicar, o Pages pode demorar a entregar os arquivos novos: a
+      # conferência tenta de novo por até 5 minutos antes de dar erro.
+      - name: Fronteira do Sul · conferir o que está no ar
+        id: fs_conferir
+        env:
+          PUBLICADO_EM: ${{ steps.deployment.outputs.page_url }}
+        run: |
+          set -o pipefail
+          SITE="${PUBLICADO_EM%/}/fronteira-sul"
+          node fronteira-sul/conferir-publicado.mjs --arquivos dist/fronteira-sul --endereco "$SITE" --tentativas 30 --espera 10 2>&1 | tee "$RUNNER_TEMP/fronteira-sul.txt"
+          echo "::notice title=Fronteira do Sul RP no ar::$SITE/"
+          {
+            echo "### Fronteira do Sul RP"
+            echo "- Convite: $SITE/"
+            echo "- Regras: $SITE/regras/"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      # Se um passo da Fronteira do Sul falhou, o que ele escreveu vai para o
+      # resumo da execução (sem as linhas "ok" e as tentativas), para não ser
+      # preciso abrir o registro do passo.
+      - name: Fronteira do Sul · o que deu errado
+        if: failure() && (steps.fs_testes.conclusion == 'failure' || steps.fs_gravar.conclusion == 'failure' || steps.fs_conferir.conclusion == 'failure')
+        env:
+          TESTES: ${{ steps.fs_testes.conclusion }}
+          GRAVACAO: ${{ steps.fs_gravar.conclusion }}
+        run: |
+          if [ "$TESTES" = failure ]; then
+            o_que='os testes falharam e nada foi publicado'
+          elif [ "$GRAVACAO" = failure ]; then
+            o_que='o site não pôde ser gravado e nada foi publicado'
+          else
+            o_que='o site foi publicado mas o que está no ar não confere'
+          fi
+          motivo="$(grep -v -E '^[[:space:]]*(ok |Tentativa |$)' "$RUNNER_TEMP/fronteira-sul.txt" | head -n 16 | cut -c 1-300)"
+          motivo="${motivo//'%'/%25}"
+          motivo="${motivo//$'\r'/}"
+          motivo="${motivo//$'\n'/%0A}"
+          echo "::error title=Fronteira do Sul RP · $o_que::$motivo"

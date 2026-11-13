@@ -1,4 +1,6 @@
 @import "tailwindcss";
+/* A pasta fronteira-sul/ e outro site (copia independente): o Tailwind nao deve ler as classes de la. */
+@source not "../fronteira-sul";
 
 /* ------------------------------------------------------------------ */
 /* Fontes self-hosted (SIL Open Font License)                         */

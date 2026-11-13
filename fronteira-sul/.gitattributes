@@ -1,0 +1,4 @@
+# Os arquivos de site/ sao uma copia exata do site original. O Git nao deve
+# converter as quebras de linha deles (no Windows ele trocaria LF por CRLF e
+# os arquivos deixariam de ser identicos ao original).
+site/** -text
