@@ -228,7 +228,6 @@ function recusa(fazer, trecho) {
     `${PASTA}/assets/index-DMP8NyHf.css`,
     `${PASTA}/__manus/pwa/manifest.webmanifest`,
     `${PASTA}/favicon.ico`,
-    `${PASTA}/api/platform/config.js`,
   ]);
   ok('dentro de uma pasta: cada endereço do próprio site começa por ela, nas páginas, no aplicativo e na lista de ícones; o resto não muda');
 
@@ -334,7 +333,7 @@ function recusa(fazer, trecho) {
   // Na pasta: os mesmos arquivos, com a pasta na frente dos endereços (e o endereço completo com a pasta).
   const { arquivos } = gravar({ dirDados: dados, pasta: PASTA });
   const raiz = { js: texto(naRaiz.arquivos, 'assets/index-FbaU4KfD.js'), index: texto(naRaiz.arquivos, 'regras/index.html'), convite: texto(naRaiz.arquivos, 'index.html'), manifesto: texto(naRaiz.arquivos, '__manus/pwa/manifest.webmanifest') };
-  const esperado = naPasta(raiz, PASTA, { semAPlataforma: true });
+  const esperado = naPasta(raiz, PASTA);
   const comAPastaNoEndereco = (html) => html.split(`${ENDERECO}/`).join(`${ENDERECO}${PASTA}/`);
   assert.equal(texto(arquivos, 'assets/index-FbaU4KfD.js'), esperado.js);
   assert.equal(texto(arquivos, 'regras/index.html'), comAPastaNoEndereco(esperado.index));
@@ -386,7 +385,7 @@ function recusa(fazer, trecho) {
   assert.equal(texto(naRaiz.arquivos, 'index.html'), SEM_COMECAR_PELO_CONVITE_NEM_ADMIN.index);
   assert.equal(texto(naRaiz.arquivos, '404.html'), SEM_COMECAR_PELO_CONVITE_NEM_ADMIN.index);
   assert.equal(texto(naRaiz.arquivos, 'assets/index-FbaU4KfD.js'), SEM_COMECAR_PELO_CONVITE_NEM_ADMIN.js);
-  assert.equal(texto(naRaiz.arquivos, 'convite/index.html'), COPIA.convite, 'o convite é o da cópia, em /convite/');
+  assert.equal(texto(naRaiz.arquivos, 'convite/index.html'), SEM_COMECAR_PELO_CONVITE_NEM_ADMIN.convite, 'o convite é o da cópia, em /convite/, fora o selo da Manus');
   assert.equal(texto(naRaiz.arquivos, 'regras/index.html'), paginaQueLeva('/'), '"/regras/" leva às regras, que estão no começo do site');
   await comOServidor(dados, (base) => igualAoServidor(base, naRaiz.arquivos));
 
