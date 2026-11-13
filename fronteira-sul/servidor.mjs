@@ -183,7 +183,15 @@ function enderecoDe(req) {
   return req.socket.remoteAddress || 'desconhecido';
 }
 
-const conteudo = criarConteudo({ raizSite: RAIZ, dirDados: DADOS, aviso: avisar });
+const conteudo = criarConteudo({
+  raizSite: RAIZ,
+  dirDados: DADOS,
+  aviso: avisar,
+  // O endereço por onde este site está sendo aberto (por exemplo, o de uma hospedagem ou o de uma
+  // tela de prévia). Sem ele, e sem "Endereço do site" no painel, os links de compartilhamento
+  // apontariam para a hospedagem original.
+  enderecoPadrao: process.env.ENDERECO_PUBLICO || '',
+});
 const acesso = await criarAcesso({
   dirDados: DADOS,
   ...(process.env.ADMIN_USUARIO ? { usuarioInicial: process.env.ADMIN_USUARIO } : {}),
@@ -422,6 +430,7 @@ servidor.listen(PORTA, HOST, () => {
   console.log(`  Convite       : http://localhost:${PORTA}${onde.convite}`);
   console.log(`  Regras        : http://localhost:${PORTA}${onde.regras}`);
   console.log(`  Painel        : http://localhost:${PORTA}/admin/`);
+  if (conteudo.enderecoDoServidor) console.log(`  Endereço      : ${conteudo.enderecoDoServidor}`);
   console.log(`  Cópia do site : ${RAIZ}`);
   console.log(`  Alterações    : ${DADOS}`);
   if (acesso.info().senhaInicial) console.log('  Atenção       : o painel ainda usa a senha inicial. Troque no painel, em "Usuário e senha".');

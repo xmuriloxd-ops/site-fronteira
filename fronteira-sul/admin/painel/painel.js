@@ -735,7 +735,9 @@ function abaCompartilhar() {
       placeholder: 'https://meusite.com.br',
       inputMode: 'url',
       spellcheck: false,
-      ajuda: `Enquanto este campo estiver vazio, os links de compartilhamento apontam para o site original (${servidor.origemOriginal.replace('https://', '')}): quem colar o link no Discord ou no WhatsApp vê o título e a imagem de lá.`,
+      ajuda: servidor.enderecoDoServidor
+        ? `Enquanto este campo estiver vazio, vale o endereço informado na publicação (${servidor.enderecoDoServidor.replace(/^https?:\/\//, '')}).`
+        : `Enquanto este campo estiver vazio, os links de compartilhamento apontam para o site original (${servidor.origemOriginal.replace('https://', '')}): quem colar o link no Discord ou no WhatsApp vê o título e a imagem de lá. Ao abrir o servidor com ENDERECO_PUBLICO, vale esse endereço.`,
     }),
   );
   return [
@@ -756,7 +758,7 @@ function abaAvancado() {
       interruptor(
         'removerManus',
         'Tirar o selo “Made with Manus” e as estatísticas da hospedagem original',
-        'O site foi copiado com o selo da Manus no canto da tela e com scripts que enviam as visitas para a Manus, o Plausible e o Amplitude. Marque para as páginas deixarem de carregar tudo isso.',
+        'Já vem ligado: as páginas não mostram o selo da Manus e não carregam os scripts que enviam as visitas para a Manus, o Plausible e o Amplitude. Desmarque para voltar ao site original, com o selo e as estatísticas.',
       ),
     ),
     h(

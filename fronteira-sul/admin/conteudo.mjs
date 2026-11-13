@@ -412,6 +412,18 @@ const ENDERECO_DO_SITE = /\s(?:href|src)="(?=\/(?!\/))/g;
 /** Um endereço dentro do site (e não um endereço completo, uma âncora, um e-mail ou um telefone). */
 const ehDoSite = (endereco) => /^\/(?!\/)/.test(endereco);
 
+/** Um começo de endereço ("https://meu-site.exemplo"), ou '' se não servir. */
+function origemValida(texto) {
+  const escrito = String(texto ?? '').trim();
+  if (!escrito) return '';
+  try {
+    const u = new URL(/^[a-z][a-z0-9+.-]*:\/\//i.test(escrito) ? escrito : `https://${escrito}`);
+    return (u.protocol === 'https:' || u.protocol === 'http:') && u.hostname.includes('.') ? u.origin : '';
+  } catch {
+    return '';
+  }
+}
+
 /**
  * Confere e arruma o pedido de publicação (ver criarConteudo): devolve
  * { pasta, endereco } ou null.
@@ -450,9 +462,17 @@ function limparPublicacao(entrada) {
  *     no lugar do "Endereço do site" do painel nos links de compartilhamento.
  *
  * Sem `publicacao`, nada disso se aplica.
+ *
+ * `enderecoPadrao` é o endereço de quem está servindo o site agora
+ * (ENDERECO_PUBLICO, no servidor). Ele vale nos links de compartilhamento
+ * quando nem a publicação nem o painel disseram onde o site está: assim o
+ * site aberto numa hospedagem não aponta para o endereço da hospedagem
+ * original. Vazio, nada muda.
  */
-export function criarConteudo({ raizSite, dirDados, aviso = () => {}, publicacao = null }) {
+export function criarConteudo({ raizSite, dirDados, aviso = () => {}, publicacao = null, enderecoPadrao = '' }) {
   const pedido = limparPublicacao(publicacao);
+  /** O endereço de quem serve o site agora, quando ninguém mais disse qual é. */
+  const enderecoDoServidor = origemValida(enderecoPadrao);
   /** A pasta do endereço em que o site fica; vazia na raiz (e sempre no servidor). */
   const PASTA = pedido?.pasta || '';
   /** Um endereço do site, com a pasta na frente. */
@@ -892,7 +912,7 @@ export function criarConteudo({ raizSite, dirDados, aviso = () => {}, publicacao
    * o "Endereço do site" do painel, mais a pasta. Vazio quando ninguém disse qual é.
    */
   function enderecoDeFora() {
-    const origem = pedido?.endereco || estado.opcoes.enderecoPublico;
+    const origem = pedido?.endereco || estado.opcoes.enderecoPublico || enderecoDoServidor;
     return origem ? origem + PASTA : '';
   }
 
@@ -1278,6 +1298,8 @@ export function criarConteudo({ raizSite, dirDados, aviso = () => {}, publicacao
         };
       }),
       origemOriginal: ORIGEM_ORIGINAL,
+      // O endereço informado a quem serve o site (ENDERECO_PUBLICO), quando o painel não tem um.
+      enderecoDoServidor,
       historico: listarHistorico(),
       problemas: [...o.problemas],
     };
@@ -1297,6 +1319,10 @@ export function criarConteudo({ raizSite, dirDados, aviso = () => {}, publicacao
     restaurarDoHistorico,
     get versao() {
       return estado.versao;
+    },
+    /** O endereço informado a quem serve o site (ENDERECO_PUBLICO), ou ''. */
+    get enderecoDoServidor() {
+      return enderecoDoServidor;
     },
     get problemas() {
       return lerOriginal().problemas;

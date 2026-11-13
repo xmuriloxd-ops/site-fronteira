@@ -517,7 +517,7 @@ try {
   for (const caminho of ['/', '/index.html', '/uma-rota-qualquer']) assert.equal(await pagina(caminho), SEM_COMECAR_PELO_CONVITE.index, caminho);
   assert.equal(await pagina(`/${ARQUIVOS.js}`), SEM_COMECAR_PELO_CONVITE.js);
   for (const caminho of ['/convite', '/convite/', '/convite/index.html']) {
-    assert.ok((await baixar(caminho)).corpo.equals(doSite('convite/index.html')), `${caminho}: a página do convite, byte a byte como a cópia`);
+    assert.equal(await pagina(caminho), SEM_COMECAR_PELO_CONVITE.convite, `${caminho}: a página do convite, byte a byte como a cópia, fora o selo da Manus`);
     assert.equal((await semSeguir(caminho))[0], 200, caminho);
   }
   // "/regras/" continua valendo (um link para as regras serve nos dois casos): leva para "/".

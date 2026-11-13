@@ -180,6 +180,27 @@ export const comAImagemTrocada = (texto, endereco, bytes) => texto.split(`"${end
 export const esconderLinha = (n) => `.author-details > .contact-row:nth-child(${n}){display:none!important}`;
 
 /**
+ * O que este projeto tira das páginas já na instalação nova (a opção "Tirar o
+ * selo da Manus" vem ligada): o que a hospedagem original põe no fim do
+ * <body> (selo "Made with Manus" e estatísticas, dentro de
+ * <manus-content-root>) e o <script> da plataforma original, que só responde
+ * erro. É montado aqui com trocas simples de texto, sem passar pelo
+ * conteudo.mjs.
+ */
+export function semSeloDaManus(html) {
+  if (!html) return html;
+  const plataforma = '<script src="/api/platform/config.js"></script>';
+  const p = html.indexOf(plataforma);
+  if (p >= 0 && (html.indexOf('<manus-content-root>') < 0 || p + plataforma.length <= html.indexOf('<manus-content-root>'))) {
+    html = html.slice(0, p) + html.slice(p + plataforma.length);
+  }
+  const inicio = html.indexOf('<manus-content-root>');
+  const fim = html.indexOf('</body>');
+  if (inicio >= 0 && fim > inicio) html = html.slice(0, inicio) + html.slice(fim);
+  return html;
+}
+
+/**
  * O que o site entrega sem nada salvo pelo painel: a cópia mais o que este
  * projeto mudou nela.
  *
@@ -199,8 +220,9 @@ export const esconderLinha = (n) => `.author-details > .contact-row:nth-child(${
  * `comecaPeloConvite: false` é a opção "Começar o site pelo convite"
  * desligada: as páginas ficam onde estavam no site original. O aplicativo
  * volta a ter a raiz e o botão da cópia, não há link de volta, e a página do
- * convite é a da cópia, sem tirar nem pôr (null). A aba Admin e os créditos
- * continuam. `textoDoLink` é o texto do link de volta; vazio, ele não entra.
+ * convite é a da cópia, fora o selo da Manus, que este projeto tira de toda
+ * instalação. A aba Admin e os créditos continuam. `textoDoLink` é o texto do
+ * link de volta; vazio, ele não entra.
  * `entradaDoAdmin: false` é a opção "Mostrar “Admin” para os visitantes"
  * desligada: nem a aba na página de regras, nem a etiqueta no convite.
  */
@@ -219,13 +241,13 @@ function oQueOSiteEntrega({ comecaPeloConvite = true, textoDoLink = 'Voltar ao c
   js = trocarOUnico(js, /href:"tel:[^"]*",children:"[^"]*"/, () => 'href:"tel:",children:""');
   js = trocarOUnico(js, /href:"mailto:[^"]*",children:"[^"]*"/, () => 'href:"mailto:",children:""');
   const noHead = `${link ? `${ESTILO_DO_LINK_DE_VOLTA}\n` : ''}<style id="ajustes-do-admin">\n${esconderLinha(3)}\n${esconderLinha(4)}\n</style>`;
-  const index = pedindoOAplicativo(trocarOUnico(COPIA.index, /<\/head>/, (achado) => noHead + achado), js);
-  if (!comecaPeloConvite) return { js, index, convite: null };
+  const index = semSeloDaManus(pedindoOAplicativo(trocarOUnico(COPIA.index, /<\/head>/, (achado) => noHead + achado), js));
+  if (!comecaPeloConvite) return { js, index, convite: semSeloDaManus(COPIA.convite) };
   let convite = trocarOUnico(COPIA.convite, /<a class="button" href="\/">/, () => '<a class="button" href="/regras/">');
   convite = trocarOUnico(convite, /<img class="poster"/, (achado) => achado + CLIQUE_NA_IMAGEM);
   if (entradaDoAdmin) convite = trocarOUnico(convite, /<\/main>/, (achado) => achado + LINK_DO_ADMIN);
   convite = trocarOUnico(convite, /<\/head>/, (achado) => CABECA_DO_INICIO + (entradaDoAdmin ? `\n${ESTILO_DO_LINK_DO_ADMIN}` : '') + achado);
-  return { js, index, convite };
+  return { js, index, convite: semSeloDaManus(convite) };
 }
 
 /** Uma instalação nova. */
@@ -290,10 +312,10 @@ function trocarTodas(texto, antes, depois, vezes) {
  *   - nas duas: onde fica o ícone da aba, que na raiz o navegador acha
  *     sozinho.
  *
- * `comecaPeloConvite: false` é a opção desligada: `esperado.convite` vem null
- * (a página é a da cópia) e as regras ficam no começo da pasta.
+ * `comecaPeloConvite: false` é a opção desligada: `esperado.convite` vem a
+ * página da cópia, fora o selo da Manus, e as regras ficam no começo da pasta.
  */
-export function naPasta(esperado, pasta, { comecaPeloConvite = true, semAPlataforma = false } = {}) {
+export function naPasta(esperado, pasta, { comecaPeloConvite = true } = {}) {
   // (a pasta dentro de uma expressão regular: as barras e os pontos levam uma barra invertida na frente)
   const emExpressao = pasta.replace(/[/.]/g, (c) => `\\${c}`);
   let js = esperado.js;
@@ -316,7 +338,6 @@ export function naPasta(esperado, pasta, { comecaPeloConvite = true, semAPlatafo
   let index = esperado.index;
   index = trocarOUnico(index, /(<script type="module" crossorigin src=")(\/assets\/index-FbaU4KfD\.js)(?:\?v=[A-Za-z0-9_-]{10})?(">)/, (_, antes, endereco, depois) => `${antes}${pasta}${endereco}?v=${versaoDe(js)}${depois}`);
   index = trocarTodas(index, '<link rel="stylesheet" crossorigin href="/assets/index-DMP8NyHf.css">', `<link rel="stylesheet" crossorigin href="${pasta}/assets/index-DMP8NyHf.css">`, 1);
-  index = trocarTodas(index, '<script src="/api/platform/config.js"></script>', `<script src="${pasta}/api/platform/config.js"></script>`, semAPlataforma ? 0 : 1);
   index = comOIcone(index);
 
   let convite = esperado.convite ?? COPIA.convite;

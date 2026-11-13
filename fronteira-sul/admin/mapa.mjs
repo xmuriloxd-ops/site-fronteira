@@ -419,9 +419,17 @@ export const OPCOES_PADRAO = {
   mostrarCreditos: true,
   /** Mostra o destaque no começo do regulamento. */
   mostrarDestaque: true,
-  /** Tira das páginas o selo e as estatísticas da hospedagem original (Manus). */
-  removerManus: false,
-  /** Endereço público deste site; vazio mantém o endereço do site original nos links de compartilhamento. */
+  /**
+   * Tira das páginas o selo e as estatísticas da hospedagem original (Manus).
+   * Vem ligada: o site que este projeto entrega não mostra o nome da Manus nem
+   * manda visitas para os serviços dela. Desligada, as páginas voltam a ser as
+   * da cópia, com o selo "Made with Manus" e os scripts de estatística.
+   */
+  removerManus: true,
+  /**
+   * Endereço público deste site. Vazio, valem o endereço da publicação (--endereco) ou o de quem
+   * serve o site (ENDERECO_PUBLICO); sem nenhum deles, os links de compartilhamento ficam como na cópia.
+   */
   enderecoPublico: '',
   /** CSS acrescentado às duas páginas. */
   cssExtra: '',

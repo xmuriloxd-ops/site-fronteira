@@ -15,14 +15,14 @@ Ele parte de uma cópia exata do site publicado em <https://fronteirasul-fmudazp
 | Camada | Onde fica | O que é |
 |---|---|---|
 | 1. A cópia | `site/` | Os arquivos do site original, sem nenhuma alteração: mesmos bytes, mesmos caminhos. |
-| 2. O que este projeto mudou | `admin/mapa.mjs` e `admin/convite-no-inicio.mjs` | O site começar pelo convite, os créditos e a entrada do painel ("Admin") nas duas páginas. Vale em toda instalação. |
+| 2. O que este projeto mudou | `admin/mapa.mjs` e `admin/convite-no-inicio.mjs` | O site começar pelo convite, os créditos, a entrada do painel ("Admin") nas duas páginas e a retirada do selo e das estatísticas da hospedagem original. Vale em toda instalação. |
 | 3. O que o administrador muda | `dados/` | Tudo o que é salvo pelo painel. |
 
 Esta pasta é independente do outro site que está no restante do repositório. Um não usa nada do outro. Os dois saem juntos na publicação do GitHub Pages, cada um no seu endereço (ver "Como publicar").
 
 ## O que mudou em relação ao site original
 
-Numa instalação nova, sem nada salvo pelo painel, o site difere do original em três pontos:
+Numa instalação nova, sem nada salvo pelo painel, o site difere do original em quatro pontos:
 
 1. **O site começa pelo convite.** No original, o endereço principal (`/`) era a página de regras e o convite ficava em `/convite/`. Aqui, quem entra no site vê só o convite: a imagem, o texto ("CONVITE OFICIAL", "Uma nova história começa aqui.", "Conheça a cidade, confira as regras oficiais e prepare-se para o roleplay.") e o botão "Consultar regras oficiais". As regras ficam em outra página, `/regras/`, e é por esse botão que se chega a elas.
    - Clicar na imagem faz o mesmo que o botão.
@@ -36,10 +36,11 @@ Numa instalação nova, sem nada salvo pelo painel, o site difere do original em
 3. **Entrada do painel ("Admin") nas duas páginas.** No convite, uma etiqueta pequena no canto de cima da tela, à direita. Na página de regras, uma aba no fim da linha das abas. As duas levam a `/admin/`.
    - A etiqueta fica na margem que a página deixa acima do convite. Ela não muda o convite de lugar nem fica por cima da imagem, do texto ou do botão.
    - Para tirar as duas: painel > Página de regras > Abas > "Mostrar “Admin” para os visitantes". O painel continua abrindo pelo endereço `/admin/`.
+4. **Sem o selo nem as estatísticas da Manus.** O original mostrava o selo "Made with Manus" no canto da tela, carregava scripts que enviavam as visitas para a Manus, o Plausible e o Amplitude e pedia `/api/platform/config.js`. Numa instalação nova nada disso aparece, nada disso é carregado e o endereço não é pedido. Para voltar ao original: painel > Avançado > desmarcar "Tirar o selo “Made with Manus” e as estatísticas da hospedagem original".
 
 Há ainda uma diferença que não aparece na tela: a página de regras pede o aplicativo dela com a versão no endereço (`/assets/index-FbaU4KfD.js?v=...`). O motivo está em "Quando há um intermediário no caminho".
 
-No painel, "original" quer dizer esse estado, e não a cópia: "Voltar ao original" e "Restaurar o site original" voltam para o site começando pelo convite e para os créditos acima.
+No painel, "original" quer dizer esse estado, e não a cópia: "Voltar ao original" e "Restaurar o site original" voltam para o site começando pelo convite, sem o selo da Manus e com os créditos acima.
 
 ## Como abrir
 
@@ -56,6 +57,14 @@ Depois abra no navegador:
 - Área do administrador: <http://localhost:4173/admin/>
 
 Para usar outra porta: `PORT=8080 node fronteira-sul/servidor.mjs`.
+
+Se o site estiver aberto por um endereço público (uma hospedagem, uma tela de prévia), informe-o para os links de compartilhamento apontarem para lá, e não para o site original:
+
+```bash
+ENDERECO_PUBLICO=https://meu-site.exemplo node fronteira-sul/servidor.mjs
+```
+
+O mesmo endereço pode ser preenchido no painel, em "Compartilhamento", e vale mais que o da linha de comando. Na publicação do GitHub Pages ele é o do próprio Pages, sem precisar configurar nada.
 
 Não abra os `.html` com dois cliques. As páginas pedem os arquivos por caminhos que começam em `/` (`/assets/...`, `/fronteira-sul-convite-preview.jpg`), então só funcionam quando são entregues pelo `servidor.mjs`.
 
@@ -84,7 +93,7 @@ Se esquecer a senha: apague o arquivo `dados/acesso.json` e reinicie o servidor.
 | Convite | Textos do convite, o botão e para onde ele leva. Também liga e desliga a opção de o site começar pelo convite. |
 | Imagens | Imagem do convite, logo e ícone da aba do navegador (PNG, JPG, WebP ou GIF, até 8 MB). |
 | Compartilhamento | Título e descrição que aparecem na aba do navegador e na prévia do link no Discord e no WhatsApp, e o endereço onde o site está publicado. |
-| Avançado | Tirar o selo "Made with Manus" e os scripts de estatística; CSS extra para mudar cores e tamanhos. |
+| Avançado | O selo "Made with Manus" e as estatísticas da hospedagem original: já vêm tirados, e a opção os traz de volta; CSS extra para mudar cores e tamanhos. |
 | Histórico | Voltar para uma das 15 últimas versões salvas, ou desfazer tudo o que foi feito pelo painel ("Restaurar o site original"). |
 | Usuário e senha | Trocar o usuário e a senha do painel. |
 
@@ -93,7 +102,7 @@ Como funciona:
 - Textos e regras só entram no ar ao clicar em **Salvar e publicar**. Cada campo alterado fica marcado e tem um link "Voltar ao original".
 - Imagens entram no ar assim que o envio termina. O convite se ajusta ao formato da imagem enviada (quadrada ou em pé, por exemplo); o ideal continua sendo 1200 × 675. A mesma imagem aparece na prévia quando o link é colado no Discord ou no WhatsApp.
 - Quem está com o site aberto vê a mudança ao recarregar a página.
-- "Restaurar o site original" desfaz tudo o que foi feito pelo painel, menos o usuário e a senha. O site volta a ser o de uma instalação nova: começando pelo convite e com os créditos descritos em "O que mudou em relação ao site original".
+- "Restaurar o site original" desfaz tudo o que foi feito pelo painel, menos o usuário e a senha. O site volta a ser o de uma instalação nova: começando pelo convite, sem o selo da Manus e com os créditos descritos em "O que mudou em relação ao site original".
 - Os links "Ver regras" e "Ver convite", no topo do painel, abrem cada página no endereço em que ela está no momento.
 
 O painel não muda a estrutura das páginas (a ordem dos blocos, por exemplo). Para isso é preciso editar os arquivos; veja "Como editar os arquivos à mão".
@@ -184,11 +193,15 @@ Três cuidados:
 
 ## O que ainda aponta para o site original
 
-A cópia traz junto o que a hospedagem original (Manus) colocava nas páginas. Os dois primeiros itens se resolvem pelo painel:
+Só os endereços das páginas. O selo "Made with Manus", os scripts de estatística (Manus, Plausible e Amplitude) e o pedido a `/api/platform/config.js` já vêm tirados numa instalação nova; painel > Avançado desfaz isso.
 
-- O selo "Made with Manus" no canto da tela e os scripts de estatística (Manus, Plausible e Amplitude). Com internet, as visitas feitas à cópia são enviadas para esses serviços. Para tirar: painel > Avançado.
-- Os endereços oficiais das páginas (`canonical`, `og:url`, `og:image`, `twitter:image`), o `robots.txt` e o `sitemap.xml` apontam para `fronteirasul-fmudazpm.manus.space`. Ao colar o link da cópia, a imagem de prévia ainda vem do site original. Para trocar: painel > Compartilhamento > "Endereço onde este site está publicado". Com esse endereço preenchido, o convite é anunciado em `/` e as regras em `/regras/`, e o `sitemap.xml` lista as duas páginas. Na publicação do GitHub Pages isso é feito sozinho: o endereço é o do próprio Pages.
-- A página de regras pede `/api/platform/config.js`. No site original esse endereço responde com erro 500; a cópia responde com o mesmo erro e a página funciona do mesmo jeito. Ao tirar o selo da Manus pelo painel, esse pedido também sai.
+Os endereços oficiais das páginas (`canonical`, `og:url`, `og:image`, `twitter:image`), o `robots.txt` e o `sitemap.xml` apontam para `fronteirasul-fmudazpm.manus.space` enquanto ninguém disser onde o site está. Para trocar, use um destes (o de cima vale mais que o de baixo):
+
+1. `--endereco` na publicação em arquivos, que o fluxo do GitHub Pages preenche sozinho com o endereço do Pages;
+2. painel > Compartilhamento > "Endereço onde este site está publicado";
+3. `ENDERECO_PUBLICO=https://meu-site.exemplo` ao abrir o servidor.
+
+Com o endereço, o convite é anunciado em `/`, as regras em `/regras/`, o `sitemap.xml` lista as duas páginas e a imagem de prévia vem do próprio site.
 
 ## Como publicar
 
@@ -417,12 +430,11 @@ Os testes automáticos da publicação estão em `admin/testes/exportacao.mjs` e
 - O `conferir-publicado.mjs` aponta um arquivo com conteúdo diferente (mesmo que do mesmo tamanho) e um arquivo que falta, e tenta de novo enquanto a hospedagem ainda entrega a publicação anterior.
 - Ele recusa, antes de pedir qualquer coisa, arquivos gravados para outra pasta do endereço: mais rasa, mais funda, de nome parecido ou nenhuma. Nesse caso todos os arquivos estariam no ar, iguais aos gravados, e as páginas não os achariam.
 
-Em 12/11/2026 o site gravado para a pasta `/projetos-cidades2/fronteira-sul` foi aberto no Chromium 153 atrás de um servidor de teste que responde como o GitHub Pages de um repositório: o site dentro da pasta do repositório, pasta sem a barra do fim redirecionada, `nome` respondendo por `nome.html`, página "não encontrada" própria, maiúsculas diferentes de minúsculas. Em três situações (instalação nova; "Começar o site pelo convite" desligado; textos, a imagem do convite e o logo trocados pelo painel, com o selo da Manus retirado), em tela de computador (1440×900) e de celular (390×844):
+Em 12/11/2026 o site gravado para a pasta `/projetos-cidades2/fronteira-sul` foi aberto no Chromium 153 atrás de um servidor de teste que responde como o GitHub Pages de um repositório: o site dentro da pasta do repositório, pasta sem a barra do fim redirecionada, `nome` respondendo por `nome.html`, página "não encontrada" própria, maiúsculas diferentes de minúsculas. Em três situações (instalação nova; "Começar o site pelo convite" desligado; textos, a imagem do convite e o logo trocados pelo painel), em tela de computador (1440×900) e de celular (390×844):
 
 - O convite e a página de regras mostram o mesmo texto que no servidor aberto na raiz, e os elementos medidos (a imagem, o cartão, os textos e o botão do convite; a barra do topo, as abas, o título e a busca das regras) têm a mesma posição e o mesmo tamanho.
 - Funcionam dentro da pasta: o botão, o clique na imagem, o link "Voltar ao convite", as abas das regras, `/regras` sem a barra, o endereço antigo `/convite/` (mantendo o que vem depois do `?`) e a tela "não encontrada" em `/404`, com o botão voltando ao começo.
-- Tudo o que as páginas pedem ao próprio site fica dentro da pasta. O único pedido que volta com erro é `/api/platform/config.js`, o endereço da plataforma original, que no site original também só responde erro.
-- Com o selo e as estatísticas da Manus retirados pelo painel, as páginas não fazem nenhum pedido a outro site e nada aparece no console. Sem retirar, elas pedem scripts a `files.manuscdn.com`, `plausible.io` e `manus-analytics.com`, como o site original.
+- Tudo o que as páginas pedem ao próprio site fica dentro da pasta, e nada é pedido a outro site: o `/api/platform/config.js` e os scripts da hospedagem original já vêm tirados. Nada aparece no console. (Com a opção do painel desmarcada, voltam os scripts de `files.manuscdn.com`, `plausible.io` e `manus-analytics.com`, como no site original.)
 
 O outro site do repositório, montado com o mesmo comando que o fluxo do Pages usa, sai byte a byte igual com e sem esta pasta no repositório. Com os dois no mesmo conjunto de arquivos que o fluxo monta, cada um abre no seu endereço, um depois do outro, e o outro site não pede nada desta pasta.
 

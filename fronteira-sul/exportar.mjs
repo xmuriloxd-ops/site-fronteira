@@ -24,7 +24,8 @@
  *   --saida     onde gravar. Precisa não existir ou estar vazia.
  *   --pasta     a pasta do endereço em que o site vai ficar, sem a barra do
  *               fim. Sem ela, o site fica na raiz do endereço.
- *   --endereco  o começo do endereço em que o site vai ficar (sem a pasta).
+ *   --endereco  o começo do endereço em que o site vai ficar (sem a pasta). Sem ele,
+ *               vale ENDERECO_PUBLICO, se estiver definido.
  *               Vale nos links de compartilhamento (a prévia que o Discord e o
  *               WhatsApp mostram) no lugar do "Endereço do site" do painel.
  *
@@ -110,6 +111,8 @@ function conferirDados(dirDados) {
  */
 export function exportar({ saida, pasta = '', endereco = '', raizSite = path.join(AQUI, 'site'), dirDados = path.join(AQUI, 'dados') } = {}) {
   if (!saida) throw new ErroDeExportacao('Diga onde gravar: --saida PASTA_DE_SAIDA');
+  // Sem --endereco, vale o endereço informado no ambiente (o mesmo que o servidor usa).
+  if (!endereco) endereco = process.env.ENDERECO_PUBLICO || '';
   saida = path.resolve(saida);
   raizSite = path.resolve(raizSite);
   dirDados = path.resolve(dirDados);
