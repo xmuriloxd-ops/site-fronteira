@@ -1,11 +1,11 @@
 /**
- * Servidor do Sistema de Registro de Prisões — Polícia Civil RP do Paraná.
+ * Servidor do Canal de Denúncias — Corregedoria-Geral da Polícia Militar do Paraná (RP).
  *
  * - Em desenvolvimento: sobe o middleware do Vite (hot reload).
  * - Em produção: serve o build de `dist/`.
- * - Guarda os registros, a config do Discord e o histórico num JSON local
- *   (`dados-pcpr-rp.json`, fora do Git). Se o servidor estiver indisponível,
- *   o navegador continua funcionando com localStorage.
+ * - Guarda as denúncias, a config do Discord e o histórico num JSON local
+ *   (`dados-corregedoria-pmpr.json`, fora do Git). Se o servidor estiver
+ *   indisponível, o navegador continua funcionando com localStorage.
  * - `/api/discord/proxy` é um fallback de entrega: alguns navegadores/rede
  *   bloqueiam a chamada direta ao Discord, então o envio também pode sair
  *   do servidor (que tem rede liberada num deploy normal).
@@ -17,13 +17,13 @@ import fs from 'fs';
 import { timingSafeEqual } from 'node:crypto';
 import type {
   ConfigDiscord,
+  Denuncia,
   EnvioDiscord,
   EstadoApp,
-  Mandado,
   OperacaoSync,
-  Prisao,
+  SituacaoDenuncia,
 } from './src/types';
-import { CONFIG_DISCORD_PADRAO, CONFIG_MANDADOS_PADRAO } from './src/types';
+import { CONFIG_DISCORD_PADRAO, SITUACOES_DENUNCIA } from './src/types';
 
 const PORT = Number(process.env.PORT) || 3000;
 const DATA_DIR = process.env.PC_DATA_DIR || process.cwd();
@@ -32,7 +32,7 @@ try {
 } catch {
   /* sem permissão de escrita: usa a raiz do projeto */
 }
-const DATA_FILE = path.join(DATA_DIR, 'dados-pcpr-rp.json');
+const DATA_FILE = path.join(DATA_DIR, 'dados-corregedoria-pmpr.json');
 
 /* ------------------------------------------------------------------ */
 /* Proteção opcional para produção                                     */
@@ -41,7 +41,7 @@ const DATA_FILE = path.join(DATA_DIR, 'dados-pcpr-rp.json');
 // Defina PC_SENHA (e opcionalmente PC_USUARIO) antes de publicar. Sem ela o
 // sistema segue aberto, como em desenvolvimento. /api/health fica público
 // para os healthchecks de Docker/plataformas.
-const USUARIO_ACESSO = process.env.PC_USUARIO || 'pcpr';
+const USUARIO_ACESSO = process.env.PC_USUARIO || 'corregedoria';
 const SENHA_ACESSO = process.env.PC_SENHA || '';
 
 /** Basic Auth com comparação em tempo constante. */
@@ -80,10 +80,8 @@ function dentroDoLimite(chave: string, limite: number, janelaMs: number): boolea
 
 function estadoVazio(): EstadoApp {
   return {
-    prisoes: [],
-    mandados: [],
+    denuncias: [],
     discord: { ...CONFIG_DISCORD_PADRAO },
-    discordMandados: { ...CONFIG_MANDADOS_PADRAO },
     envios: [],
   };
 }
@@ -93,105 +91,65 @@ function textoSeguro(valor: unknown, limite = 4000): string {
 }
 
 /** Normaliza o que vem do cliente para nunca gravar lixo no JSON. */
-function normalizarPrisao(bruto: unknown): Prisao | null {
+function normalizarDenuncia(bruto: unknown): Denuncia | null {
   if (!bruto || typeof bruto !== 'object') return null;
-  const p = bruto as Record<string, unknown>;
-  if (!textoSeguro(p.id)) return null;
+  const d = bruto as Record<string, unknown>;
+  if (!textoSeguro(d.id)) return null;
 
-  const fotos = Array.isArray(p.fotos)
-    ? p.fotos
+  const fotos = Array.isArray(d.fotos)
+    ? d.fotos
         .filter((f): f is string => typeof f === 'string' && /^data:image\//.test(f))
         .slice(0, 4)
         .map((f) => f.slice(0, 2_500_000))
     : [];
 
-  const assinaturaBruta = textoSeguro(p.assinatura, 1_500_000);
-  const assinatura = /^data:image\/png;base64,/.test(assinaturaBruta) ? assinaturaBruta : undefined;
-
   const criadoEm =
-    typeof p.criadoEm === 'string' && !Number.isNaN(Date.parse(p.criadoEm))
-      ? new Date(p.criadoEm).toISOString()
+    typeof d.criadoEm === 'string' && !Number.isNaN(Date.parse(d.criadoEm))
+      ? new Date(d.criadoEm).toISOString()
       : new Date().toISOString();
 
+  const situacao: SituacaoDenuncia =
+    typeof d.situacao === 'string' && d.situacao in SITUACOES_DENUNCIA
+      ? (d.situacao as SituacaoDenuncia)
+      : 'aberta';
+
   return {
-    id: textoSeguro(p.id, 80),
-    numero: textoSeguro(p.numero, 60),
+    id: textoSeguro(d.id, 80),
+    numero: textoSeguro(d.numero, 60),
+    categoria: textoSeguro(d.categoria, 200),
+    relato: textoSeguro(d.relato),
+    local: textoSeguro(d.local, 300),
+    dataFatos: textoSeguro(d.dataFatos, 40),
+    denunciadoNome: textoSeguro(d.denunciadoNome, 200),
+    denunciadoPosto: textoSeguro(d.denunciadoPosto, 100),
+    denunciadoUnidade: textoSeguro(d.denunciadoUnidade, 200),
+    anonima: d.anonima === true,
+    denuncianteNome: textoSeguro(d.denuncianteNome, 200),
+    denuncianteContato: textoSeguro(d.denuncianteContato, 200),
     fotos,
-    nome: textoSeguro(p.nome, 200),
-    idRp: textoSeguro(p.idRp, 100),
-    artigos: textoSeguro(p.artigos),
-    tempoPrisao: textoSeguro(p.tempoPrisao, 200),
-    itensApreendidos: textoSeguro(p.itensApreendidos),
-    agente: textoSeguro(p.agente, 200),
-    unidade: textoSeguro(p.unidade, 200),
-    escrivao: textoSeguro(p.escrivao, 200),
-    local: textoSeguro(p.local, 300),
-    observacoes: textoSeguro(p.observacoes, 2000),
-    assinatura,
+    situacao,
+    parecer: textoSeguro(d.parecer),
     criadoEm,
-    discordEnviadoEm: textoSeguro(p.discordEnviadoEm, 40) || undefined,
-    discordErro: textoSeguro(p.discordErro, 500) || undefined,
+    atualizadoEm:
+      typeof d.atualizadoEm === 'string' && !Number.isNaN(Date.parse(d.atualizadoEm))
+        ? new Date(d.atualizadoEm).toISOString()
+        : undefined,
+    discordEnviadoEm: textoSeguro(d.discordEnviadoEm, 40) || undefined,
+    discordErro: textoSeguro(d.discordErro, 500) || undefined,
   };
 }
 
-function normalizarMandado(bruto: unknown): Mandado | null {
-  if (!bruto || typeof bruto !== 'object') return null;
-  const m = bruto as Record<string, unknown>;
-  if (!textoSeguro(m.id)) return null;
-
-  const fotos = Array.isArray(m.fotos)
-    ? m.fotos
-        .filter((f): f is string => typeof f === 'string' && /^data:image\//.test(f))
-        .slice(0, 4)
-        .map((f) => f.slice(0, 2_500_000))
-    : [];
-  const assinaturaBruta = textoSeguro(m.assinatura, 1_500_000);
-  const assinatura = /^data:image\/png;base64,/.test(assinaturaBruta) ? assinaturaBruta : undefined;
-  const criadoEm =
-    typeof m.criadoEm === 'string' && !Number.isNaN(Date.parse(m.criadoEm))
-      ? new Date(m.criadoEm).toISOString()
-      : new Date().toISOString();
-  const status: Mandado['status'] =
-    m.status === 'cumprido' || m.status === 'revogado' ? m.status : 'pendente';
-
-  return {
-    id: textoSeguro(m.id, 80),
-    numero: textoSeguro(m.numero, 60),
-    fotos,
-    nome: textoSeguro(m.nome, 200),
-    idRp: textoSeguro(m.idRp, 100),
-    artigos: textoSeguro(m.artigos),
-    fundamento: textoSeguro(m.fundamento),
-    processo: textoSeguro(m.processo, 200),
-    autoridade: textoSeguro(m.autoridade, 200),
-    origem: textoSeguro(m.origem, 300),
-    unidade: textoSeguro(m.unidade, 200),
-    agente: textoSeguro(m.agente, 200),
-    validade: textoSeguro(m.validade, 200),
-    status,
-    observacoes: textoSeguro(m.observacoes, 2000),
-    assinatura,
-    criadoEm,
-    cumpridoEm: textoSeguro(m.cumpridoEm, 40) || undefined,
-    discordEnviadoEm: textoSeguro(m.discordEnviadoEm, 40) || undefined,
-    discordErro: textoSeguro(m.discordErro, 500) || undefined,
-  };
-}
-
-function normalizarConfig(
-  bruto: unknown,
-  padrao: ConfigDiscord = CONFIG_DISCORD_PADRAO,
-): ConfigDiscord {
+function normalizarConfig(bruto: unknown): ConfigDiscord {
   const c = (bruto && typeof bruto === 'object' ? bruto : {}) as Record<string, unknown>;
   return {
     webhook: textoSeguro(c.webhook, 500),
-    canal: textoSeguro(c.canal, 100) || padrao.canal,
+    canal: textoSeguro(c.canal, 100) || CONFIG_DISCORD_PADRAO.canal,
     autoEnviar: c.autoEnviar === true,
     mencionarHere: c.mencionarHere === true,
     cargoId: textoSeguro(c.cargoId, 40),
-    nomeBot: textoSeguro(c.nomeBot, 80) || padrao.nomeBot,
+    nomeBot: textoSeguro(c.nomeBot, 80) || CONFIG_DISCORD_PADRAO.nomeBot,
     formatoEnvio:
-      c.formatoEnvio === 'texto' || c.formatoEnvio === 'ambos' ? c.formatoEnvio : 'cartaz',
+      c.formatoEnvio === 'texto' || c.formatoEnvio === 'fotos' ? c.formatoEnvio : 'ambos',
   };
 }
 
@@ -199,27 +157,20 @@ function normalizarEstado(bruto: unknown): EstadoApp {
   const estado = estadoVazio();
   if (!bruto || typeof bruto !== 'object') return estado;
   const e = bruto as Record<string, unknown>;
-  if (Array.isArray(e.prisoes)) {
-    estado.prisoes = e.prisoes
-      .map(normalizarPrisao)
-      .filter((p): p is Prisao => p !== null)
-      .slice(0, 5000);
-  }
-  if (Array.isArray(e.mandados)) {
-    estado.mandados = e.mandados
-      .map(normalizarMandado)
-      .filter((m): m is Mandado => m !== null)
+  if (Array.isArray(e.denuncias)) {
+    estado.denuncias = e.denuncias
+      .map(normalizarDenuncia)
+      .filter((d): d is Denuncia => d !== null)
       .slice(0, 5000);
   }
   estado.discord = normalizarConfig(e.discord);
-  estado.discordMandados = normalizarConfig(e.discordMandados, CONFIG_MANDADOS_PADRAO);
   if (Array.isArray(e.envios)) {
     estado.envios = e.envios
       .filter((x): x is Record<string, unknown> => Boolean(x) && typeof x === 'object')
       .slice(0, 150)
       .map((x) => ({
         id: textoSeguro(x.id, 80),
-        prisaoId: textoSeguro(x.prisaoId, 80) || undefined,
+        denunciaId: textoSeguro(x.denunciaId, 80) || undefined,
         titulo: textoSeguro(x.titulo, 200),
         status: x.status === 'sucesso' ? ('sucesso' as const) : ('erro' as const),
         detalhe: textoSeguro(x.detalhe, 600),
@@ -321,13 +272,13 @@ async function startServer() {
     next();
   });
 
-  // Basic Auth opcional, recomendado em produção: protege os registros e,
+  // Basic Auth opcional, recomendado em produção: protege as denúncias e,
   // principalmente, a URL do webhook que vai para o navegador via /api/estado.
   if (SENHA_ACESSO) {
     app.use((req, res, next) => {
       if (req.path === '/api/health') return next();
       if (credenciaisValidas(req.headers.authorization)) return next();
-      res.set('WWW-Authenticate', 'Basic realm="PCPR RP", charset="UTF-8"');
+      res.set('WWW-Authenticate', 'Basic realm="Corregedoria PMPR", charset="UTF-8"');
       res.status(401).type('text/plain; charset=utf-8').send(
         'Acesso restrito. Informe o usuário e a senha do sistema.',
       );
@@ -337,7 +288,7 @@ async function startServer() {
   // Fotos vão em base64 no JSON: 15 MB dá folga para várias imagens.
   app.use(express.json({ limit: '15mb' }));
 
-  // Assets de identidade visual nunca entram em cache: trocar o logo deve
+  // Assets de identidade visual nunca entram em cache: trocar o brasão deve
   // aparecer no primeiro recarregamento, sem depender de Ctrl+F5.
   app.use((req, res, next) => {
     if (req.path === '/manifest.json' || /\.(png|jpe?g|webp|svg|ico)$/i.test(req.path)) {
@@ -350,9 +301,8 @@ async function startServer() {
     const estado = carregar();
     res.json({
       ok: true,
-      servico: 'PCPR RP · Registro de Prisões e Mandados',
-      registros: estado.prisoes.length,
-      mandados: estado.mandados.length,
+      servico: 'Corregedoria · Denúncias PMPR RP',
+      denuncias: estado.denuncias.length,
     });
   });
 
@@ -370,72 +320,43 @@ async function startServer() {
     }
     const estado = carregar();
     let estadoNovo: EstadoApp = {
-      prisoes: [...estado.prisoes],
-      mandados: [...estado.mandados],
+      denuncias: [...estado.denuncias],
       discord: { ...estado.discord },
-      discordMandados: { ...estado.discordMandados },
       envios: [...estado.envios],
     };
 
     switch (operacao.tipo) {
       case 'criar': {
-        const prisao = normalizarPrisao(operacao.prisao);
-        if (!prisao) {
+        const denuncia = normalizarDenuncia(operacao.denuncia);
+        if (!denuncia) {
           res.status(400).json({ erro: 'Registro inválido.' });
           return;
         }
-        estadoNovo.prisoes = [prisao, ...estadoNovo.prisoes.filter((p) => p.id !== prisao.id)];
+        estadoNovo.denuncias = [
+          denuncia,
+          ...estadoNovo.denuncias.filter((d) => d.id !== denuncia.id),
+        ];
         break;
       }
       case 'atualizar': {
-        const prisao = normalizarPrisao(operacao.prisao);
-        if (!prisao) {
+        const denuncia = normalizarDenuncia(operacao.denuncia);
+        if (!denuncia) {
           res.status(400).json({ erro: 'Registro inválido.' });
           return;
         }
-        const existe = estadoNovo.prisoes.some((p) => p.id === prisao.id);
-        estadoNovo.prisoes = existe
-          ? estadoNovo.prisoes.map((p) => (p.id === prisao.id ? prisao : p))
-          : [prisao, ...estadoNovo.prisoes];
+        const existe = estadoNovo.denuncias.some((d) => d.id === denuncia.id);
+        estadoNovo.denuncias = existe
+          ? estadoNovo.denuncias.map((d) => (d.id === denuncia.id ? denuncia : d))
+          : [denuncia, ...estadoNovo.denuncias];
         break;
       }
       case 'excluir': {
         const id = textoSeguro(operacao.id, 80);
-        estadoNovo.prisoes = estadoNovo.prisoes.filter((p) => p.id !== id);
-        break;
-      }
-      case 'criar-mandado': {
-        const mandado = normalizarMandado(operacao.mandado);
-        if (!mandado) {
-          res.status(400).json({ erro: 'Mandado inválido.' });
-          return;
-        }
-        estadoNovo.mandados = [mandado, ...estadoNovo.mandados.filter((m) => m.id !== mandado.id)].slice(0, 5000);
-        break;
-      }
-      case 'atualizar-mandado': {
-        const mandado = normalizarMandado(operacao.mandado);
-        if (!mandado) {
-          res.status(400).json({ erro: 'Mandado inválido.' });
-          return;
-        }
-        const existe = estadoNovo.mandados.some((m) => m.id === mandado.id);
-        estadoNovo.mandados = existe
-          ? estadoNovo.mandados.map((m) => (m.id === mandado.id ? mandado : m))
-          : [mandado, ...estadoNovo.mandados];
-        break;
-      }
-      case 'excluir-mandado': {
-        const id = textoSeguro(operacao.id, 80);
-        estadoNovo.mandados = estadoNovo.mandados.filter((m) => m.id !== id);
+        estadoNovo.denuncias = estadoNovo.denuncias.filter((d) => d.id !== id);
         break;
       }
       case 'discord': {
         estadoNovo.discord = normalizarConfig(operacao.config);
-        break;
-      }
-      case 'discord-mandados': {
-        estadoNovo.discordMandados = normalizarConfig(operacao.config, CONFIG_MANDADOS_PADRAO);
         break;
       }
       case 'envio': {
@@ -446,7 +367,7 @@ async function startServer() {
         }
         const novoEnvio: EnvioDiscord = {
           id: textoSeguro(envio.id, 80),
-          prisaoId: textoSeguro(envio.prisaoId, 80) || undefined,
+          denunciaId: textoSeguro(envio.denunciaId, 80) || undefined,
           titulo: textoSeguro(envio.titulo, 200),
           status: envio.status === 'sucesso' ? 'sucesso' : 'erro',
           detalhe: textoSeguro(envio.detalhe, 600),
@@ -474,7 +395,7 @@ async function startServer() {
     }
     const webhook = textoSeguro(req.body?.webhook, 500);
     const payload = req.body?.payload;
-    // Formato novo: anexos nomeados (cartaz + fotos). Mantém `fotos` legado.
+    // Formato novo: anexos nomeados (fotos de evidência). Mantém `fotos` legado.
     const anexosBrutos = Array.isArray(req.body?.anexos) ? req.body.anexos : null;
     const anexos: { nome: string; dataUrl: string }[] = anexosBrutos
       ? (anexosBrutos as unknown[])
@@ -490,7 +411,7 @@ async function startServer() {
         )
           .filter((f): f is string => typeof f === 'string')
           .slice(0, 4)
-          .map((f, i) => ({ nome: `foto-${i}.jpg`, dataUrl: f }));
+          .map((f, i) => ({ nome: `evidencia-${i + 1}.jpg`, dataUrl: f }));
 
     if (!webhookPermitido(webhook)) {
       res.status(400).json({
@@ -607,7 +528,7 @@ async function startServer() {
 
   for (const porta of PORTAS) {
     const servidor = app.listen(porta, '0.0.0.0', () => {
-      console.log(`PCPR RP · Registro de Prisões em http://0.0.0.0:${porta}`);
+      console.log(`Corregedoria · Denúncias PMPR em http://0.0.0.0:${porta}`);
     });
     servidor.on('error', (erro: NodeJS.ErrnoException) => {
       if (erro.code === 'EADDRINUSE') {

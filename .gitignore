@@ -7,9 +7,9 @@ coverage/
 .env*
 !.env.example
 
-# Dados locais do sistema (prisões, fotos, webhook do Discord)
-dados-pcpr-rp.json
-dados-pcpr-rp.json.tmp
+# Dados locais do sistema (denúncias, evidências, webhook do Discord)
+dados-corregedoria-pmpr.json
+dados-corregedoria-pmpr.json.tmp
 .dados/
 image-search/
 
@@ -17,6 +17,9 @@ image-search/
 .exemplos/
 entregas/
 .dados-preview/
+
+# Pacotes de download gerados
+/downloads/
 
 # Fronteira do Sul: o que o administrador muda pelo painel (textos, imagens
 # enviadas e o acesso). Fica só no servidor onde o site roda.
