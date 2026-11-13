@@ -7,11 +7,16 @@
  *
  *   - o que este projeto mudou no site copiado (admin/mapa.mjs e
  *     admin/convite-no-inicio.mjs): o site começa pelo convite, os créditos e
- *     a aba "Admin";
+ *     a entrada do painel ("Admin") nas duas páginas;
  *   - o que o administrador muda pelo painel (/admin/), guardado em ./dados.
  *
  * Os arquivos que nenhuma dessas mudanças toca saem exatamente como estão no
  * disco.
+ *
+ * O que muda pelo painel é pedido pelas páginas com a versão no endereço
+ * ("...js?v=abc"): um intermediário no caminho pode guardar arquivos por um
+ * tempo sem perguntar se mudaram. O que vem depois do "?" não muda a
+ * resposta: o servidor entrega sempre o arquivo de agora.
  *
  * O site começa pelo convite, e as regras ficam em outra página:
  *

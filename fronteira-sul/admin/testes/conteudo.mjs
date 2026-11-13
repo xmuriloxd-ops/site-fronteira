@@ -18,21 +18,29 @@ import {
   ENDERECOS,
   ENDERECOS_DO_ORIGINAL,
   ESTILO_DO_LINK_DE_VOLTA,
+  ESTILO_DO_LINK_DO_ADMIN,
+  IMAGEM_DO_CONVITE,
   LINK_DE_VOLTA,
+  LINK_DO_ADMIN,
   PADRAO,
+  SEM_A_ENTRADA_DO_ADMIN,
   SEM_COMECAR_PELO_CONVITE,
   SEM_O_LINK_DE_VOLTA,
   SITE,
   VOLTAR_ENTREGUE,
   VOLTAR_NA_COPIA,
+  comAImagemTrocada,
   comOLinkDeVolta,
   copiaDoSite,
   esconderLinha,
   linkDeVolta,
   ok,
   pastaTemporaria,
+  pedindoOAplicativo,
   pngSimples,
   resumo,
+  versaoDaImagem,
+  versaoDe,
 } from './apoio.mjs';
 
 /** Quantas vezes `trecho` aparece em `texto`. */
@@ -44,6 +52,9 @@ function botaoDoConvite(html) {
   assert.equal(achados.length, 1, 'a página do convite tem um botão só');
   return [achados[0][1], achados[0][2]];
 }
+
+/** Os links de uma página, na ordem em que aparecem (que é a da tecla Tab): [classe, destino, texto]. */
+const linksDe = (html) => [...html.matchAll(/<a class="([^"]*)" href="([^"]*)">([^<]*)<\/a>/g)].map((m) => [m[1], m[2], m[3]]);
 
 /** A raiz dos endereços que o aplicativo montado usa quando a página está em `caminho`. */
 function raizDoAplicativo(js, caminho) {
@@ -132,7 +143,8 @@ function dadoDoOriginal(abre, fecha) {
   }
   ok('endereços: "/" é o convite, "/regras/" é a página de regras e "/convite/" leva para "/"');
 
-  // O início do site, com as palavras do pedido: a imagem, os três textos e o botão. E mais nada.
+  // O início do site, com as palavras do pedido: a imagem, os três textos e o botão. Fora do convite,
+  // só a etiqueta "Admin", no canto da página (ela tem a parte dela, logo abaixo).
   for (const trecho of [
     '<img class="poster" onclick="var b=document.querySelector(\'a.button\');if(b)b.click()" src="/fronteira-sul-convite-preview.jpg"',
     '<span class="eyebrow">CONVITE OFICIAL</span>',
@@ -143,14 +155,31 @@ function dadoDoOriginal(abre, fecha) {
     assert.equal(vezes(convite, trecho), 1, trecho);
   }
   assert.deepEqual(botaoDoConvite(convite), ['/regras/', 'Consultar regras oficiais'], 'é pelo botão que se chega às regras');
-  assert.equal(vezes(convite, '<a '), 1, 'o botão é o único link da página');
+  assert.equal(vezes(convite, '<a '), 2);
+  assert.deepEqual(linksDe(convite), [['button', '/regras/', 'Consultar regras oficiais'], ['admin-no-canto', '/admin/', 'Admin']], 'os links da página: o botão e, depois dele, a etiqueta Admin');
   assert.ok(!/id="root"|\/assets\/index-|topbar|view-tab|rules-search/.test(convite), 'nada da página de regras vem junto');
   const corpo = convite.slice(convite.indexOf('<body'), convite.indexOf('<manus-content-root>'));
-  assert.deepEqual(corpo.match(/<(?!\/)[a-z0-9]+/g), ['<body', '<main', '<img', '<section', '<div', '<span', '<h1', '<p', '<a'], 'no corpo da página só há a imagem, os textos e o botão');
+  assert.deepEqual(corpo.match(/<(?!\/)[a-z0-9]+/g), ['<body', '<main', '<img', '<section', '<div', '<span', '<h1', '<p', '<a', '<a'], 'no corpo da página só há a imagem, os textos, o botão e a etiqueta Admin');
+  const dentroDoConvite = corpo.slice(corpo.indexOf('<main'), corpo.indexOf('</main>'));
+  assert.deepEqual(dentroDoConvite.match(/<(?!\/)[a-z0-9]+/g), ['<main', '<img', '<section', '<div', '<span', '<h1', '<p', '<a'], 'dentro do convite, o botão é o único link');
   assert.equal(vezes(convite, CABECA_DO_INICIO), 1);
-  assert.ok(convite.indexOf(CABECA_DO_INICIO) + CABECA_DO_INICIO.length === convite.indexOf('</head>'), 'as regras de visual do início entram no fim do <head>');
+  assert.equal(vezes(convite, `${CABECA_DO_INICIO}\n${ESTILO_DO_LINK_DO_ADMIN}</head>`), 1, 'as regras de visual do início entram no fim do <head>, seguidas só das da etiqueta Admin');
   assert.ok(CABECA_DO_INICIO.startsWith('<style id="convite-no-inicio">') && CABECA_DO_INICIO.includes('aspect-ratio:auto 1200/675'), 'e reservam o espaço da imagem (1200 × 675)');
   ok('o início do site é só o convite: a imagem, os três textos e o botão "Consultar regras oficiais", que leva a /regras/');
+
+  // A entrada do painel na primeira página: a etiqueta "Admin", no canto do convite.
+  assert.equal(LINK_DO_ADMIN, '<a class="admin-no-canto" href="/admin/">Admin</a>', 'um link para o painel, com o mesmo texto da aba Admin da página de regras');
+  assert.equal(vezes(convite, `</section>\n    </main>${LINK_DO_ADMIN}\n  <manus-content-root>`), 1, 'entra logo depois do convite: fora dele, e depois do botão na ordem da tecla Tab');
+  assert.equal(vezes(convite, 'admin-no-canto'), vezes(LINK_DO_ADMIN + ESTILO_DO_LINK_DO_ADMIN, 'admin-no-canto'), 'uma vez só, com as regras de visual dela');
+  // Ela fica solta da página, no canto de cima à direita, e tem a altura da menor margem que a página deixa
+  // acima do convite: 16px (a margem vai de 16px a 48px; no desenho de tela baixa, é de 16px).
+  assert.ok(ESTILO_DO_LINK_DO_ADMIN.includes('.admin-no-canto{position:absolute;top:0;right:0;display:flex;align-items:center;height:16px;'));
+  assert.ok(COPIA.convite.includes('padding: clamp(16px, 4vw, 48px);') && CABECA_DO_INICIO.includes('body{padding-top:16px;padding-bottom:16px}'), 'a margem de cima da página nunca é menor que a altura da etiqueta');
+  assert.equal(vezes(COPIA.convite + COPIA.index + COPIA.js + js + index, 'admin-no-canto'), 0, 'a etiqueta não existe na cópia nem entra na página de regras');
+  const chaveDoAdmin = d.interruptores.find((i) => i.opcao === 'abaAdmin');
+  assert.deepEqual([chaveDoAdmin.pagina, chaveDoAdmin.grupo, chaveDoAdmin.rotulo], ['regras', 'Abas', 'Mostrar “Admin” para os visitantes'], 'no painel, a mesma opção liga e desliga a aba e a etiqueta');
+  assert.ok(chaveDoAdmin.ajuda.includes('a página de regras tem a aba “Admin”') && chaveDoAdmin.ajuda.includes('etiqueta “Admin” no canto de cima') && chaveDoAdmin.ajuda.includes('/admin/'), chaveDoAdmin.ajuda);
+  ok('o convite tem a etiqueta "Admin" no canto, que leva ao painel: fora do convite, depois do botão');
 
   // A outra parte do site: a página de regras, sem o convite, funcionando em /regras/.
   assert.ok(!/fs-convite|convite-no-inicio|class="poster"/.test(js + index), 'a página de regras não traz o convite');
@@ -257,9 +286,11 @@ function dadoDoOriginal(abre, fecha) {
     let achados = 0;
     for (const nome of Object.keys(ARQUIVOS)) {
       const t = texto(c, nome);
-      const padrao = PADRAO[nome] ?? null; // o que a instalação nova entrega (null = o arquivo da cópia)
+      // O que a instalação nova entrega (null = o arquivo da cópia). A página de regras pede o aplicativo pela
+      // versão dele: quando o campo muda o aplicativo, esse endereço muda junto, e mais nada.
+      const padrao = nome === 'index' ? pedindoOAplicativo(PADRAO.index, texto(c, 'js')) : (PADRAO[nome] ?? null);
       if (nome === 'index' && apareceALinha) {
-        assert.equal(t, PADRAO.index.replace(`${campo.seVazioEsconde}{display:none!important}\n`, ''), `${campo.id}: só a regra que escondia a linha sai da página`);
+        assert.equal(t, padrao.replace(`${campo.seVazioEsconde}{display:none!important}\n`, ''), `${campo.id}: só a regra que escondia a linha sai da página`);
         continue;
       }
       if (!arquivosDoCampo.has(nome)) {
@@ -310,11 +341,16 @@ function dadoDoOriginal(abre, fecha) {
   const js = texto(c, 'js');
   conferirSintaxe(js);
   const contarTags = (t) => (t.match(/<[a-zA-Z/!]/g) || []).length;
-  // As únicas tags a mais são as dos <style> do projeto: na página de regras, o do link de volta ao convite;
-  // na do convite, o que entra quando ela é o início do site.
-  const tagsEsperadas = { index: contarTags(COPIA.index) + contarTags(ESTILO_DO_LINK_DE_VOLTA), convite: contarTags(COPIA.convite) + contarTags(CABECA_DO_INICIO) };
+  // As únicas tags a mais são as do projeto: na página de regras, o <style> do link de volta ao convite;
+  // na do convite, o <style> que entra quando ela é o início do site, e a etiqueta Admin com o <style> dela.
+  const tagsEsperadas = {
+    index: contarTags(COPIA.index) + contarTags(ESTILO_DO_LINK_DE_VOLTA),
+    convite: contarTags(COPIA.convite) + contarTags(CABECA_DO_INICIO) + contarTags(ESTILO_DO_LINK_DO_ADMIN) + contarTags(LINK_DO_ADMIN),
+  };
   assert.equal(contarTags(ESTILO_DO_LINK_DE_VOLTA), 2);
   assert.equal(contarTags(CABECA_DO_INICIO), 2);
+  assert.equal(contarTags(ESTILO_DO_LINK_DO_ADMIN), 2);
+  assert.equal(contarTags(LINK_DO_ADMIN), 2);
   for (const nome of ['index', 'convite']) {
     const html = texto(c, nome);
     assert.equal(contarTags(html), tagsEsperadas[nome], `${nome}: o texto não pode criar tags`);
@@ -482,8 +518,8 @@ const pastaQueFica = pastaTemporaria();
   let convite = texto(c, 'convite');
   assert.ok(convite.includes('body{color:red}<\\/style><script>alert(1)<\\/script>'));
   assert.ok(!convite.includes('.author-card'), 'as regras que escondem partes da página de regras não vão para o convite');
-  assert.equal(vezes(convite, '</style>'), vezes(COPIA.convite, '</style>') + 2, 'no convite, o <style> do início do site e o dos ajustes');
-  const ordem = ['<style>', '<style id="convite-no-inicio">', '<style id="ajustes-do-admin">', '</head>'].map((trecho) => convite.indexOf(trecho));
+  assert.equal(vezes(convite, '</style>'), vezes(COPIA.convite, '</style>') + 3, 'no convite, o <style> do início do site, o da etiqueta Admin e o dos ajustes');
+  const ordem = ['<style>', '<style id="convite-no-inicio">', '<style id="admin-no-canto">', '<style id="ajustes-do-admin">', '</head>'].map((trecho) => convite.indexOf(trecho));
   assert.ok(ordem.every((posicao, n) => posicao >= 0 && (n === 0 || posicao > ordem[n - 1])), 'o CSS do administrador vem por último, para poder mudar o resto');
   conferirSintaxe(texto(c, 'js'));
   ok('esconder blocos, campos vazios e CSS extra');
@@ -496,6 +532,7 @@ const pastaQueFica = pastaTemporaria();
   }
   assert.ok(!texto(c, 'index').includes('/api/platform/config.js'));
   assert.ok(texto(c, 'index').includes('<div id="root"></div>'));
+  assert.match(texto(c, 'convite'), /<\/section>\s*<\/main><a class="admin-no-canto" href="\/admin\/">Admin<\/a>\s*<\/body>\s*<\/html>\s*$/, 'a etiqueta Admin do convite continua: o que sai é só o que vem depois dela');
   assert.equal(r.opcoes.mostrarCreditos, false, 'mudar uma opção preserva as outras');
   ok('tirar o selo e as estatísticas da hospedagem original');
 
@@ -641,12 +678,18 @@ const pastaQueFica = pastaTemporaria();
   assert.equal(vezes(texto(c, 'convite'), 'onclick='), 1);
   assert.equal(vezes(COPIA.convite, 'onclick='), 0);
   // As regras de visual acompanham as medidas da imagem que estiver valendo.
-  const enviar = (largura, altura) => c.trocarImagem('convite', { corpo: pngSimples(8, 4, [largura % 256, 0, 0]), tipo: 'image/png', ext: 'png', largura, altura });
-  enviar(800, 400);
-  assert.equal(texto(c, 'convite'), PADRAO.convite.replace(CABECA_DO_INICIO, cabecaDoInicio({ largura: 800, altura: 400 })));
+  // (E a imagem trocada é pedida com a versão dela no endereço: ver "endereços com versão", mais abaixo.)
+  const enviar = (largura, altura) => {
+    const corpo = pngSimples(8, 4, [largura % 256, 0, 0]);
+    c.trocarImagem('convite', { corpo, tipo: 'image/png', ext: 'png', largura, altura });
+    return corpo;
+  };
+  const comAImagem = (bytes, cabeca) => comAImagemTrocada(PADRAO.convite.replace(CABECA_DO_INICIO, cabeca), IMAGEM_DO_CONVITE, bytes);
+  let enviada = enviar(800, 400);
+  assert.equal(texto(c, 'convite'), comAImagem(enviada, cabecaDoInicio({ largura: 800, altura: 400 })));
   assert.ok(cabecaDoInicio({ largura: 800, altura: 400 }).includes('aspect-ratio:auto 800/400') && cabecaDoInicio({ largura: 800, altura: 400 }).includes('*2.0000)'));
-  enviar(0, 0); // imagem cujo tamanho não pôde ser lido: a página só não reserva o espaço dela
-  assert.equal(texto(c, 'convite'), PADRAO.convite.replace(CABECA_DO_INICIO, cabecaDoInicio(null)));
+  enviada = enviar(0, 0); // imagem cujo tamanho não pôde ser lido: a página só não reserva o espaço dela
+  assert.equal(texto(c, 'convite'), comAImagem(enviada, cabecaDoInicio(null)));
   assert.ok(!cabecaDoInicio(null).includes('aspect-ratio:auto') && cabecaDoInicio(null).includes('*1.7778)'));
   c.removerImagem('convite');
   assert.equal(texto(c, 'convite'), PADRAO.convite);
@@ -669,11 +712,13 @@ const pastaQueFica = pastaTemporaria();
   // Uma imagem que é um fio de tão comprida, ou de tão alta, não põe números inválidos nas regras.
   assert.equal(cabecaDoInicio({ largura: 65535, altura: 1 }), comOutraImagem(65535, 1, '20.0000', 325, 311));
   assert.equal(cabecaDoInicio({ largura: 1, altura: 65535 }), comOutraImagem(1, 65535, '0.1000', 3310, 6281));
-  // Com a opção desligada, nada disso entra: a página do convite é a da cópia mesmo com imagem nova.
-  enviar(800, 400);
+  // Com a opção desligada, nada disso entra: mesmo com imagem nova, a página do convite é a da cópia.
+  // A única diferença é o endereço da imagem nova, que leva a versão dela.
+  enviada = enviar(800, 400);
   r = c.salvar({ versao: c.versao, opcoes: { conviteNoInicio: false } });
-  assert.equal(c.gerar('convite/index.html'), null);
+  assert.equal(texto(c, 'convite'), comAImagemTrocada(COPIA.convite, IMAGEM_DO_CONVITE, enviada));
   c.removerImagem('convite');
+  assert.equal(c.gerar('convite/index.html'), null, 'de volta à imagem original, a página é a da cópia, sem tirar nem pôr');
   ok('a imagem do convite é clicável e as regras de visual seguem as medidas da imagem em uso');
 }
 
@@ -719,7 +764,24 @@ const pastaQueFica = pastaTemporaria();
   const convite2 = texto(c2, 'convite');
   assert.deepEqual(botaoDoConvite(convite2), ['/regras/', 'Consultar regras oficiais']);
   assert.ok(!convite2.includes('onclick=') && convite2.includes('<style id="convite-no-inicio">'));
+  assert.deepEqual(linksDe(convite2), [['button', '/regras/', 'Consultar regras oficiais'], ['admin-no-canto', '/admin/', 'Admin']], 'a etiqueta Admin não depende da imagem');
   ok('sem achar o botão da tela "não encontrada" ou a imagem do convite, só esse detalhe fica de fora, e o painel avisa');
+
+  // O terceiro acabamento: a etiqueta Admin entra onde o convite termina. Se esse ponto não for achado
+  // (ou aparecer mais de uma vez), a etiqueta fica de fora, com as regras de visual dela; o resto continua.
+  for (const [caso, mexer] of [
+    ['sem o fim do convite', (html) => html.replace('</main>', '</main >')],
+    ['com dois', (html) => html.replace('</body>', '<!-- </main> --></body>')],
+  ]) {
+    const { c: c3 } = novo(pastaTemporaria(), copiaDoSite({ convite: mexer }));
+    const d3 = c3.descrever();
+    assert.deepEqual(d3.problemas, ['A etiqueta “Admin” não pôde ser colocada no canto do convite (o painel continua abrindo pelo endereço /admin/).'], caso);
+    assert.deepEqual(d3.enderecos, ENDERECOS, `${caso}: o site começa pelo convite do mesmo jeito`);
+    assert.equal(texto(c3, 'convite'), mexer(SEM_A_ENTRADA_DO_ADMIN.convite), `${caso}: o convite sai como sairia sem a etiqueta`);
+    assert.ok(!texto(c3, 'convite').includes('admin-no-canto'), caso);
+    assert.equal(texto(c3, 'js'), PADRAO.js, `${caso}: a aba Admin da página de regras continua`);
+  }
+  ok('sem achar onde o convite termina, só a etiqueta Admin fica de fora, e o painel avisa');
 }
 
 // ───── 8. o link de volta ao convite, na página de regras
@@ -730,7 +792,7 @@ const pastaQueFica = pastaTemporaria();
   assert.equal(texto(c, 'js'), comOLinkDeVolta('Início').js);
   assert.equal(vezes(texto(c, 'js'), linkDeVolta('Início')), 2);
   assert.ok(linkDeVolta('Início').endsWith(',"Início"]})})') && linkDeVolta('Início').includes('href:"/"'));
-  assert.equal(texto(c, 'index'), PADRAO.index);
+  assert.equal(texto(c, 'index'), comOLinkDeVolta('Início').index, 'na página de regras só muda o endereço do aplicativo, que leva a versão dele');
   assert.equal(texto(c, 'convite'), PADRAO.convite);
 
   // Texto vazio: o link não entra, nem as regras de visual dele.
@@ -749,7 +811,7 @@ const pastaQueFica = pastaTemporaria();
   assert.equal(vezes(semAdmin, `children:"Regras da Polícia"}),${LINK_DE_VOLTA}]})`), 1);
   assert.equal(vezes(semAdmin, LINK_DE_VOLTA), 2);
   conferirSintaxe(semAdmin);
-  assert.equal(texto(c, 'index'), PADRAO.index);
+  assert.equal(texto(c, 'index'), SEM_A_ENTRADA_DO_ADMIN.index);
 
   // O link só existe enquanto o site começa pelo convite. Com as páginas nos lugares do original,
   // a página de regras é o início do site: não há para onde voltar, mesmo com um texto salvo.
@@ -758,7 +820,7 @@ const pastaQueFica = pastaTemporaria();
   assert.equal(texto(c, 'index'), SEM_COMECAR_PELO_CONVITE.index);
   r = c.salvar({ versao: r.versao, opcoes: { conviteNoInicio: true } });
   assert.equal(texto(c, 'js'), comOLinkDeVolta('Início').js, 'ligando de novo, o link volta com o texto que estava salvo');
-  assert.equal(texto(c, 'index'), PADRAO.index);
+  assert.equal(texto(c, 'index'), comOLinkDeVolta('Início').index);
 
   // "Restaurar o site original" devolve o texto do projeto.
   assert.deepEqual(c.restaurarOriginal().textos, {});
@@ -799,6 +861,170 @@ const pastaQueFica = pastaTemporaria();
   assert.equal(vezes(js, BASE_ENTREGUE), 1);
   conferirSintaxe(js);
   ok('sem achar um dos lugares do link de volta no aplicativo, ele só não entra ali, e o painel avisa');
+
+  // Sem lugar para a aba Admin na página de regras, a etiqueta do convite continua: ela está em outro arquivo.
+  assert.equal(texto(semAbas, 'convite'), PADRAO.convite);
+  assert.equal(texto(semOsDois, 'convite'), PADRAO.convite);
+}
+
+// ───── 9. a etiqueta Admin, no canto do convite
+{
+  const { c } = novo(pastaTemporaria());
+  const oBotaoEAEtiqueta = [['button', '/regras/', 'Consultar regras oficiais'], ['admin-no-canto', '/admin/', 'Admin']];
+  assert.deepEqual(linksDe(texto(c, 'convite')), oBotaoEAEtiqueta);
+
+  // A opção do painel tira as duas entradas de uma vez: a aba da página de regras e a etiqueta do convite.
+  // Sem a etiqueta, o convite sai byte a byte como saía antes de ela existir.
+  let r = c.salvar({ versao: 0, opcoes: { abaAdmin: false } });
+  assert.equal(texto(c, 'convite'), SEM_A_ENTRADA_DO_ADMIN.convite);
+  assert.equal(SEM_A_ENTRADA_DO_ADMIN.convite, PADRAO.convite.replace(LINK_DO_ADMIN, '').replace(`\n${ESTILO_DO_LINK_DO_ADMIN}`, ''), 'o que muda no convite é só o link e as regras de visual dele');
+  assert.equal(texto(c, 'js'), SEM_A_ENTRADA_DO_ADMIN.js);
+  assert.equal(SEM_A_ENTRADA_DO_ADMIN.js, PADRAO.js.replace(ABA_ADMIN, ''));
+  assert.equal(texto(c, 'index'), SEM_A_ENTRADA_DO_ADMIN.index, 'na página de regras só muda o endereço do aplicativo, que agora é outro');
+  assert.deepEqual(linksDe(texto(c, 'convite')), [oBotaoEAEtiqueta[0]], 'o botão volta a ser o único link do convite');
+  assert.ok(!(texto(c, 'convite') + texto(c, 'js') + texto(c, 'index')).includes('/admin/'), 'nenhuma página aponta para o painel');
+  r = c.salvar({ versao: r.versao, opcoes: { abaAdmin: true } });
+  assert.equal(texto(c, 'convite'), PADRAO.convite);
+  assert.equal(texto(c, 'js'), PADRAO.js);
+
+  // A etiqueta só existe enquanto o convite é o início do site. Com as páginas nos lugares do original, o
+  // início é a página de regras, que tem a aba Admin; o convite, em /convite/, é o da cópia, sem tirar nem pôr.
+  r = c.salvar({ versao: r.versao, opcoes: { conviteNoInicio: false } });
+  assert.equal(c.gerar('convite/index.html'), null);
+  assert.equal(texto(c, 'js'), SEM_COMECAR_PELO_CONVITE.js);
+  assert.equal(vezes(texto(c, 'js'), ABA_ADMIN), 1);
+  r = c.salvar({ versao: r.versao, opcoes: { conviteNoInicio: true } });
+  assert.equal(texto(c, 'convite'), PADRAO.convite);
+
+  // Ela não depende do que o administrador põe no convite: outros textos, outro destino no botão, botão sem texto, outra imagem.
+  r = c.salvar({ versao: r.versao, textos: { 'convite.sobretitulo': '', 'convite.titulo': 'Outro <título>', 'convite.texto': 'Outro texto', 'convite.botao': '', 'convite.botaoLink': 'https://discord.gg/exemplo' } });
+  c.trocarImagem('convite', { corpo: pngSimples(8, 8), tipo: 'image/png', ext: 'png', largura: 900, altura: 900 });
+  let convite = texto(c, 'convite');
+  assert.deepEqual(linksDe(convite), [['button', 'https://discord.gg/exemplo', ''], oBotaoEAEtiqueta[1]]);
+  assert.equal(vezes(convite, `</main>${LINK_DO_ADMIN}\n  <manus-content-root>`), 1);
+  assert.equal(vezes(convite, `${cabecaDoInicio({ largura: 900, altura: 900 })}\n${ESTILO_DO_LINK_DO_ADMIN}</head>`), 1, 'as regras de visual da etiqueta são sempre as mesmas, seja qual for a imagem');
+  c.removerImagem('convite');
+
+  // Sem o selo da hospedagem original, e com CSS do administrador (que vem depois, e pode mudar a etiqueta).
+  r = c.salvar({ versao: c.versao, textos: {}, opcoes: { removerManus: true, cssExtra: '.admin-no-canto{display:none}' } }); // (trocar a imagem também cria versão)
+  convite = texto(c, 'convite');
+  assert.deepEqual(linksDe(convite), oBotaoEAEtiqueta);
+  assert.match(convite, /<\/main><a class="admin-no-canto" href="\/admin\/">Admin<\/a>\s*<\/body>\s*<\/html>\s*$/);
+  assert.equal(vezes(convite, `${CABECA_DO_INICIO}\n${ESTILO_DO_LINK_DO_ADMIN}\n<style id="ajustes-do-admin">\n.admin-no-canto{display:none}\n</style></head>`), 1);
+
+  // "Restaurar o site original" devolve a etiqueta, como tudo o mais.
+  r = c.salvar({ versao: r.versao, opcoes: { abaAdmin: false } });
+  assert.ok(!texto(c, 'convite').includes(LINK_DO_ADMIN));
+  assert.equal(c.restaurarOriginal().opcoes.abaAdmin, true);
+  assert.equal(texto(c, 'convite'), PADRAO.convite);
+  ok('etiqueta Admin: liga e desliga junto com a aba Admin; só existe enquanto o site começa pelo convite; não depende dos textos nem da imagem');
+}
+
+// ───── 10. endereços com versão: o que muda pelo painel é pedido por um endereço que muda junto
+// Entre o servidor e o visitante pode haver quem guarde arquivos por um tempo sem perguntar se mudaram.
+// As páginas são pedidas a cada visita; o que elas carregam, nem sempre. Com a versão no endereço,
+// ninguém tem guardada uma cópia antiga do que acabou de mudar.
+{
+  const { c } = novo(pastaTemporaria());
+  const pedidoDoAplicativo = (html) => /<script type="module" crossorigin src="([^"]*)"><\/script>/.exec(html)[1];
+  const comVersao = (t) => (t.match(/"(?:https?:\/\/[^"\s?]*|\/[^"\s?]*)\?v=[A-Za-z0-9_-]+"/g) || []).sort();
+  const todos = () => ['js', 'index', 'convite', 'manifesto'].flatMap((nome) => comVersao(texto(c, nome) ?? COPIA[nome]));
+
+  // O aplicativo de regras: a página pede pelo resumo do que o servidor entrega.
+  const versaoInicial = versaoDe(PADRAO.js);
+  assert.match(versaoInicial, /^[A-Za-z0-9_-]{10}$/);
+  assert.equal(pedidoDoAplicativo(texto(c, 'index')), `/assets/index-FbaU4KfD.js?v=${versaoInicial}`);
+  assert.equal(pedidoDoAplicativo(COPIA.index), '/assets/index-FbaU4KfD.js', 'na cópia, o endereço não tem versão');
+  assert.equal(c.gerar(ARQUIVOS.js).versao, versaoInicial);
+  assert.ok(c.gerar(ARQUIVOS.js).etag.startsWith(`W/"a-${versaoInicial}`), 'é o mesmo resumo que identifica o arquivo para o navegador');
+  assert.deepEqual(todos(), [`"/assets/index-FbaU4KfD.js?v=${versaoInicial}"`], 'numa instalação nova, é o único endereço com versão');
+
+  // Mudou um texto das regras: o aplicativo é outro, e o endereço dele também.
+  let r = c.salvar({ versao: 0, textos: { 'regras.topo.menu': 'Sumário' } });
+  const versaoComOTexto = versaoDe(texto(c, 'js'));
+  assert.notEqual(versaoComOTexto, versaoInicial);
+  assert.equal(texto(c, 'index'), pedindoOAplicativo(PADRAO.index, texto(c, 'js')), 'na página de regras, só o endereço do aplicativo muda');
+  assert.equal(pedidoDoAplicativo(texto(c, 'index')), `/assets/index-FbaU4KfD.js?v=${versaoComOTexto}`);
+  // Um texto que só existe no convite não mexe no aplicativo nem no endereço dele.
+  r = c.salvar({ versao: r.versao, textos: { 'regras.topo.menu': 'Sumário', 'convite.titulo': 'Outro título' } });
+  assert.equal(pedidoDoAplicativo(texto(c, 'index')), `/assets/index-FbaU4KfD.js?v=${versaoComOTexto}`);
+  // Voltando o texto, volta o endereço: a versão depende só do conteúdo.
+  r = c.salvar({ versao: r.versao, textos: {} });
+  assert.equal(texto(c, 'index'), PADRAO.index);
+  // Quando o aplicativo é o da cópia, sem tirar nem pôr, o endereço fica como na cópia.
+  r = c.salvar({ versao: r.versao, opcoes: { abaAdmin: false, conviteNoInicio: false }, textos: CREDITOS_DA_COPIA });
+  assert.equal(c.gerar(ARQUIVOS.js), null);
+  assert.equal(c.gerar(ARQUIVOS.index), null);
+  r = c.salvar({ versao: r.versao, opcoes: { abaAdmin: true, conviteNoInicio: true }, textos: {} });
+  assert.equal(texto(c, 'index'), PADRAO.index);
+  ok('a página de regras pede o aplicativo pela versão dele, que muda quando um texto das regras muda');
+
+  // Imagens trocadas pelo painel: o endereço de cada uma ganha o resumo do arquivo enviado.
+  const enviar = (id, corpo, medidas = {}) => c.trocarImagem(id, { corpo, tipo: 'image/png', ext: 'png', largura: 1200, altura: 675, ...medidas });
+  const convite1 = pngSimples(8, 4, [10, 20, 30]);
+  const convite2 = pngSimples(8, 4, [30, 20, 10]);
+  enviar('convite', convite1);
+  assert.match(versaoDaImagem(convite1), /^[0-9a-f]{12}$/);
+  assert.equal(texto(c, 'convite'), comAImagemTrocada(PADRAO.convite, IMAGEM_DO_CONVITE, convite1), 'no convite, só o endereço da imagem muda');
+  assert.equal(vezes(texto(c, 'convite'), `<img class="poster"${CLIQUE_NA_IMAGEM} src="/fronteira-sul-convite-preview.jpg?v=${versaoDaImagem(convite1)}" alt="`), 1);
+  assert.equal(texto(c, 'js'), PADRAO.js, 'o aplicativo não usa a imagem do convite');
+  assert.equal(texto(c, 'index'), PADRAO.index);
+  // (sem o endereço público preenchido, a imagem da prévia de link continua apontando para o site original, sem versão)
+  assert.equal(vezes(texto(c, 'convite'), `content="${ORIGEM_ORIGINAL}/fronteira-sul-convite-preview.jpg"`), 3);
+  enviar('convite', convite2);
+  assert.equal(texto(c, 'convite'), comAImagemTrocada(PADRAO.convite, IMAGEM_DO_CONVITE, convite2), 'outra imagem, outro endereço');
+  assert.notEqual(versaoDaImagem(convite1), versaoDaImagem(convite2));
+  // Um texto do administrador igual ao endereço da imagem, com aspas e tudo, continua sendo só um texto.
+  r = c.salvar({ versao: c.versao, textos: { 'convite.titulo': 'Veja "/fronteira-sul-convite-preview.jpg" aqui' } });
+  assert.equal(vezes(texto(c, 'convite'), '<h1 id="title">Veja "/fronteira-sul-convite-preview.jpg" aqui</h1>'), 1);
+  assert.equal(vezes(texto(c, 'convite'), '?v='), 1, 'a versão entra só no endereço da imagem');
+  r = c.salvar({ versao: r.versao, textos: {} });
+  // Com o endereço público, a imagem da prévia de link leva a mesma versão (uma vez só).
+  r = c.salvar({ versao: r.versao, opcoes: { enderecoPublico: 'https://meusite.com.br' } });
+  for (const nome of ['index', 'convite']) {
+    assert.equal(vezes(texto(c, nome), `content="https://meusite.com.br/fronteira-sul-convite-preview.jpg?v=${versaoDaImagem(convite2)}"`), 3, nome);
+    assert.ok(!texto(c, nome).includes('?v=' + versaoDaImagem(convite2) + '?v='), nome);
+  }
+  r = c.salvar({ versao: r.versao, opcoes: { enderecoPublico: '' } });
+  c.removerImagem('convite');
+  assert.equal(texto(c, 'convite'), PADRAO.convite, 'de volta à imagem original, o endereço volta a ser o da cópia');
+  ok('imagem do convite trocada: a página pede a imagem pela versão do arquivo enviado');
+
+  // O logo aparece no aplicativo, em dois endereços; e é o ícone, enquanto o ícone não tem imagem própria.
+  const logo = pngSimples(8, 8, [1, 2, 3]);
+  const icone = pngSimples(8, 8, [3, 2, 1]);
+  enviar('logo', logo, { largura: 8, altura: 8 });
+  const vLogo = versaoDaImagem(logo);
+  let js = texto(c, 'js');
+  let jsEsperado = comAImagemTrocada(comAImagemTrocada(PADRAO.js, '/manus-storage/fronteira-sul-logo_1b1b4c2d.webp', logo), '/fronteira-sul-logo.webp', logo);
+  assert.equal(js, jsEsperado);
+  assert.equal(vezes(js, `ng="/manus-storage/fronteira-sul-logo_1b1b4c2d.webp?v=${vLogo}"`), 1);
+  assert.equal(vezes(js, `o("/fronteira-sul-logo.webp?v=${vLogo}")`), 1);
+  assert.equal(comVersao(js).length, 2, 'e mais nenhum endereço com versão');
+  conferirSintaxe(js);
+  assert.equal(texto(c, 'index'), pedindoOAplicativo(PADRAO.index, jsEsperado), 'o aplicativo mudou: a página de regras pede o novo');
+  assert.notEqual(versaoDe(jsEsperado), versaoInicial);
+  assert.equal(texto(c, 'convite'), PADRAO.convite, 'o convite não usa o logo');
+  const iconesDe = (t) => JSON.parse(t).icons.map((i) => i.src);
+  assert.deepEqual(iconesDe(COPIA.manifesto), ['/favicon.ico', '/favicon.ico']);
+  assert.deepEqual(iconesDe(texto(c, 'manifesto')), [`/favicon.ico?v=${vLogo}`, `/favicon.ico?v=${vLogo}`], 'sem ícone próprio, o ícone é o logo novo');
+  assert.equal(texto(c, 'manifesto'), comAImagemTrocada(COPIA.manifesto, '/favicon.ico', logo), 'na lista de ícones, só os endereços mudam');
+  enviar('icone', icone, { largura: 8, altura: 8 });
+  assert.deepEqual(iconesDe(texto(c, 'manifesto')), [`/favicon.ico?v=${versaoDaImagem(icone)}`, `/favicon.ico?v=${versaoDaImagem(icone)}`]);
+  assert.equal(texto(c, 'js'), jsEsperado, 'o ícone próprio não muda o aplicativo');
+  // Um nome de site igual ao endereço do ícone não vira endereço.
+  r = c.salvar({ versao: c.versao, textos: { 'compartilhar.nomeDoApp': '/favicon.ico' } });
+  const manifesto = JSON.parse(texto(c, 'manifesto'));
+  assert.deepEqual([manifesto.name, manifesto.short_name], ['/favicon.ico', '/favicon.ico']);
+  assert.deepEqual(manifesto.icons.map((i) => i.src), [`/favicon.ico?v=${versaoDaImagem(icone)}`, `/favicon.ico?v=${versaoDaImagem(icone)}`]);
+  r = c.salvar({ versao: r.versao, textos: {} });
+  c.removerImagem('icone');
+  c.removerImagem('logo');
+  assert.equal(texto(c, 'js'), PADRAO.js);
+  assert.equal(texto(c, 'index'), PADRAO.index);
+  assert.equal(c.gerar(ARQUIVOS.manifesto), null);
+  assert.deepEqual(todos(), [`"/assets/index-FbaU4KfD.js?v=${versaoInicial}"`]);
+  ok('logo e ícone trocados: o aplicativo e a lista de ícones pedem as imagens pela versão do arquivo enviado');
 }
 
 resumo();

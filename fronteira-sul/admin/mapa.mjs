@@ -17,7 +17,7 @@
  *     que acrescenta à página (hoje, o link de volta ao convite). Quem escreve
  *     esse texto na página é o conteudo.mjs.
  *   - OPCOES_PADRAO, no fim do arquivo: o que vem ligado ou desligado (o site
- *     começar pelo convite, a aba Admin...).
+ *     começar pelo convite, a entrada "Admin" nas duas páginas...).
  *
  * Como um "local" é descrito:
  *   { arquivo: 'js', apos, chave }   texto dentro do aplicativo de regras:
@@ -409,7 +409,11 @@ export const OPCOES_PADRAO = {
    * em "/" e convite em /convite/.
    */
   conviteNoInicio: true,
-  /** Mostra a aba "Admin" ao lado das abas da página de regras. */
+  /**
+   * Mostra aos visitantes a entrada do painel: a aba "Admin" ao lado das abas
+   * da página de regras e, com o site começando pelo convite, a etiqueta
+   * "Admin" no canto dele (ver convite-no-inicio.mjs).
+   */
   abaAdmin: true,
   /** Mostra o bloco de créditos no fim da página de regras. */
   mostrarCreditos: true,
@@ -436,8 +440,8 @@ export const INTERRUPTORES = [
     opcao: 'abaAdmin',
     pagina: 'regras',
     grupo: 'Abas',
-    rotulo: 'Mostrar a aba “Admin” para os visitantes',
-    ajuda: 'Desligada, o painel continua abrindo pelo endereço /admin/.',
+    rotulo: 'Mostrar “Admin” para os visitantes',
+    ajuda: 'Ligado: a página de regras tem a aba “Admin” e o convite, quando o site começa por ele, tem a etiqueta “Admin” no canto de cima. Desligado: as duas somem, e o painel continua abrindo pelo endereço /admin/.',
   },
   { opcao: 'mostrarDestaque', pagina: 'regras', grupo: 'Destaque no começo do regulamento', rotulo: 'Mostrar este destaque na página', ajuda: '' },
   { opcao: 'mostrarCreditos', pagina: 'regras', grupo: 'Créditos (fim da página)', rotulo: 'Mostrar os créditos na página', ajuda: '' },

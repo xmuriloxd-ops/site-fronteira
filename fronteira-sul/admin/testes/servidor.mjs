@@ -15,8 +15,10 @@ import {
   ESTILO_DO_LINK_DE_VOLTA,
   GIF_MINIMO,
   LINK_DE_VOLTA,
+  LINK_DO_ADMIN,
   PADRAO,
   RAIZ,
+  SEM_A_ENTRADA_DO_ADMIN,
   SEM_COMECAR_PELO_CONVITE,
   SEM_O_LINK_DE_VOLTA,
   SITE,
@@ -25,6 +27,8 @@ import {
   pastaTemporaria,
   pngSimples,
   resumo,
+  versaoDaImagem,
+  versaoDe,
 } from './apoio.mjs';
 
 const DADOS = pastaTemporaria();
@@ -69,30 +73,33 @@ const siteAntes = retratoDoSite();
 }
 
 // ───── servidor
-const PORTA = await new Promise((resolver) => {
-  const s = net.createServer();
-  s.listen(0, '127.0.0.1', () => {
-    const { port } = s.address();
-    s.close(() => resolver(port));
+const portaLivre = () =>
+  new Promise((resolver) => {
+    const s = net.createServer();
+    s.listen(0, '127.0.0.1', () => {
+      const { port } = s.address();
+      s.close(() => resolver(port));
+    });
   });
-});
+const PORTA = await portaLivre();
 const BASE = `http://127.0.0.1:${PORTA}`;
 let processo = null;
 
-async function subir() {
+/** Sobe um servidor e espera ele responder. `registro: true` liga a lista de pedidos que ele escreve no terminal. */
+async function iniciar(porta, dados, { registro = false } = {}) {
   // Só as variáveis do teste: nada do ambiente de quem roda muda o resultado.
-  const env = { ...process.env, PORT: String(PORTA), HOST: '127.0.0.1', DADOS_DIR: DADOS, SILENCIOSO: '1' };
-  for (const nome of ['SITE_DIR', 'ADMIN_USUARIO', 'ADMIN_SENHA', 'CONFIAR_NO_PROXY']) delete env[nome];
-  processo = spawn(process.execPath, [path.join(RAIZ, 'servidor.mjs')], { env, stdio: ['ignore', 'pipe', 'pipe'] });
+  const env = { ...process.env, PORT: String(porta), HOST: '127.0.0.1', DADOS_DIR: dados, SILENCIOSO: '1' };
+  for (const nome of ['SITE_DIR', 'ADMIN_USUARIO', 'ADMIN_SENHA', 'CONFIAR_NO_PROXY', ...(registro ? ['SILENCIOSO'] : [])]) delete env[nome];
+  const p = spawn(process.execPath, [path.join(RAIZ, 'servidor.mjs')], { env, stdio: ['ignore', 'pipe', 'pipe'] });
   let saida = '';
-  processo.stdout.on('data', (d) => (saida += d));
-  processo.stderr.on('data', (d) => (saida += d));
-  processo.saida = () => saida;
+  p.stdout.on('data', (d) => (saida += d));
+  p.stderr.on('data', (d) => (saida += d));
+  p.saida = () => saida;
   for (let i = 0; i < 200; i++) {
-    if (processo.exitCode !== null) break;
+    if (p.exitCode !== null) break;
     try {
-      await fetch(`${BASE}/robots.txt`);
-      return;
+      await fetch(`http://127.0.0.1:${porta}/robots.txt`);
+      return p;
     } catch {
       await new Promise((r) => setTimeout(r, 50));
     }
@@ -100,25 +107,35 @@ async function subir() {
   throw new Error(`o servidor não subiu:\n${saida}`);
 }
 
-async function descer() {
-  if (!processo || processo.exitCode !== null) return;
-  const fim = new Promise((r) => processo.once('exit', r));
-  processo.kill('SIGTERM');
+async function parar(p) {
+  if (!p || p.exitCode !== null) return;
+  const fim = new Promise((r) => p.once('exit', r));
+  p.kill('SIGTERM');
   await fim;
 }
 
-async function api(metodo, rota, { token, json, corpo, tipo } = {}) {
-  const headers = {};
-  if (token) headers.Authorization = `Bearer ${token}`;
+async function subir() {
+  processo = await iniciar(PORTA, DADOS);
+}
+
+const descer = () => parar(processo);
+
+/**
+ * Um pedido à API do painel, como o painel faz: POST com JSON, e o token da sessão dentro do corpo.
+ * Para os pedidos fora do formato: `corpo` e `tipo` mandam um corpo qualquer, `metodo` troca o POST,
+ * `headers` acrescenta cabeçalhos e `base` manda o pedido por outro caminho (ver o intermediário, lá embaixo).
+ */
+async function api(rota, { token, json, corpo, tipo, metodo = 'POST', headers: extras = {}, base = BASE } = {}) {
+  const headers = { ...extras };
   let body;
-  if (json !== undefined) {
-    headers['Content-Type'] = 'application/json';
-    body = JSON.stringify(json);
-  } else if (corpo !== undefined) {
+  if (corpo !== undefined) {
     headers['Content-Type'] = tipo || 'application/octet-stream';
     body = corpo;
+  } else if (metodo !== 'GET' && metodo !== 'HEAD') {
+    headers['Content-Type'] = 'application/json';
+    body = JSON.stringify(token ? { sessao: token, ...json } : (json ?? {}));
   }
-  const r = await fetch(`${BASE}/admin/api/${rota}`, { method: metodo, headers, body });
+  const r = await fetch(`${base}/admin/api/${rota}`, { method: metodo, headers, body });
   const texto = await r.text();
   let dados = null;
   try {
@@ -147,7 +164,9 @@ const baixar = async (caminho, opcoes) => {
   const r = await fetch(BASE + caminho, opcoes);
   return { status: r.status, tipo: r.headers.get('content-type'), headers: r.headers, corpo: Buffer.from(await r.arrayBuffer()) };
 };
-const entrar = (usuario, senha) => api('POST', 'entrar', { json: { usuario, senha } });
+const entrar = (usuario, senha, base) => api('entrar', { json: { usuario, senha }, base });
+/** Envia uma imagem como o painel: os bytes em base64, dentro do JSON. */
+const enviarImagem = (id, token, bytes, base) => api(`imagens/${id}`, { token, json: { arquivo: Buffer.from(bytes).toString('base64') }, base });
 const pagina = async (caminho) => (await baixar(caminho)).corpo.toString('utf8');
 /** Pede sem seguir o redirecionamento: [status, para onde manda, tamanho do corpo]. */
 const semSeguir = async (caminho, metodo = 'GET') => {
@@ -187,6 +206,7 @@ try {
   }
   assert.ok(aplicativo.includes('href:"/admin/"'));
   assert.ok(PADRAO.convite.includes('<a class="button" href="/regras/">Consultar regras oficiais</a>'), 'é pelo botão do convite que se chega às regras');
+  assert.ok(PADRAO.convite.includes(`</main>${LINK_DO_ADMIN}`) && LINK_DO_ADMIN.includes('href="/admin/"'), 'e, no canto do convite, a etiqueta Admin leva ao painel');
   assert.ok(!aplicativo.includes('fs-convite') && !PADRAO.index.includes('convite-no-inicio'), 'a página de regras não traz o convite');
   assert.equal(aplicativo.split(LINK_DE_VOLTA).length - 1, 2, 'a página de regras tem o link de volta ao convite (um para telas estreitas, outro para as largas)');
   assert.ok(LINK_DE_VOLTA.includes('href:"/"') && PADRAO.index.includes(ESTILO_DO_LINK_DE_VOLTA), 'ele leva ao início do site, e a página recebe as regras de visual dele');
@@ -214,32 +234,55 @@ try {
     assert.equal(r.tipo, tipo, caminho);
   }
   for (const caminho of ['/', '/regras/', '/convite/', '/admin/']) assert.equal((await fetch(BASE + caminho, { method: 'POST', redirect: 'manual' })).status, 405, `POST ${caminho}`);
-  ok('site sem alterações do painel: "/" é o convite, "/regras/" são as regras (link de volta ao convite, créditos novos e aba Admin) e "/convite/" leva para "/"');
+  ok('site sem alterações do painel: "/" é o convite (com a etiqueta Admin), "/regras/" são as regras (link de volta ao convite, créditos novos e aba Admin) e "/convite/" leva para "/"');
 
   const painel = await baixar('/admin/');
   assert.ok(painel.headers.get('content-security-policy').includes("script-src 'self'"));
   assert.equal(painel.headers.get('x-robots-tag'), 'noindex, nofollow');
   ok('painel: só carrega arquivos do próprio servidor e fica fora dos buscadores');
 
+  // ───── endereços com versão
+  // Um intermediário pode guardar arquivos por um tempo sem perguntar ao servidor se mudaram. As páginas
+  // são pedidas a cada visita; por isso é nelas que vai a versão do que carregam. Quando o arquivo muda,
+  // o endereço muda, e ninguém tem o endereço novo guardado.
+  {
+    // A página do painel nunca é guardada, e pede o painel.css e o painel.js pela versão de cada um.
+    for (const caminho of ['/admin/', '/admin', '/Admin/']) {
+      const tela = await baixar(caminho);
+      assert.equal(tela.headers.get('cache-control'), 'no-store', caminho);
+      assert.equal(tela.headers.get('etag'), null, caminho);
+      const html = tela.corpo.toString('utf8');
+      const pedidos = [...html.matchAll(/(?:href|src)="(\/admin\/painel\.[^"]*)"/g)].map((m) => m[1]);
+      const doPainel = (nome) => fs.readFileSync(path.join(RAIZ, 'admin', 'painel', nome));
+      assert.deepEqual(pedidos, [`/admin/painel.css?v=${versaoDe(doPainel('painel.css'))}`, `/admin/painel.js?v=${versaoDe(doPainel('painel.js'))}`], caminho);
+      for (const pedido of pedidos) {
+        const arquivo = await baixar(pedido);
+        assert.equal(arquivo.status, 200, pedido);
+        assert.ok(arquivo.corpo.equals(doPainel(pedido.slice('/admin/'.length).split('?')[0])), `${pedido}: é o arquivo de agora`);
+      }
+      assert.equal(html.replace(/\?v=[A-Za-z0-9_-]{10}"/g, '"'), doPainel('index.html').toString('utf8'), `${caminho}: fora as versões, a página é o arquivo`);
+    }
+    const semCorpo = await fetch(`${BASE}/admin/`, { method: 'HEAD' });
+    assert.deepEqual([semCorpo.status, (await semCorpo.arrayBuffer()).byteLength, semCorpo.headers.get('cache-control')], [200, 0, 'no-store']);
+    // A página de regras pede o aplicativo pela versão dele; com ou sem a versão, o servidor entrega o de agora.
+    const pedidoDoAplicativo = /<script type="module" crossorigin src="([^"]*)"><\/script>/.exec(await pagina('/regras/'))[1];
+    assert.equal(pedidoDoAplicativo, `/${ARQUIVOS.js}?v=${versaoDe(PADRAO.js)}`);
+    assert.equal(await pagina(pedidoDoAplicativo), PADRAO.js);
+    assert.equal(await pagina(`/${ARQUIVOS.js}?v=uma-versao-antiga`), PADRAO.js);
+  }
+  ok('endereços com versão: a página do painel (nunca guardada) e a página de regras pedem os arquivos pelo resumo do conteúdo deles');
+
   // ───── sem login
-  for (const [metodo, rota] of [
-    ['GET', 'sessao'],
-    ['GET', 'conteudo'],
-    ['PUT', 'conteudo'],
-    ['PUT', 'imagens/logo'],
-    ['DELETE', 'imagens/logo'],
-    ['POST', 'acesso'],
-    ['POST', 'sair'],
-    ['POST', 'restaurar-original'],
-    ['POST', 'historico/1/restaurar'],
-    ['GET', 'qualquer'],
-  ]) {
-    const r = await api(metodo, rota, metodo === 'GET' ? {} : { json: {} });
-    assert.equal(r.status, 401, `${metodo} ${rota}`);
+  const ROTAS_COM_SESSAO = ['sessao', 'conteudo', 'conteudo/salvar', 'imagens/logo', 'imagens/logo/remover', 'acesso', 'sair', 'restaurar-original', 'historico/1/restaurar'];
+  for (const rota of [...ROTAS_COM_SESSAO, 'qualquer']) {
+    const r = await api(rota);
+    assert.equal(r.status, 401, rota);
     assert.ok(r.dados.erro);
     assert.equal(r.headers.get('cache-control'), 'no-store');
   }
-  for (const token of ['x', 'a'.repeat(43), '../../etc/passwd']) assert.equal((await api('GET', 'conteudo', { token })).status, 401);
+  for (const token of ['x', 'a'.repeat(43), '../../etc/passwd']) assert.equal((await api('conteudo', { token })).status, 401);
+  // (aqui o campo vai direto no corpo, do jeito que alguém de fora tentaria)
+  for (const sessao of [123, true, null, ['a'.repeat(43)], { a: 1 }, '']) assert.equal((await api('conteudo', { json: { sessao } })).status, 401, JSON.stringify(sessao));
   ok('sem login, nada do conteúdo é lido nem alterado');
 
   for (const caminho of [
@@ -265,11 +308,11 @@ try {
   ok('arquivos do servidor e da pasta de dados não são alcançados pela web');
 
   // ───── login
-  assert.equal((await api('GET', 'entrar')).status, 405);
-  assert.equal((await api('POST', 'entrar', { corpo: 'usuario=adm&senha=142536', tipo: 'application/x-www-form-urlencoded' })).status, 415);
-  assert.equal((await api('POST', 'entrar', { corpo: '{"usuario":', tipo: 'application/json' })).status, 400);
-  assert.equal((await api('POST', 'entrar', { json: [] })).status, 400);
-  assert.equal((await api('POST', 'entrar', { json: { usuario: 'adm' } })).status, 400);
+  assert.equal((await api('entrar', { metodo: 'GET' })).status, 405);
+  assert.equal((await api('entrar', { corpo: 'usuario=adm&senha=142536', tipo: 'application/x-www-form-urlencoded' })).status, 415);
+  assert.equal((await api('entrar', { corpo: '{"usuario":', tipo: 'application/json' })).status, 400);
+  assert.equal((await api('entrar', { json: [] })).status, 400);
+  assert.equal((await api('entrar', { json: { usuario: 'adm' } })).status, 400);
   let r = await entrar('adm', '000000');
   assert.equal(r.status, 401);
   assert.equal(r.dados.erro, 'Usuário ou senha incorretos.');
@@ -277,15 +320,29 @@ try {
   assert.equal(r.status, 200);
   assert.equal(r.dados.senhaInicial, true);
   const token = r.dados.token;
-  assert.deepEqual((await api('GET', 'sessao', { token })).dados, { usuario: 'adm', senhaInicial: true });
+  const tokensUsados = [token];
+  assert.deepEqual((await api('sessao', { token })).dados, { usuario: 'adm', senhaInicial: true });
+  // Todo pedido à API é um POST (é o que qualquer hospedagem repassa), e a sessão só vale dentro do corpo.
+  for (const rota of ['entrar', ...ROTAS_COM_SESSAO]) {
+    for (const metodo of ['GET', 'PUT', 'DELETE']) {
+      const recusa = await api(rota, { metodo, ...(metodo === 'GET' ? {} : { corpo: JSON.stringify({ sessao: token }), tipo: 'application/json' }) });
+      assert.equal(recusa.status, 405, `${metodo} ${rota}`);
+      assert.equal(recusa.headers.get('allow'), 'POST', `${metodo} ${rota}`);
+      // Quem pede assim é um painel aberto antes da atualização (ele usava GET, PUT e DELETE), e ele mostra na tela o que vier aqui.
+      assert.equal(recusa.dados.erro, 'O painel foi atualizado e esta tela ficou antiga: recarregue a página. (Este endereço só aceita pedidos POST.)', `${metodo} ${rota}`);
+    }
+  }
+  assert.equal((await api('sessao', { headers: { Authorization: `Bearer ${token}` } })).status, 401, 'o token em um cabeçalho não abre nada');
+  assert.equal((await api('sessao', { corpo: JSON.stringify({ sessao: token }), tipo: 'text/plain' })).status, 415, 'o corpo tem que ser JSON');
+  assert.equal((await api('sessao', { token })).status, 200, 'nenhuma dessas recusas derruba a sessão');
   ok('login adm / 142536 abre a sessão; pedidos fora do formato são recusados');
 
   // ───── textos
-  r = await api('GET', 'conteudo', { token });
+  r = await api('conteudo', { token });
   assert.equal(r.status, 200);
   assert.equal(r.dados.versao, 0);
   assert.deepEqual(r.dados.problemas, []);
-  r = await api('PUT', 'conteudo', { token, json: { versao: 0, textos: { 'convite.titulo': 'Título <novo> & "aspas"', 'regras.abertura.titulo1': 'RP sério.' } } });
+  r = await api('conteudo/salvar', { token, json: { versao: 0, textos: { 'convite.titulo': 'Título <novo> & "aspas"', 'regras.abertura.titulo1': 'RP sério.' } } });
   assert.equal(r.status, 200);
   assert.equal(r.dados.versao, 1);
   assert.deepEqual(r.dados.enderecos, ENDERECOS, 'o painel recebe os endereços das duas páginas');
@@ -293,12 +350,11 @@ try {
   const aplicativoNovo = await pagina(`/${ARQUIVOS.js}`);
   assert.ok(aplicativoNovo.includes('children:["RP sério.",'));
   assert.equal(aplicativoNovo.length, PADRAO.js.length + 'RP sério.'.length - 'Roleplay justo.'.length, 'na página de regras só mudou o texto dela');
-  assert.equal((await api('PUT', 'conteudo', { token, json: { versao: 0, textos: {} } })).status, 409);
-  r = await api('PUT', 'conteudo', { token, json: { versao: 1, textos: { 'convite.titulo': 'x'.repeat(400) } } });
+  assert.equal((await api('conteudo/salvar', { token, json: { versao: 0, textos: {} } })).status, 409);
+  r = await api('conteudo/salvar', { token, json: { versao: 1, textos: { 'convite.titulo': 'x'.repeat(400) } } });
   assert.equal(r.status, 400);
   assert.ok(r.dados.erro.includes('300'));
-  assert.equal((await api('PUT', 'conteudo', { token, corpo: 'x'.repeat(4 * 1024 * 1024 + 10), tipo: 'application/json' })).status, 413);
-  assert.equal((await api('POST', 'conteudo', { token, json: {} })).status, 405);
+  assert.equal((await api('conteudo/salvar', { corpo: 'x'.repeat(4 * 1024 * 1024 + 10), tipo: 'application/json' })).status, 413);
   ok('salvar textos muda as páginas na hora; conflito de versão e limites de tamanho respondem certo');
 
   const comprimido = await fetch(`${BASE}/${ARQUIVOS.js}`, { headers: { 'Accept-Encoding': 'gzip' } });
@@ -320,7 +376,7 @@ try {
   // ───── imagens
   const jpg = doSite('fronteira-sul-convite-preview.jpg').subarray(0, 4000); // basta o começo: o servidor só lê o cabeçalho
   const png = pngSimples(300, 200);
-  r = await api('PUT', 'imagens/logo', { token, corpo: png, tipo: 'text/plain' }); // o tipo informado não importa: vale o conteúdo
+  r = await enviarImagem('logo', token, png);
   assert.equal(r.status, 200, r.texto);
   let registro = r.dados.imagens.find((x) => x.id === 'logo').atual;
   assert.deepEqual([registro.tipo, registro.largura, registro.altura, registro.bytes], ['image/png', 300, 200, png.length]);
@@ -330,46 +386,84 @@ try {
     assert.equal(img.headers.get('x-content-type-options'), 'nosniff');
     assert.ok(img.corpo.equals(png), caminho);
   }
-  r = await api('PUT', 'imagens/icone', { token, corpo: GIF_MINIMO, tipo: 'image/gif' });
+  r = await enviarImagem('icone', token, GIF_MINIMO);
   assert.equal(r.dados.imagens.find((x) => x.id === 'icone').atual.tipo, 'image/gif');
   assert.equal((await baixar('/favicon.ico')).tipo, 'image/gif');
-  r = await api('PUT', 'imagens/convite', { token, corpo: jpg, tipo: 'image/jpeg' });
+  r = await enviarImagem('convite', token, jpg);
   registro = r.dados.imagens.find((x) => x.id === 'convite').atual;
   assert.deepEqual([registro.tipo, registro.largura, registro.altura], ['image/jpeg', 1200, 675]);
+  // As páginas pedem cada imagem trocada pela versão do arquivo enviado (para nenhum intermediário entregar a
+  // antiga, que ele pode ter guardado), e nesse endereço o servidor entrega a nova.
+  {
+    const noConvite = /<img class="poster"[^>]* src="([^"]*)"/.exec(await pagina('/'))[1];
+    assert.equal(noConvite, `/fronteira-sul-convite-preview.jpg?v=${versaoDaImagem(jpg)}`);
+    assert.ok((await baixar(noConvite)).corpo.equals(jpg));
+    const aplicativoAgora = await pagina(`/${ARQUIVOS.js}`);
+    for (const pedido of [`ng="/manus-storage/fronteira-sul-logo_1b1b4c2d.webp?v=${versaoDaImagem(png)}"`, `o("/fronteira-sul-logo.webp?v=${versaoDaImagem(png)}")`]) {
+      assert.equal(aplicativoAgora.split(pedido).length - 1, 1, pedido);
+    }
+    assert.ok((await baixar(`/fronteira-sul-logo.webp?v=${versaoDaImagem(png)}`)).corpo.equals(png));
+    const pedidoDoAplicativo = /<script type="module" crossorigin src="([^"]*)">/.exec(await pagina('/regras/'))[1];
+    assert.equal(pedidoDoAplicativo, `/${ARQUIVOS.js}?v=${versaoDe(aplicativoAgora)}`, 'o aplicativo mudou (o logo é outro): a página de regras pede o novo');
+    const icones = JSON.parse(await pagina(`/${ARQUIVOS.manifesto}`)).icons.map((i) => i.src);
+    assert.deepEqual(icones, [`/favicon.ico?v=${versaoDaImagem(GIF_MINIMO)}`, `/favicon.ico?v=${versaoDaImagem(GIF_MINIMO)}`]);
+    assert.ok((await baixar(icones[0])).corpo.equals(GIF_MINIMO));
+  }
 
+  // O que decide se é imagem é o conteúdo do arquivo, e não o nome nem o que o navegador diz dele.
   const svg = Buffer.from('<svg xmlns="http://www.w3.org/2000/svg"><script>alert(1)</script></svg>');
-  assert.equal((await api('PUT', 'imagens/logo', { token, corpo: svg, tipo: 'image/svg+xml' })).status, 415);
-  assert.equal((await api('PUT', 'imagens/logo', { token, corpo: Buffer.from('<html><script>alert(1)</script></html> texto'), tipo: 'image/png' })).status, 415);
-  assert.equal((await api('PUT', 'imagens/logo', { token, corpo: Buffer.alloc(0), tipo: 'image/png' })).status, 415);
-  assert.equal((await api('PUT', 'imagens/outra', { token, corpo: png, tipo: 'image/png' })).status, 404);
-  assert.equal((await api('PUT', 'imagens/..%2Flogo', { token, corpo: png, tipo: 'image/png' })).status, 404);
-  // Passou de 8 MB: o servidor recebe o envio até o fim para o navegador conseguir ler o motivo da recusa.
-  r = await api('PUT', 'imagens/logo', { token, corpo: Buffer.concat([png, Buffer.alloc(8 * 1024 * 1024)]), tipo: 'image/png' });
+  assert.equal((await enviarImagem('logo', token, svg)).status, 415);
+  assert.equal((await enviarImagem('logo', token, Buffer.from('<html><script>alert(1)</script></html> texto'))).status, 415);
+  assert.equal((await enviarImagem('logo', token, Buffer.alloc(0))).status, 415);
+  assert.equal((await enviarImagem('outra', token, png)).status, 404);
+  assert.equal((await enviarImagem('..%2Flogo', token, png)).status, 404);
+  // A imagem viaja em base64 dentro do JSON; o que não for base64 inteiro é recusado antes de virar arquivo.
+  const emBase64 = png.toString('base64');
+  for (const arquivo of [undefined, 123, null, ['a'], emBase64.slice(0, -3), `${emBase64.slice(0, 40)}\n${emBase64.slice(40)}`, `data:image/png;base64,${emBase64}`, `=${emBase64.slice(1)}`, 'não é base64!']) {
+    r = await api('imagens/logo', { token, json: { arquivo } });
+    assert.equal(r.status, 400, `${String(arquivo).slice(0, 30)}: ${r.texto}`);
+  }
+  assert.equal((await enviarImagem('logo', undefined, png)).status, 401, 'sem sessão, a imagem não entra');
+  // O limite é de 8 MB do arquivo, e não do texto em base64 (que é um terço maior): 8 MB justos entram, um byte a mais não.
+  const OITO_MB = 8 * 1024 * 1024;
+  const justa = Buffer.concat([png, Buffer.alloc(OITO_MB - png.length)]);
+  r = await enviarImagem('convite', token, justa);
+  assert.equal(r.status, 200, r.texto);
+  assert.equal(r.dados.imagens.find((x) => x.id === 'convite').atual.bytes, OITO_MB);
+  assert.ok((await baixar('/fronteira-sul-convite-preview.jpg')).corpo.equals(justa), 'e chega ao site inteira, byte a byte');
+  r = await enviarImagem('convite', token, Buffer.concat([justa, Buffer.alloc(1)]));
   assert.equal(r.status, 413);
   assert.ok(r.dados.erro.includes('8 MB'), r.texto);
-  assert.equal((await api('GET', 'sessao', { token })).status, 200, 'a conexão continua boa depois da recusa');
+  r = await enviarImagem('convite', token, jpg);
+  assert.equal(r.status, 200, r.texto);
+  // Passou bem de 8 MB: o servidor recebe o envio até o fim para o navegador conseguir ler o motivo da recusa.
+  r = await enviarImagem('logo', token, Buffer.concat([png, Buffer.alloc(OITO_MB)]));
+  assert.equal(r.status, 413);
+  assert.ok(r.dados.erro.includes('8 MB'), r.texto);
+  assert.equal((await api('sessao', { token })).status, 200, 'a conexão continua boa depois da recusa');
   // Muito acima do limite: recusa só pelo tamanho anunciado, sem receber nada.
-  const enorme = await cru('/admin/api/imagens/logo', { metodo: 'PUT', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'image/png', 'Content-Length': String(70 * 1024 * 1024) } });
+  const enorme = await cru('/admin/api/imagens/logo', { metodo: 'POST', headers: { 'Content-Type': 'application/json', 'Content-Length': String(100 * 1024 * 1024) } });
   assert.equal(enorme.status, 413);
   assert.equal(enorme.headers.connection, 'close');
-  r = await api('GET', 'conteudo', { token });
+  r = await api('conteudo', { token });
   assert.equal(r.dados.imagens.find((x) => x.id === 'logo').atual.largura, 300, 'os envios recusados não mexeram no logo');
 
-  await api('DELETE', 'imagens/icone', { token });
+  await api('imagens/icone/remover', { token });
   assert.equal((await baixar('/favicon.ico')).tipo, 'image/png', 'sem ícone próprio, vale o logo enviado');
-  await api('DELETE', 'imagens/logo', { token });
+  await api('imagens/logo/remover', { token });
   assert.ok((await baixar('/favicon.ico')).corpo.equals(doSite('favicon.ico')));
-  ok('imagens: enviar, recusar o que não é imagem ou passa de 8 MB, e voltar à original');
+  ok('imagens: enviar (as páginas pedem a nova pela versão dela), recusar o que não é imagem ou passa de 8 MB, e voltar à original');
 
   // ───── troca de usuário e senha
-  assert.equal((await api('POST', 'acesso', { token, json: { senhaAtual: 'errada', novaSenha: 'nova-senha-1' } })).status, 403);
-  assert.equal((await api('POST', 'acesso', { token, json: { senhaAtual: '142536', novaSenha: '123' } })).status, 400);
+  assert.equal((await api('acesso', { token, json: { senhaAtual: 'errada', novaSenha: 'nova-senha-1' } })).status, 403);
+  assert.equal((await api('acesso', { token, json: { senhaAtual: '142536', novaSenha: '123' } })).status, 400);
   const outroAparelho = (await entrar('adm', '142536')).dados.token;
-  r = await api('POST', 'acesso', { token, json: { senhaAtual: '142536', novoUsuario: 'Chefe', novaSenha: 'nova-senha-1' } });
+  tokensUsados.push(outroAparelho);
+  r = await api('acesso', { token, json: { senhaAtual: '142536', novoUsuario: 'Chefe', novaSenha: 'nova-senha-1' } });
   assert.equal(r.status, 200, r.texto);
   assert.deepEqual(r.dados, { usuario: 'chefe', senhaInicial: false });
-  assert.equal((await api('GET', 'sessao', { token })).status, 200);
-  assert.equal((await api('GET', 'sessao', { token: outroAparelho })).status, 401);
+  assert.equal((await api('sessao', { token })).status, 200);
+  assert.equal((await api('sessao', { token: outroAparelho })).status, 401);
   assert.equal((await entrar('adm', '142536')).status, 401);
   assert.equal((await entrar('chefe', 'nova-senha-1')).status, 200);
   ok('trocar usuário e senha: a senha antiga para de valer e os outros aparelhos saem');
@@ -377,24 +471,25 @@ try {
   // ───── reinício
   await descer();
   await subir();
-  assert.equal((await api('GET', 'sessao', { token })).status, 401);
+  assert.equal((await api('sessao', { token })).status, 401);
   assert.equal((await entrar('adm', '142536')).status, 401);
   r = await entrar('chefe', 'nova-senha-1');
   assert.equal(r.status, 200);
   const token2 = r.dados.token;
+  tokensUsados.push(token2);
   assert.ok((await pagina('/')).includes('<h1 id="title">Título &lt;novo&gt; &amp; "aspas"</h1>'));
   assert.ok((await baixar('/fronteira-sul-convite-preview.jpg')).corpo.equals(jpg));
   assert.ok(!processo.saida().includes('senha inicial'));
   ok('depois de reiniciar: textos, imagem e o novo acesso continuam');
 
   // ───── histórico e restauração
-  r = await api('PUT', 'conteudo', { token: token2, json: { textos: { 'convite.titulo': 'Segunda versão' } } });
+  r = await api('conteudo/salvar', { token: token2, json: { textos: { 'convite.titulo': 'Segunda versão' } } });
   assert.ok(r.dados.historico.length >= 1);
-  r = await api('POST', `historico/${r.dados.historico[0].id}/restaurar`, { token: token2 });
+  r = await api(`historico/${r.dados.historico[0].id}/restaurar`, { token: token2 });
   assert.equal(r.status, 200);
   assert.equal(r.dados.textos['convite.titulo'], 'Título <novo> & "aspas"');
-  assert.equal((await api('POST', 'historico/999999/restaurar', { token: token2 })).status, 404);
-  r = await api('POST', 'restaurar-original', { token: token2 });
+  assert.equal((await api('historico/999999/restaurar', { token: token2 })).status, 404);
+  r = await api('restaurar-original', { token: token2 });
   assert.equal(r.status, 200);
   assert.deepEqual(r.dados.textos, {});
   for (const rel of ['fronteira-sul-convite-preview.jpg', 'favicon.ico']) {
@@ -408,30 +503,49 @@ try {
 
   // ───── o link de volta ao convite, na página de regras
   // O texto muda pelo painel, na hora, e vazio tira o link.
-  r = await api('GET', 'conteudo', { token: token2 });
+  r = await api('conteudo', { token: token2 });
   assert.deepEqual(r.dados.textos, {});
   assert.equal(r.dados.campos.find((f) => f.id === 'regras.voltar.texto').original, 'Voltar ao convite');
-  r = await api('PUT', 'conteudo', { token: token2, json: { versao: r.dados.versao, textos: { 'regras.voltar.texto': 'Início' } } });
+  r = await api('conteudo/salvar', { token: token2, json: { versao: r.dados.versao, textos: { 'regras.voltar.texto': 'Início' } } });
   assert.equal(r.status, 200, r.texto);
   assert.equal(await pagina(`/${ARQUIVOS.js}`), comOLinkDeVolta('Início').js);
-  assert.equal(await pagina('/regras/'), PADRAO.index);
-  r = await api('PUT', 'conteudo', { token: token2, json: { versao: r.dados.versao, textos: { 'regras.voltar.texto': '' } } });
+  assert.equal(await pagina('/regras/'), comOLinkDeVolta('Início').index, 'a página de regras passa a pedir o aplicativo novo, pela versão dele');
+  r = await api('conteudo/salvar', { token: token2, json: { versao: r.dados.versao, textos: { 'regras.voltar.texto': '' } } });
   assert.equal(r.status, 200, r.texto);
   assert.equal(await pagina(`/${ARQUIVOS.js}`), SEM_O_LINK_DE_VOLTA.js);
   assert.equal(await pagina('/regras/'), SEM_O_LINK_DE_VOLTA.index);
   assert.ok(!(await pagina('/regras/')).includes('voltar-ao-convite') && !(await pagina(`/${ARQUIVOS.js}`)).includes('voltar-ao-convite'));
   assert.equal(await pagina('/'), PADRAO.convite, 'a página do convite não muda com o link');
-  r = await api('PUT', 'conteudo', { token: token2, json: { versao: r.dados.versao, textos: {} } });
+  r = await api('conteudo/salvar', { token: token2, json: { versao: r.dados.versao, textos: {} } });
   assert.equal(r.status, 200, r.texto);
   assert.equal(await pagina(`/${ARQUIVOS.js}`), PADRAO.js);
   assert.equal(await pagina('/regras/'), PADRAO.index);
   ok('link de volta ao convite: pelo painel, o texto muda na hora, e vazio tira o link da página de regras');
 
+  // ───── a entrada do painel para os visitantes: a etiqueta "Admin" do convite e a aba "Admin" das regras
+  r = await api('conteudo', { token: token2 });
+  const chaveDoAdmin = r.dados.interruptores.find((i) => i.opcao === 'abaAdmin');
+  assert.deepEqual([chaveDoAdmin.pagina, chaveDoAdmin.grupo, chaveDoAdmin.rotulo, r.dados.opcoes.abaAdmin], ['regras', 'Abas', 'Mostrar “Admin” para os visitantes', true]);
+  const marcaComAdmin = (await baixar('/')).headers.get('etag');
+  r = await api('conteudo/salvar', { token: token2, json: { versao: r.dados.versao, opcoes: { abaAdmin: false } } });
+  assert.equal(r.status, 200, r.texto);
+  assert.equal((await fetch(`${BASE}/`, { headers: { 'If-None-Match': marcaComAdmin } })).status, 200, 'o navegador não fica com o convite antigo guardado');
+  assert.equal(await pagina('/'), SEM_A_ENTRADA_DO_ADMIN.convite);
+  assert.equal(await pagina(`/${ARQUIVOS.js}`), SEM_A_ENTRADA_DO_ADMIN.js);
+  assert.equal(await pagina('/regras/'), SEM_A_ENTRADA_DO_ADMIN.index);
+  assert.ok(!((await pagina('/')) + (await pagina(`/${ARQUIVOS.js}`)) + (await pagina('/regras/'))).includes('/admin/'), 'desligada, nenhuma página aponta para o painel');
+  assert.equal((await baixar('/admin/')).status, 200, 'e o painel continua abrindo pelo endereço');
+  r = await api('conteudo/salvar', { token: token2, json: { versao: r.dados.versao, opcoes: { abaAdmin: true } } });
+  assert.equal(r.status, 200, r.texto);
+  assert.equal(await pagina('/'), PADRAO.convite);
+  assert.equal(await pagina(`/${ARQUIVOS.js}`), PADRAO.js);
+  ok('opção "Mostrar “Admin” para os visitantes": a etiqueta do convite e a aba das regras somem e voltam juntas, na hora');
+
   // ───── a opção "Começar o site pelo convite"
   const marcaDoInicio = (await baixar('/')).headers.get('etag');
   assert.equal((await fetch(`${BASE}/`, { headers: { 'If-None-Match': marcaDoInicio } })).status, 304);
-  r = await api('GET', 'conteudo', { token: token2 });
-  r = await api('PUT', 'conteudo', { token: token2, json: { versao: r.dados.versao, opcoes: { conviteNoInicio: false } } });
+  r = await api('conteudo', { token: token2 });
+  r = await api('conteudo/salvar', { token: token2, json: { versao: r.dados.versao, opcoes: { conviteNoInicio: false } } });
   assert.equal(r.status, 200, r.texto);
   assert.deepEqual(r.dados.enderecos, ENDERECOS_DO_ORIGINAL);
   // Desligada, as páginas ficam onde estavam no site original, e a troca vale no pedido seguinte.
@@ -449,23 +563,127 @@ try {
   }
   assert.deepEqual(await semSeguir('/regras/?busca=rdm'), [302, '/?busca=rdm', 0]);
   // Ligada de novo, o site volta a começar pelo convite.
-  r = await api('PUT', 'conteudo', { token: token2, json: { versao: r.dados.versao, opcoes: { conviteNoInicio: true } } });
+  r = await api('conteudo/salvar', { token: token2, json: { versao: r.dados.versao, opcoes: { conviteNoInicio: true } } });
   assert.deepEqual(r.dados.enderecos, ENDERECOS);
   assert.equal(await pagina('/'), PADRAO.convite);
   assert.equal(await pagina('/regras/'), PADRAO.index);
   assert.equal(await pagina(`/${ARQUIVOS.js}`), PADRAO.js);
   assert.deepEqual(await semSeguir('/convite/'), [302, '/', 0]);
   // Com o endereço do site preenchido, o mapa do site lista as duas páginas.
-  r = await api('PUT', 'conteudo', { token: token2, json: { versao: r.dados.versao, opcoes: { enderecoPublico: 'https://cidade.exemplo' } } });
+  r = await api('conteudo/salvar', { token: token2, json: { versao: r.dados.versao, opcoes: { enderecoPublico: 'https://cidade.exemplo' } } });
   assert.equal(r.status, 200, r.texto);
   assert.deepEqual([...(await pagina('/sitemap.xml')).matchAll(/<loc>([^<]*)<\/loc>/g)].map((m) => m[1]), ['https://cidade.exemplo/', 'https://cidade.exemplo/regras/']);
   assert.ok((await pagina('/')).includes('<link rel="canonical" href="https://cidade.exemplo/" />'));
   assert.ok((await pagina('/regras/')).includes('<link rel="canonical" href="https://cidade.exemplo/regras/" />'));
   ok('opção "Começar o site pelo convite": desligada, o site volta aos endereços do original; ligada, volta a começar pelo convite');
 
-  assert.equal((await api('POST', 'sair', { token: token2 })).status, 200);
-  assert.equal((await api('GET', 'sessao', { token: token2 })).status, 401);
+  assert.equal((await api('sair', { token: token2 })).status, 200);
+  assert.equal((await api('sessao', { token: token2 })).status, 401);
   ok('sair encerra a sessão');
+
+  // ───── atrás de um intermediário que só repassa o básico
+  // Entre o navegador e o servidor quase sempre há um intermediário: o da hospedagem, o de uma tela de
+  // prévia. Este é o mais pobre que ainda entrega um site: só deixa passar GET, HEAD e POST e, dos
+  // cabeçalhos do pedido, só repassa o tipo e o tamanho do corpo. (Foi atrás de um que não entregava o
+  // cabeçalho "Authorization" que o painel aceitava o login e, no pedido seguinte, dizia "sua sessão
+  // terminou".) O painel tem que funcionar inteiro através dele.
+  const intermediario = http.createServer((req, res) => {
+    if (!['GET', 'HEAD', 'POST'].includes(req.method)) {
+      res.writeHead(405, { 'Content-Length': 0, 'X-Recusado-Por': 'intermediario' });
+      req.resume();
+      return res.end();
+    }
+    const headers = {};
+    for (const nome of ['content-type', 'content-length']) if (req.headers[nome] !== undefined) headers[nome] = req.headers[nome];
+    const adiante = http.request({ host: '127.0.0.1', port: PORTA, method: req.method, path: req.url, headers }, (r) => {
+      res.writeHead(r.statusCode, r.headers);
+      r.pipe(res);
+    });
+    adiante.on('error', () => {
+      if (!res.headersSent) res.writeHead(502, { 'Content-Length': 0 });
+      res.end();
+    });
+    req.pipe(adiante);
+  });
+  await new Promise((r) => intermediario.listen(0, '127.0.0.1', r));
+  try {
+    const base = `http://127.0.0.1:${intermediario.address().port}`;
+    const por = (rota, opcoes = {}) => api(rota, { ...opcoes, base });
+    // Ele é mesmo tão pobre quanto foi dito: PUT e DELETE param nele, e um cabeçalho com o token não chega.
+    for (const metodo of ['PUT', 'DELETE']) assert.equal((await por('sessao', { metodo, corpo: '{}', tipo: 'application/json' })).headers.get('x-recusado-por'), 'intermediario', metodo);
+    assert.equal((await fetch(`${base}/`)).status, 200);
+    r = await entrar('chefe', 'nova-senha-1', base);
+    assert.equal(r.status, 200, r.texto);
+    const token3 = r.dados.token;
+    // O pedido logo depois do login: era aqui que o painel parava.
+    r = await por('conteudo', { token: token3 });
+    assert.equal(r.status, 200, r.texto);
+    assert.deepEqual((await por('sessao', { token: token3 })).dados, { usuario: 'chefe', senhaInicial: false });
+    r = await por('conteudo/salvar', { token: token3, json: { versao: r.dados.versao, textos: { 'convite.titulo': 'Pelo intermediário' } } });
+    assert.equal(r.status, 200, r.texto);
+    assert.ok((await pagina('/')).includes('<h1 id="title">Pelo intermediário</h1>'));
+    r = await enviarImagem('logo', token3, png, base);
+    assert.equal(r.status, 200, r.texto);
+    assert.ok((await baixar('/fronteira-sul-logo.webp')).corpo.equals(png));
+    r = await por('imagens/logo/remover', { token: token3 });
+    assert.equal(r.status, 200, r.texto);
+    assert.ok((await baixar('/fronteira-sul-logo.webp')).corpo.equals(doSite('fronteira-sul-logo.webp')));
+    r = await por(`historico/${r.dados.historico[0].id}/restaurar`, { token: token3 });
+    assert.equal(r.status, 200, r.texto);
+    r = await por('acesso', { token: token3, json: { senhaAtual: 'nova-senha-1', novoUsuario: 'chefia' } });
+    assert.deepEqual([r.status, r.dados], [200, { usuario: 'chefia', senhaInicial: false }], r.texto);
+    r = await por('acesso', { token: token3, json: { senhaAtual: 'nova-senha-1', novoUsuario: 'chefe' } });
+    assert.equal(r.status, 200, r.texto);
+    r = await por('restaurar-original', { token: token3 });
+    assert.equal(r.status, 200, r.texto);
+    assert.equal(await pagina('/'), PADRAO.convite);
+    assert.equal((await por('sair', { token: token3 })).status, 200);
+    assert.equal((await por('sessao', { token: token3 })).status, 401);
+    tokensUsados.push(token3);
+  } finally {
+    intermediario.close();
+    intermediario.closeAllConnections();
+  }
+  // O painel fala com o servidor por um caminho só, e esse caminho é o que o teste acima percorreu.
+  const painelJs = fs.readFileSync(path.join(RAIZ, 'admin', 'painel', 'painel.js'), 'utf8');
+  assert.deepEqual(painelJs.match(/\bfetch\([^\n]*/g), ["fetch(`/admin/api/${rota}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(corpo), cache: 'no-store' });"]);
+  assert.ok(painelJs.includes("const corpo = rota === 'entrar' ? pedido : { sessao: token, ...pedido };"), 'a sessão vai dentro do corpo');
+  assert.ok(!/XMLHttpRequest|sendBeacon|EventSource|WebSocket|<form/.test(painelJs));
+  ok('painel atrás de um intermediário que só repassa POST e o corpo: login, textos, imagens, histórico, acesso e sair funcionam');
+
+  // ───── o registro do servidor diz por que um pedido do painel foi recusado
+  // É o que se vê no terminal quando alguém diz "a senha está certa e não entra": o login aceito e, logo
+  // depois, um pedido recusado. A nota ao lado conta se o pedido chegou sem a sessão ou com uma que não vale.
+  {
+    const porta = await portaLivre();
+    const outro = await iniciar(porta, pastaTemporaria(), { registro: true });
+    try {
+      const base = `http://127.0.0.1:${porta}`;
+      const sessao = (await entrar('adm', '142536', base)).dados.token;
+      assert.equal((await api('conteudo', { token: sessao, base })).status, 200);
+      assert.equal((await api('conteudo', { base })).status, 401);
+      assert.equal((await api('conteudo', { token: 'a'.repeat(43), base })).status, 401);
+      assert.equal((await api('conteudo', { metodo: 'GET', headers: { Authorization: `Bearer ${sessao}` }, base })).status, 405);
+      // (a linha de um pedido é escrita depois da resposta: a última pode demorar um instante para chegar aqui)
+      for (let i = 0; i < 150 && !outro.saida().includes('405  GET /admin/api/conteudo'); i++) await new Promise((r) => setTimeout(r, 20));
+      const linhas = outro
+        .saida()
+        .split('\n')
+        .filter((linha) => linha.includes('/admin/api/'))
+        .map((linha) => linha.replace(/^\d\d:\d\d:\d\d {2}/, ''));
+      assert.deepEqual(linhas, [
+        '200  POST /admin/api/entrar',
+        '200  POST /admin/api/conteudo',
+        '401  POST /admin/api/conteudo  (pedido sem sessão)',
+        '401  POST /admin/api/conteudo  (sessão desconhecida ou vencida)',
+        '405  GET /admin/api/conteudo',
+      ]);
+      assert.ok(!outro.saida().includes(sessao) && !outro.saida().includes('142536'), 'o token e a senha não aparecem no registro');
+    } finally {
+      await parar(outro);
+    }
+  }
+  ok('registro do servidor: um pedido do painel recusado traz o motivo (sem sessão, ou sessão que não vale); token e senha não aparecem');
 
   // ───── limite de tentativas
   for (let i = 0; i < 5; i++) assert.equal((await entrar('chefe', `errada-${i}`)).status, 401);
@@ -477,6 +695,14 @@ try {
 
   assert.deepEqual(fs.readdirSync(DADOS).sort(), ['acesso.json', 'conteudo.json', 'historico', 'imagens']);
   assert.ok(!fs.readFileSync(path.join(DADOS, 'acesso.json'), 'utf8').includes('nova-senha-1'));
+  // O token da sessão vai no corpo dos pedidos, junto com o que é salvo: ele abre a porta e para aí, sem ir para o disco.
+  const noDisco = fs.readdirSync(DADOS, { recursive: true, withFileTypes: true }).filter((item) => item.isFile());
+  assert.ok(noDisco.length >= 3 && tokensUsados.length === 4);
+  for (const item of noDisco) {
+    const texto = fs.readFileSync(path.join(item.parentPath ?? item.path, item.name), 'latin1');
+    for (const usado of tokensUsados) assert.ok(!texto.includes(usado), `${item.name} guarda um token de sessão`);
+    assert.ok(!texto.includes('"sessao"'), `${item.name} guarda o campo da sessão`);
+  }
   assert.deepEqual(retratoDoSite(), siteAntes);
   ok('tudo fica na pasta de dados (a senha não fica escrita nela); nenhum arquivo de site/ foi tocado');
 } finally {

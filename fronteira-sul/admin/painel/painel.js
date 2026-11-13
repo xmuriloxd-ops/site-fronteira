@@ -87,20 +87,17 @@ class ErroDoServidor extends Error {
   }
 }
 
-async function api(metodo, rota, { json, arquivo } = {}) {
-  const headers = {};
-  if (token) headers.Authorization = `Bearer ${token}`;
-  let body;
-  if (json !== undefined) {
-    headers['Content-Type'] = 'application/json';
-    body = JSON.stringify(json);
-  } else if (arquivo) {
-    headers['Content-Type'] = arquivo.type || 'application/octet-stream';
-    body = arquivo;
-  }
+/**
+ * Fala com o servidor. Todo pedido é um POST com JSON, e a sessão vai dentro do
+ * corpo, no campo "sessao" (o motivo está em admin/api.mjs: é o formato do
+ * próprio login, e passa igual por qualquer hospedagem ou tela de prévia que
+ * fique entre o navegador e o servidor).
+ */
+async function api(rota, pedido = {}) {
+  const corpo = rota === 'entrar' ? pedido : { sessao: token, ...pedido };
   let resposta;
   try {
-    resposta = await fetch(`/admin/api/${rota}`, { method: metodo, headers, body, cache: 'no-store' });
+    resposta = await fetch(`/admin/api/${rota}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(corpo), cache: 'no-store' });
   } catch {
     throw new ErroDoServidor(0, 'Não consegui falar com o servidor. Confira a internet e tente de novo.');
   }
@@ -115,7 +112,24 @@ async function api(metodo, rota, { json, arquivo } = {}) {
     if (resposta.status === 401 && rota !== 'entrar') sessaoTerminou();
     throw erro;
   }
+  // Uma resposta "deu certo" sem os dados não veio deste servidor: foi alguma página que um intermediário pôs no lugar.
+  if (!dados || typeof dados !== 'object') throw new ErroDoServidor(0, 'A resposta não veio no formato que o painel espera: alguma coisa entre o navegador e o servidor respondeu no lugar dele. Recarregue a página e tente de novo.');
   return dados;
+}
+
+/** O conteúdo de um arquivo escolhido pelo administrador, em base64, para ir dentro do JSON. */
+function emBase64(arquivo) {
+  return new Promise((resolver, rejeitar) => {
+    const leitor = new FileReader();
+    leitor.onload = () => {
+      // Vem como "data:image/png;base64,AAAA…": só interessa o que está depois da vírgula.
+      const texto = String(leitor.result);
+      const virgula = texto.indexOf(',');
+      resolver(virgula < 0 ? '' : texto.slice(virgula + 1));
+    };
+    leitor.onerror = () => rejeitar(new ErroDoServidor(0, 'Não consegui ler esse arquivo. Escolha a imagem de novo.'));
+    leitor.readAsDataURL(arquivo);
+  });
 }
 
 // ───────────────────────────── avisos e confirmações ─────────────────────────────
@@ -262,7 +276,7 @@ async function salvar() {
     let porCima = false;
     for (;;) {
       try {
-        const dados = await api('PUT', 'conteudo', { json: { ...montarEnvio(), ...(porCima ? {} : { versao: servidor.versao }) } });
+        const dados = await api('conteudo/salvar', { ...montarEnvio(), ...(porCima ? {} : { versao: servidor.versao }) });
         sincronizar(dados);
         desenhar({ manterPosicao: true });
         avisar('Salvo. O site já está atualizado.');
@@ -676,7 +690,7 @@ function cartaoDaImagem(img) {
     if (arquivo.size > LIMITE_IMAGEM) return avisar(`Essa imagem tem ${tamanhoLegivel(arquivo.size)}. O máximo é 8 MB; envie uma versão menor.`, true);
     rotulo.textContent = 'Enviando…';
     try {
-      sincronizarSemPerderEdicao(await api('PUT', `imagens/${img.id}`, { arquivo }));
+      sincronizarSemPerderEdicao(await api(`imagens/${img.id}`, { arquivo: await emBase64(arquivo) }));
       avisar(`${img.rotulo}: imagem trocada. Já está no site.`);
     } catch (erro) {
       if (erro.status !== 401) avisar(erro.message, true);
@@ -690,7 +704,7 @@ function cartaoDaImagem(img) {
       const sim = await confirmar({ titulo: 'Voltar à imagem original?', texto: `${img.rotulo}: a imagem que você enviou é apagada e o site volta a mostrar a original.`, ok: 'Voltar à original', perigo: true });
       if (!sim) return;
       try {
-        sincronizarSemPerderEdicao(await api('DELETE', `imagens/${img.id}`));
+        sincronizarSemPerderEdicao(await api(`imagens/${img.id}/remover`));
         avisar(`${img.rotulo}: voltou a imagem original.`);
       } catch (erro) {
         if (erro.status !== 401) avisar(erro.message, true);
@@ -799,7 +813,7 @@ function abaHistorico() {
         onclick: () =>
           trocarTudo(
             { titulo: 'Voltar para esta versão?', texto: `Os textos, as regras e as opções voltam a ser os de ${dataLegivel(v.publicadaEm)}. As imagens não mudam.`, ok: 'Voltar para esta' },
-            () => api('POST', `historico/${v.id}/restaurar`),
+            () => api(`historico/${v.id}/restaurar`),
             'Pronto. O site voltou para a versão escolhida.',
           ),
       }),
@@ -827,7 +841,7 @@ function abaHistorico() {
           () =>
             trocarTudo(
               { titulo: 'Restaurar o site original?', texto: 'Todos os textos, as regras e as opções voltam ao original, e as imagens que você enviou são apagadas.', ok: 'Restaurar tudo' },
-              () => api('POST', 'restaurar-original'),
+              () => api('restaurar-original'),
               'Pronto. O site voltou ao original.',
             ),
           'perigo',
@@ -871,7 +885,7 @@ function abaAcesso() {
     if (!atual.value) return falhar('Escreva a senha atual.', atual);
     enviar.disabled = true;
     try {
-      sessao = await api('POST', 'acesso', { json: { senhaAtual: atual.value, novoUsuario, novaSenha: nova.value } });
+      sessao = await api('acesso', { senhaAtual: atual.value, novoUsuario, novaSenha: nova.value });
       avisar(nova.value ? 'Usuário e senha trocados. Na próxima vez, entre com os dados novos.' : 'Usuário trocado. Na próxima vez, entre com o usuário novo.');
       desenhar();
     } catch (falha) {
@@ -988,11 +1002,21 @@ async function entrar(evento) {
   $('entrar-botao').disabled = true;
   $('entrar-botao').textContent = 'Entrando…';
   try {
-    const dados = await api('POST', 'entrar', { json: { usuario, senha } });
+    const dados = await api('entrar', { usuario, senha });
     guardarToken(dados.token);
     sessao = { usuario: dados.usuario, senhaInicial: dados.senhaInicial };
     // Se a sessão caiu no meio de uma edição, o rascunho continua como estava.
-    if (!rascunho) sincronizar(await api('GET', 'conteudo'));
+    if (!rascunho) {
+      try {
+        sincronizar(await api('conteudo'));
+      } catch (falha) {
+        if (falha.status !== 401) throw falha;
+        // O login acabou de ser aceito: se o pedido seguinte volta como "sem sessão", o problema não é a
+        // senha nem o tempo. Dizer "sua sessão terminou" aqui só confundiria.
+        $('entrar-aviso').hidden = true;
+        throw new ErroDoServidor(401, 'O usuário e a senha estão certos, mas o servidor não reconheceu a sessão no pedido seguinte. Tente entrar de novo. Se continuar assim, o problema está no servidor ou na hospedagem, e não na senha.');
+      }
+    }
     $('entrar-senha').value = '';
     mostrarPainel();
   } catch (falha) {
@@ -1011,7 +1035,7 @@ async function sair() {
     if (!sim) return;
   }
   try {
-    await api('POST', 'sair');
+    await api('sair');
   } catch {
     /* sem conexão: a sessão termina sozinha */
   }
@@ -1067,8 +1091,8 @@ window.addEventListener('hashchange', () => {
   if (ABAS.some((a) => a.id === pedida)) aba = pedida;
   if (token) {
     try {
-      sessao = await api('GET', 'sessao');
-      sincronizar(await api('GET', 'conteudo'));
+      sessao = await api('sessao');
+      sincronizar(await api('conteudo'));
       mostrarPainel();
       return;
     } catch (erro) {

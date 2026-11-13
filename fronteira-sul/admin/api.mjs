@@ -3,12 +3,28 @@
  *
  *   /admin/                    a tela do painel (arquivos da pasta painel/)
  *   /admin/api/entrar          login; devolve o token da sessão
- *   /admin/api/...             o resto só responde com o token no cabeçalho
- *                              "Authorization: Bearer <token>"
+ *   /admin/api/...             o resto só responde a quem manda esse token
  *
- * O token vai no cabeçalho, não em cookie: páginas de outros sites não
- * conseguem fazer o navegador do administrador enviar pedidos em nome dele.
+ * Todo pedido à API é um POST com o corpo em JSON, e o token da sessão vai
+ * dentro do corpo, no campo "sessao".
+ *
+ * Não vai em cookie: páginas de outros sites não conseguem fazer o navegador
+ * do administrador enviar pedidos em nome dele.
+ *
+ * E não vai em cabeçalho. Ia, em "Authorization", e o painel usava também GET,
+ * PUT e DELETE. Só que entre o navegador e este servidor quase sempre há um
+ * intermediário (o da hospedagem, o de uma tela de prévia), e nem todos
+ * entregam esse cabeçalho: o login era aceito e o pedido seguinte chegava aqui
+ * sem a sessão. Um POST com JSON é o que o próprio login usa; se o login
+ * chega, o resto chega do mesmo jeito.
+ *
+ * Pelo mesmo motivo, a página do painel pede os arquivos dela (painel.css e
+ * painel.js) com a versão no endereço, e ela mesma nunca é guardada: um
+ * intermediário pode guardar arquivos por um tempo sem perguntar se mudaram,
+ * e o navegador ficaria com um painel.js antigo falando com um servidor novo.
  */
+import crypto from 'node:crypto';
+import fs from 'node:fs';
 import path from 'node:path';
 import { ErroDeAcesso } from './acesso.mjs';
 import { ErroDeConteudo } from './conteudo.mjs';
@@ -16,6 +32,10 @@ import { analisarImagem } from './imagem.mjs';
 
 const LIMITE_JSON = 4 * 1024 * 1024;
 const LIMITE_IMAGEM = 8 * 1024 * 1024;
+// A imagem vem dentro do JSON, em base64 (4 letras para cada 3 bytes), junto com a sessão.
+const LIMITE_JSON_COM_IMAGEM = Math.ceil(LIMITE_IMAGEM / 3) * 4 + 1024;
+const IMAGEM_GRANDE = `A imagem passa de ${LIMITE_IMAGEM / 1024 / 1024} MB. Envie uma versão menor.`;
+const ROTA_DE_IMAGEM = /^imagens\/([a-z]{1,20})$/;
 
 const PAINEL = {
   '/admin': 'index.html',
@@ -23,6 +43,13 @@ const PAINEL = {
   '/admin/painel.css': 'painel.css',
   '/admin/painel.js': 'painel.js',
 };
+/** Os arquivos que a página do painel carrega; cada um é pedido com a versão dele no endereço. */
+const ARQUIVOS_DA_TELA = ['painel.css', 'painel.js'];
+/**
+ * O que um painel aberto antes de uma atualização recebe quando faz um pedido
+ * do jeito antigo (GET, PUT ou DELETE): ele mostra este texto na tela.
+ */
+const TELA_ANTIGA = 'O painel foi atualizado e esta tela ficou antiga: recarregue a página. (Este endereço só aceita pedidos POST.)';
 
 /** O painel só carrega arquivos deste servidor e não aparece em buscadores. */
 const CABECALHOS_DO_PAINEL = {
@@ -33,10 +60,12 @@ const CABECALHOS_DO_PAINEL = {
 };
 
 class ErroHttp extends Error {
-  constructor(status, mensagem, cabecalhos = {}) {
+  /** `nota` aparece só no registro do servidor, ao lado do pedido. */
+  constructor(status, mensagem, cabecalhos = {}, nota = '') {
     super(mensagem);
     this.status = status;
     this.cabecalhos = cabecalhos;
+    this.nota = nota;
   }
 }
 
@@ -79,9 +108,9 @@ function lerCorpo(req, limite, mensagem) {
   });
 }
 
-async function lerJson(req) {
+async function lerJson(req, limite = LIMITE_JSON, grandeDemais = 'O conteúdo enviado é grande demais.') {
   if (!/^application\/json\b/i.test(String(req.headers['content-type'] || ''))) throw new ErroHttp(415, 'O pedido precisa ser JSON.');
-  const corpo = await lerCorpo(req, LIMITE_JSON, 'O conteúdo enviado é grande demais.');
+  const corpo = await lerCorpo(req, limite, grandeDemais);
   let dados;
   try {
     dados = JSON.parse(corpo.toString('utf8'));
@@ -92,13 +121,22 @@ async function lerJson(req) {
   return dados;
 }
 
-function tokenDe(req) {
-  const m = /^Bearer ([A-Za-z0-9_-]{20,200})$/.exec(String(req.headers.authorization || ''));
-  return m ? m[1] : '';
+/** O token da sessão que veio no corpo do pedido, ou '' se não veio nenhum com cara de token. */
+function sessaoDe(dados) {
+  return typeof dados.sessao === 'string' && /^[A-Za-z0-9_-]{20,200}$/.test(dados.sessao) ? dados.sessao : '';
+}
+
+/** Os bytes da imagem que veio no campo "arquivo", em base64. */
+function imagemDe(dados) {
+  const texto = dados.arquivo;
+  if (typeof texto !== 'string' || texto.length % 4 !== 0 || !/^[A-Za-z0-9+/]*={0,2}$/.test(texto)) throw new ErroHttp(400, 'A imagem não chegou inteira. Tente enviar de novo.');
+  const corpo = Buffer.from(texto, 'base64');
+  if (corpo.length > LIMITE_IMAGEM) throw new ErroHttp(413, IMAGEM_GRANDE);
+  return corpo;
 }
 
 export function criarAdmin({ acesso, conteudo, dirPainel, enviarArquivo, enderecoDe = (req) => req.socket.remoteAddress || 'desconhecido', registrar = () => {} }) {
-  function json(req, res, status, dados, extras = {}) {
+  function json(req, res, status, dados, extras = {}, nota = '') {
     const corpo = Buffer.from(JSON.stringify(dados), 'utf8');
     res.writeHead(status, {
       'Content-Type': 'application/json; charset=utf-8',
@@ -109,64 +147,65 @@ export function criarAdmin({ acesso, conteudo, dirPainel, enviarArquivo, enderec
       ...extras,
     });
     res.end(corpo);
-    registrar(req, status);
+    registrar(req, status, nota ? `  (${nota})` : '');
   }
 
   /** Rotas da API. Devolve [status, dados] ou lança um erro com status. */
   async function rotear(req, rota) {
-    const metodo = req.method;
+    if (req.method !== 'POST') throw new ErroHttp(405, TELA_ANTIGA, { Allow: 'POST' });
     const endereco = enderecoDe(req);
-    const so = (...aceitos) => {
-      if (!aceitos.includes(metodo)) throw new ErroHttp(405, 'Método não aceito neste endereço.', { Allow: aceitos.join(', ') });
-    };
+    const deImagem = ROTA_DE_IMAGEM.exec(rota);
+    const dados = deImagem ? await lerJson(req, LIMITE_JSON_COM_IMAGEM, IMAGEM_GRANDE) : await lerJson(req);
 
-    if (rota === 'entrar') {
-      so('POST');
-      const { usuario, senha } = await lerJson(req);
-      return [200, await acesso.entrar(endereco, usuario, senha)];
+    if (rota === 'entrar') return [200, await acesso.entrar(endereco, dados.usuario, dados.senha)];
+
+    // Daqui para baixo, só com sessão aberta. (Quem não entrou não fica sabendo nem quais endereços existem.)
+    const token = sessaoDe(dados);
+    if (!acesso.validar(token)) {
+      throw new ErroHttp(401, 'Entre de novo: a sessão expirou ou foi encerrada.', {}, token ? 'sessão desconhecida ou vencida' : 'pedido sem sessão');
     }
 
-    // Daqui para baixo, só com sessão aberta.
-    const token = tokenDe(req);
-    if (!acesso.validar(token)) throw new ErroHttp(401, 'Entre de novo: a sessão expirou ou foi encerrada.');
-
-    if (rota === 'sessao') {
-      so('GET');
-      return [200, acesso.info()];
-    }
+    if (rota === 'sessao') return [200, acesso.info()];
     if (rota === 'sair') {
-      so('POST');
       acesso.sair(token);
       return [200, { ok: true }];
     }
-    if (rota === 'conteudo') {
-      so('GET', 'PUT');
-      return [200, metodo === 'GET' ? conteudo.descrever() : conteudo.salvar(await lerJson(req))];
+    if (rota === 'conteudo') return [200, conteudo.descrever()];
+    if (rota === 'conteudo/salvar') {
+      // (a sessão é do pedido, e não do conteúdo: fica de fora do que é entregue para guardar)
+      const { sessao: _, ...envio } = dados;
+      return [200, conteudo.salvar(envio)];
     }
-    const imagem = /^imagens\/([a-z]{1,20})$/.exec(rota);
-    if (imagem) {
-      so('PUT', 'DELETE');
-      if (metodo === 'DELETE') return [200, conteudo.removerImagem(imagem[1])];
-      const corpo = await lerCorpo(req, LIMITE_IMAGEM, `A imagem passa de ${LIMITE_IMAGEM / 1024 / 1024} MB. Envie uma versão menor.`);
+    if (deImagem) {
+      const corpo = imagemDe(dados);
       const info = analisarImagem(corpo);
       if (!info) throw new ErroHttp(415, 'Esse arquivo não é uma imagem PNG, JPG, WebP ou GIF.');
-      return [200, conteudo.trocarImagem(imagem[1], { corpo, ...info })];
+      return [200, conteudo.trocarImagem(deImagem[1], { corpo, ...info })];
     }
+    const semImagem = /^imagens\/([a-z]{1,20})\/remover$/.exec(rota);
+    if (semImagem) return [200, conteudo.removerImagem(semImagem[1])];
     if (rota === 'acesso') {
-      so('POST');
-      const { senhaAtual, novoUsuario, novaSenha } = await lerJson(req);
+      const { senhaAtual, novoUsuario, novaSenha } = dados;
       return [200, await acesso.trocar({ endereco, token, senhaAtual, novoUsuario, novaSenha })];
     }
     const versao = /^historico\/(\d{1,9})\/restaurar$/.exec(rota);
-    if (versao) {
-      so('POST');
-      return [200, conteudo.restaurarDoHistorico(versao[1])];
-    }
-    if (rota === 'restaurar-original') {
-      so('POST');
-      return [200, conteudo.restaurarOriginal()];
-    }
+    if (versao) return [200, conteudo.restaurarDoHistorico(versao[1])];
+    if (rota === 'restaurar-original') return [200, conteudo.restaurarOriginal()];
     throw new ErroHttp(404, 'Endereço desconhecido.');
+  }
+
+  /**
+   * A página do painel, com a versão de cada arquivo no endereço dele
+   * ("/admin/painel.js?v=abc"). A versão é um resumo do conteúdo: quando o
+   * arquivo muda, o endereço muda, e ninguém tem o endereço novo guardado.
+   */
+  function paginaDoPainel() {
+    let html = fs.readFileSync(path.join(dirPainel, 'index.html'), 'utf8');
+    for (const nome of ARQUIVOS_DA_TELA) {
+      const versao = crypto.createHash('sha1').update(fs.readFileSync(path.join(dirPainel, nome))).digest('base64url').slice(0, 10);
+      html = html.split(`"/admin/${nome}"`).join(`"/admin/${nome}?v=${versao}"`);
+    }
+    return Buffer.from(html, 'utf8');
   }
 
   /** Atende qualquer endereço que comece com /admin. */
@@ -176,7 +215,7 @@ export function criarAdmin({ acesso, conteudo, dirPainel, enviarArquivo, enderec
         const [status, dados] = await rotear(req, caminho.slice('/admin/api/'.length));
         json(req, res, status, dados);
       } catch (erro) {
-        if (erro instanceof ErroHttp) json(req, res, erro.status, { erro: erro.message }, erro.cabecalhos);
+        if (erro instanceof ErroHttp) json(req, res, erro.status, { erro: erro.message }, erro.cabecalhos, erro.nota);
         else if (erro instanceof ErroDeAcesso) json(req, res, erro.status, { erro: erro.message, ...(erro.esperar ? { esperar: erro.esperar } : {}) });
         else if (erro instanceof ErroDeConteudo) json(req, res, erro.status, { erro: erro.message });
         else {
@@ -198,6 +237,29 @@ export function criarAdmin({ acesso, conteudo, dirPainel, enviarArquivo, enderec
       res.writeHead(405, { Allow: 'GET, HEAD', 'Content-Length': 0 });
       res.end();
       registrar(req, 405);
+      return;
+    }
+    if (nome === 'index.html') {
+      let corpo;
+      try {
+        corpo = paginaDoPainel();
+      } catch (erro) {
+        console.error(erro);
+        res.writeHead(500, { 'Content-Length': 0, 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' });
+        res.end();
+        registrar(req, 500);
+        return;
+      }
+      res.writeHead(200, {
+        'Content-Type': 'text/html; charset=utf-8',
+        'Content-Length': corpo.length,
+        'X-Content-Type-Options': 'nosniff',
+        ...CABECALHOS_DO_PAINEL,
+        // A página é montada a cada pedido e nunca é guardada: é ela que diz qual é a versão dos arquivos.
+        'Cache-Control': 'no-store',
+      });
+      res.end(req.method === 'HEAD' ? undefined : corpo);
+      registrar(req, 200);
       return;
     }
     enviarArquivo(req, res, path.join(dirPainel, nome), CABECALHOS_DO_PAINEL);

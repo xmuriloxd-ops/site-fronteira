@@ -1,5 +1,6 @@
 // Apoio comum aos testes: caminhos, pastas temporárias, contagem e o que uma instalação nova deve entregar.
 import assert from 'node:assert/strict';
+import crypto from 'node:crypto';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -96,6 +97,31 @@ export const CABECA_DO_INICIO = [
 ].join('\n');
 
 /**
+ * A etiqueta "Admin" no canto do convite, quando ele é o início do site: o
+ * link, que entra logo depois do convite, e as regras de visual dele, que
+ * entram no <head> depois das de cima. É a entrada do painel na primeira
+ * página, como a aba "Admin" é na página de regras.
+ *
+ * Também por extenso: que a etiqueta não muda o convite de lugar nem fica por
+ * cima da imagem, do texto ou do botão, em nenhum tamanho de tela, foi
+ * conferido no navegador com este link e estas regras exatamente como estão
+ * aqui (ver LEIA-ME.md).
+ */
+export const LINK_DO_ADMIN = '<a class="admin-no-canto" href="/admin/">Admin</a>';
+export const ESTILO_DO_LINK_DO_ADMIN = [
+  '<style id="admin-no-canto">',
+  '.admin-no-canto{position:absolute;top:0;right:0;display:flex;align-items:center;height:16px;padding:0 9px 1px 11px;',
+  'border:solid rgba(234,191,78,.26);border-width:0 0 1px 1px;border-radius:0 0 0 8px;background:rgba(23,26,22,.94);',
+  'color:#b8b8ac;font-size:10px;font-weight:800;line-height:1;letter-spacing:.18em;text-transform:uppercase;text-decoration:none;white-space:nowrap;',
+  'transition:color .18s,border-color .18s}',
+  '.admin-no-canto::after{content:"";position:absolute;top:0;right:0;bottom:-9px;left:0}',
+  '.admin-no-canto:hover{color:#eabf4e;border-color:rgba(234,191,78,.55)}',
+  '.admin-no-canto:focus-visible{outline:2px solid #f6d77b;outline-offset:-2px}',
+  '@media (prefers-reduced-motion:reduce){.admin-no-canto{transition:none}}',
+  '</style>',
+].join('\n');
+
+/**
  * O link de volta ao convite, que a página de regras ganha quando o site
  * começa por ele: uma seta e o texto, dentro de uma caixa. O aplicativo recebe
  * o elemento duas vezes (na barra do topo, para telas estreitas, e na linha
@@ -129,6 +155,25 @@ export const ESTILO_DO_LINK_DE_VOLTA = [
   '</style>',
 ].join('\n');
 
+/**
+ * Endereços com versão. O que muda pelo painel é pedido pelas páginas com a
+ * versão no endereço ("...js?v=abc"), para nenhum intermediário entregar uma
+ * cópia antiga guardada: quando o conteúdo muda, o endereço muda.
+ *
+ * A versão de um arquivo montado pelo servidor é o começo do resumo (SHA-1,
+ * em base64 para endereços) do que é entregue.
+ */
+export const versaoDe = (conteudo) => crypto.createHash('sha1').update(conteudo, 'utf8').digest('base64url').slice(0, 10);
+const PEDIDO_DO_APLICATIVO = /(<script type="module" crossorigin src="\/assets\/index-FbaU4KfD\.js)(?:\?v=[A-Za-z0-9_-]{10})?(">)/;
+/** A página de regras `index` pedindo o aplicativo `js`: a versão que vai no endereço é a dele. */
+export const pedindoOAplicativo = (index, js) => trocarOUnico(index, PEDIDO_DO_APLICATIVO, (_, antes, depois) => `${antes}?v=${versaoDe(js)}${depois}`);
+/**
+ * Uma imagem trocada pelo painel: o endereço dela ganha, em todo lugar onde
+ * aparece, o começo do resumo (SHA-256) do arquivo enviado.
+ */
+export const versaoDaImagem = (bytes) => crypto.createHash('sha256').update(bytes).digest('hex').slice(0, 12);
+export const comAImagemTrocada = (texto, endereco, bytes) => texto.split(`"${endereco}"`).join(`"${endereco}?v=${versaoDaImagem(bytes)}"`);
+
 /** A regra que esconde uma linha dos créditos (3 = telefone, 4 = e-mail). */
 export const esconderLinha = (n) => `.author-details > .contact-row:nth-child(${n}){display:none!important}`;
 
@@ -139,10 +184,12 @@ export const esconderLinha = (n) => `.author-details > .contact-row:nth-child(${
  *   - o aplicativo de regras: a raiz dos endereços (para ele funcionar em
  *     /regras/), o botão da tela "não encontrada", o link de volta ao convite
  *     (na barra do topo e na linha das abas), a aba Admin e os créditos;
- *   - a página de regras: as regras de visual do link de volta e as linhas
- *     vazias dos créditos, escondidas;
+ *   - a página de regras: as regras de visual do link de volta, as linhas
+ *     vazias dos créditos, escondidas, e o aplicativo pedido com a versão
+ *     dele no endereço;
  *   - a página do convite, que passa a ser o início do site: o botão leva a
- *     /regras/, a imagem é clicável e o <head> ganha as regras de visual.
+ *     /regras/, a imagem é clicável, o <head> ganha as regras de visual e o
+ *     canto da página ganha a etiqueta "Admin".
  *
  * É montado aqui com trocas simples de texto, sem passar pelo conteudo.mjs.
  * Os arquivos que não aparecem aqui saem iguais aos da cópia.
@@ -152,8 +199,10 @@ export const esconderLinha = (n) => `.author-details > .contact-row:nth-child(${
  * volta a ter a raiz e o botão da cópia, não há link de volta, e a página do
  * convite é a da cópia, sem tirar nem pôr (null). A aba Admin e os créditos
  * continuam. `textoDoLink` é o texto do link de volta; vazio, ele não entra.
+ * `entradaDoAdmin: false` é a opção "Mostrar “Admin” para os visitantes"
+ * desligada: nem a aba na página de regras, nem a etiqueta no convite.
  */
-function oQueOSiteEntrega({ comecaPeloConvite = true, textoDoLink = 'Voltar ao convite' } = {}) {
+function oQueOSiteEntrega({ comecaPeloConvite = true, textoDoLink = 'Voltar ao convite', entradaDoAdmin = true } = {}) {
   const link = comecaPeloConvite && textoDoLink ? linkDeVolta(textoDoLink) : null;
   let js = COPIA.js;
   if (comecaPeloConvite) {
@@ -161,18 +210,19 @@ function oQueOSiteEntrega({ comecaPeloConvite = true, textoDoLink = 'Voltar ao c
     js = trocarOUnico(js, /const r=\(\)=>\{a\("\/"\)\}/, () => VOLTAR_ENTREGUE);
   }
   if (link) js = trocarOUnico(js, /R\.jsxs\("div",\{"data-loc":"client\/src\/pages\/Home\.tsx:285",className:"topbar-tools"/, (achado) => `${link},${achado}`);
-  js = trocarOUnico(js, /children:"Regras da Polícia"\}\)(?=\]\}\))/, (achado) => achado + (link ? `,${link}` : '') + ABA_ADMIN);
+  js = trocarOUnico(js, /children:"Regras da Polícia"\}\)(?=\]\}\))/, (achado) => achado + (link ? `,${link}` : '') + (entradaDoAdmin ? ABA_ADMIN : ''));
   js = trocarOUnico(js, /(className:"author-name",children:)"[^"]*"/, (_, antes) => `${antes}"MURILO MENDES"`);
   js = trocarOUnico(js, /(className:"text-button",onClick:ne,children:\[)"[^"]*"/, (_, antes) => `${antes}"sgtmendes1997_29726"`);
   js = trocarOUnico(js, /(navigator\.clipboard\.writeText\()"[^"]*"/, (_, antes) => `${antes}"sgtmendes1997_29726"`);
   js = trocarOUnico(js, /href:"tel:[^"]*",children:"[^"]*"/, () => 'href:"tel:",children:""');
   js = trocarOUnico(js, /href:"mailto:[^"]*",children:"[^"]*"/, () => 'href:"mailto:",children:""');
   const noHead = `${link ? `${ESTILO_DO_LINK_DE_VOLTA}\n` : ''}<style id="ajustes-do-admin">\n${esconderLinha(3)}\n${esconderLinha(4)}\n</style>`;
-  const index = trocarOUnico(COPIA.index, /<\/head>/, (achado) => noHead + achado);
+  const index = pedindoOAplicativo(trocarOUnico(COPIA.index, /<\/head>/, (achado) => noHead + achado), js);
   if (!comecaPeloConvite) return { js, index, convite: null };
   let convite = trocarOUnico(COPIA.convite, /<a class="button" href="\/">/, () => '<a class="button" href="/regras/">');
   convite = trocarOUnico(convite, /<img class="poster"/, (achado) => achado + CLIQUE_NA_IMAGEM);
-  convite = trocarOUnico(convite, /<\/head>/, (achado) => CABECA_DO_INICIO + achado);
+  if (entradaDoAdmin) convite = trocarOUnico(convite, /<\/main>/, (achado) => achado + LINK_DO_ADMIN);
+  convite = trocarOUnico(convite, /<\/head>/, (achado) => CABECA_DO_INICIO + (entradaDoAdmin ? `\n${ESTILO_DO_LINK_DO_ADMIN}` : '') + achado);
   return { js, index, convite };
 }
 
@@ -184,6 +234,8 @@ export const SEM_COMECAR_PELO_CONVITE = oQueOSiteEntrega({ comecaPeloConvite: fa
 export const SEM_O_LINK_DE_VOLTA = oQueOSiteEntrega({ textoDoLink: '' });
 /** Com outro texto no link de volta. */
 export const comOLinkDeVolta = (texto) => oQueOSiteEntrega({ textoDoLink: texto });
+/** Com a opção "Mostrar “Admin” para os visitantes" desligada: sem a aba nas regras e sem a etiqueta no convite. */
+export const SEM_A_ENTRADA_DO_ADMIN = oQueOSiteEntrega({ entradaDoAdmin: false });
 
 /** Uma cópia de site/ em uma pasta temporária, para testar o que acontece quando um arquivo vem diferente. */
 export function copiaDoSite(alterar = {}) {

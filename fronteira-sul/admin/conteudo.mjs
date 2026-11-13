@@ -20,8 +20,11 @@ import {
   BASE_ORIGINAL,
   CLIQUE_NA_IMAGEM,
   ESTILO_DO_LINK_DE_VOLTA,
+  ESTILO_DO_LINK_DO_ADMIN,
+  LINK_DO_ADMIN,
   MARCA_DA_BASE,
   MARCA_DA_IMAGEM,
+  MARCA_DO_FIM_DO_CONVITE,
   MARCA_DO_TOPO,
   MARCA_DO_VOLTAR,
   VOLTAR_ORIGINAL,
@@ -41,7 +44,10 @@ const MAX_HISTORICO = 15;
 /** Endereço da imagem do convite dentro do site (as medidas dela reservam o espaço na página do convite). */
 const IMAGEM_DO_CONVITE = IMAGENS.find((img) => img.id === 'convite').caminhos[0];
 
-/** A aba "Admin": entra logo depois das duas abas da página de regras (e do link de volta ao convite, quando ele existe). */
+/**
+ * A aba "Admin": entra logo depois das duas abas da página de regras (e do link de volta ao convite, quando ele existe).
+ * A mesma opção põe a etiqueta "Admin" no canto do convite, quando o site começa por ele (ver convite-no-inicio.mjs).
+ */
 const FIM_DAS_ABAS = 'children:"Regras da Polícia"})';
 const MARCA_DAS_ABAS = `${FIM_DAS_ABAS}]})`;
 const ABA_ADMIN =
@@ -484,7 +490,7 @@ export function criarConteudo({ raizSite, dirDados, aviso = () => {} }) {
       const base = unico(js, MARCA_DA_BASE);
       const botao = campos.get('convite.botaoLink')?.locais.find((l) => l.arquivo === 'convite' && l.tipo === 'trecho');
       if (!botao) throw new Error('não achei o botão na página do convite');
-      // Os dois que vêm agora são acabamento: sem a marca, o site começa pelo convite do mesmo jeito,
+      // Os três que vêm agora são acabamento: sem a marca, o site começa pelo convite do mesmo jeito,
       // só aquele detalhe fica de fora (e entra na lista de problemas, para quem cuida do site saber).
       const umaVez = (texto, marca, seFaltar) => {
         const i = texto.indexOf(marca);
@@ -494,12 +500,15 @@ export function criarConteudo({ raizSite, dirDados, aviso = () => {} }) {
       };
       const voltar = umaVez(js, MARCA_DO_VOLTAR, 'O botão da tela “página não encontrada” não pôde ser ajustado: ele mostra as regras em vez de voltar para o convite.');
       const imagem = umaVez(textos.convite, MARCA_DA_IMAGEM, 'A imagem do convite não pôde ficar clicável (o botão continua levando às regras).');
+      const fimDoConvite = umaVez(textos.convite, MARCA_DO_FIM_DO_CONVITE, 'A etiqueta “Admin” não pôde ser colocada no canto do convite (o painel continua abrindo pelo endereço /admin/).');
       return {
         base,
         // o botão da tela "não encontrada", que volta para o início do site
         voltar: voltar == null ? null : voltar + MARCA_DO_VOLTAR.indexOf(VOLTAR_ORIGINAL),
         // o clique na imagem do convite, que faz o mesmo que o botão
         imagem: imagem == null ? null : imagem + MARCA_DA_IMAGEM.length,
+        // a etiqueta "Admin" do canto do convite, que entra logo depois dele
+        admin: fimDoConvite == null ? null : fimDoConvite + MARCA_DO_FIM_DO_CONVITE.length,
       };
     });
     // O link de volta ao convite tem dois lugares na página de regras (ver convite-no-inicio.mjs). Como os
@@ -828,10 +837,62 @@ export function criarConteudo({ raizSite, dirDados, aviso = () => {} }) {
     return texto ? { texto, destino: enderecosDoSite().convite } : null;
   }
 
+  /**
+   * Endereços com versão.
+   *
+   * Entre o servidor e o visitante pode haver quem guarde arquivos por um
+   * tempo sem perguntar se mudaram: a hospedagem, uma tela de prévia. Uma
+   * página é pedida de novo a cada visita; os arquivos que ela carrega, nem
+   * sempre. Por isso, o que muda pelo painel vai nas páginas com a versão no
+   * endereço ("...js?v=abc"). Quando o conteúdo muda, o endereço muda, e
+   * ninguém tem o endereço novo guardado.
+   *
+   *   - O aplicativo de regras, na página de regras: os textos do painel
+   *     estão dentro dele. A versão é um resumo do que o servidor entrega
+   *     (ver gerar).
+   *   - Uma imagem trocada pelo painel, em todo lugar onde o endereço dela
+   *     aparece: na página do convite, no aplicativo, na lista de ícones. A
+   *     versão é o resumo do arquivo enviado, que já faz parte do nome com
+   *     que ele é guardado. (A imagem da prévia de link, que é um endereço
+   *     completo, ganha a mesma versão em montarHtml.)
+   *
+   * O que não mudou em relação à cópia fica com o endereço que tinha. O
+   * servidor entrega o mesmo arquivo com ou sem a versão no endereço.
+   */
+  /** As imagens trocadas pelo painel: [endereço dentro do site, versão]. */
+  function versoesDasImagens() {
+    const pares = [];
+    for (const img of IMAGENS) {
+      const reg = estado.imagens[img.id] || (img.herda ? estado.imagens[img.herda] : null);
+      const versao = reg && /-([0-9a-f]{12})\.[a-z0-9]+$/.exec(reg.arquivo)?.[1];
+      if (versao) for (const caminho of img.caminhos) pares.push([caminho, versao]);
+    }
+    return pares;
+  }
+
+  /**
+   * As trocas que põem a versão no fim de cada endereço. Os lugares são
+   * procurados no arquivo original, onde o endereço aparece inteiro entre
+   * aspas (valor de um atributo ou texto do JavaScript): um texto escrito pelo
+   * administrador nunca é confundido com um endereço.
+   */
+  function trocasDeVersao(txt, pares) {
+    const trocas = [];
+    for (const [endereco, versao] of pares) {
+      for (const i of todas(txt, `"${endereco}"`)) {
+        const fim = i + 1 + endereco.length;
+        trocas.push({ inicio: fim, fim, novo: `?v=${versao}` });
+      }
+    }
+    return trocas;
+  }
+
   function montarJs() {
     const o = lerOriginal();
     if (o.textos.js == null) return null;
     const trocas = trocasDeTexto('js');
+    // O logo trocado pelo painel é pedido com a versão dele no endereço.
+    trocas.push(...trocasDeVersao(o.textos.js, versoesDasImagens()));
     if (o.regulamento && estado.regulamento) {
       trocas.push({ inicio: o.regulamento.inicio, fim: o.regulamento.fim, novo: JSON.stringify(estado.regulamento) });
     }
@@ -886,6 +947,8 @@ export function criarConteudo({ raizSite, dirDados, aviso = () => {} }) {
     let trocas = trocasDeTexto(nome);
     const noComeco = conviteNoInicio();
     const onde = enderecosDoSite();
+    // A etiqueta "Admin" no canto do convite: junto com a aba "Admin" da página de regras, e só com o convite no início do site.
+    const adminNoCanto = nome === 'convite' && noComeco && estado.opcoes.abaAdmin && o.conviteNoInicio.admin != null;
 
     if (nome === 'convite') {
       // O botão: quando o destino quer dizer "a página de regras", vai o endereço em que ela está agora.
@@ -899,6 +962,7 @@ export function criarConteudo({ raizSite, dirDados, aviso = () => {} }) {
       }
       // Clicar na imagem faz o mesmo que o botão.
       if (noComeco && o.conviteNoInicio.imagem != null) trocas.push({ inicio: o.conviteNoInicio.imagem, fim: o.conviteNoInicio.imagem, novo: CLIQUE_NA_IMAGEM });
+      if (adminNoCanto) trocas.push({ inicio: o.conviteNoInicio.admin, fim: o.conviteNoInicio.admin, novo: LINK_DO_ADMIN });
     }
 
     // Com o endereço do site preenchido, os links de compartilhamento passam a apontar para cá.
@@ -930,9 +994,18 @@ export function criarConteudo({ raizSite, dirDados, aviso = () => {} }) {
       }
     }
 
+    // Endereços com versão: as imagens trocadas pelo painel e, na página de regras, o aplicativo.
+    const comVersao = versoesDasImagens();
+    if (nome === 'index') {
+      const aplicativo = gerar(ARQUIVOS.js);
+      if (aplicativo) comVersao.push([`/${ARQUIVOS.js}`, aplicativo.versao]);
+    }
+    trocas.push(...trocasDeVersao(txt, comVersao));
+
     // O que entra no fim do <head>. O CSS do administrador vem por último, para poder mudar o resto.
     const noHead = [];
     if (nome === 'convite' && noComeco) noHead.push(cabecaDoInicio(estado.imagens.convite || o.imagemDoConvite));
+    if (adminNoCanto) noHead.push(ESTILO_DO_LINK_DO_ADMIN);
     if (nome === 'index' && linkParaOConvite()) noHead.push(ESTILO_DO_LINK_DE_VOLTA);
     const css = cssDaPagina(nome);
     if (css) noHead.push(`<style id="ajustes-do-admin">\n${css}\n</style>`);
@@ -964,6 +1037,17 @@ export function criarConteudo({ raizSite, dirDados, aviso = () => {} }) {
         if (local.tipo !== 'manifesto') continue;
         json ||= JSON.parse(o.textos.manifesto);
         for (const chave of local.chaves) json[chave] = valor;
+      }
+    }
+    // O ícone trocado pelo painel é pedido com a versão dele no endereço.
+    const versoes = new Map(versoesDasImagens());
+    if (versoes.size) {
+      const comIcones = json || JSON.parse(o.textos.manifesto);
+      for (const icone of Array.isArray(comIcones.icons) ? comIcones.icons : []) {
+        if (icone && versoes.has(icone.src)) {
+          icone.src += `?v=${versoes.get(icone.src)}`;
+          json = comIcones;
+        }
       }
     }
     return json ? JSON.stringify(json) : null;
@@ -1006,10 +1090,13 @@ export function criarConteudo({ raizSite, dirDados, aviso = () => {} }) {
     let resultado = null;
     if (texto != null) {
       const corpo = Buffer.from(texto, 'utf8');
+      const resumo = crypto.createHash('sha1').update(corpo).digest('base64url');
       let gzip = null;
       resultado = {
         corpo,
-        etag: `W/"a-${crypto.createHash('sha1').update(corpo).digest('base64url').slice(0, 20)}"`,
+        etag: `W/"a-${resumo.slice(0, 20)}"`,
+        // o que vai no endereço deste arquivo, nas páginas que o carregam
+        versao: resumo.slice(0, 10),
         comprimido: () => (gzip ||= zlib.gzipSync(corpo)),
       };
     }

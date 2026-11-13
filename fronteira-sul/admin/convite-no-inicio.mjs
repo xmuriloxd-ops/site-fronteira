@@ -89,12 +89,59 @@ export const MARCA_DA_IMAGEM = '<img class="poster"';
 /**
  * Clique na imagem: faz o mesmo que o botão. A imagem do convite traz um
  * "CONSULTE AS REGRAS" desenhado, com cara de botão, e é nele que muita gente
- * clica. Para quem usa teclado ou leitor de tela nada muda: o botão continua
- * sendo o único link da página.
+ * clica. Para quem usa teclado ou leitor de tela nada muda: o caminho para
+ * as regras continua sendo o botão.
  *
  * É um atributo da imagem; entra logo depois de MARCA_DA_IMAGEM.
  */
 export const CLIQUE_NA_IMAGEM = ` onclick="var b=document.querySelector('a.button');if(b)b.click()"`;
+
+/**
+ * A entrada do painel, no canto do convite.
+ *
+ * A página de regras tem a aba "Admin". O convite, que é por onde o site
+ * começa, ganha uma etiqueta pequena com o mesmo texto, presa ao canto de
+ * cima da tela, à direita. A mesma opção do painel (`abaAdmin`) liga e
+ * desliga as duas.
+ *
+ * A etiqueta fica solta da página (posição absoluta): não ocupa lugar, e o
+ * convite continua com o tamanho e a posição que tinha. Ela tem 16px de
+ * altura, que é a menor margem que a página deixa acima do convite (a margem
+ * vai de 16px a 48px, e no desenho de tela baixa é de 16px). Por isso a
+ * etiqueta não fica por cima da imagem, do texto nem do botão, seja qual for
+ * o tamanho da tela, a imagem ou o texto do convite. Quando a página tem
+ * rolagem, a etiqueta fica no topo dela e sobe junto.
+ *
+ * No arquivo ela vem depois do convite, para a tecla Tab parar primeiro no
+ * botão das regras.
+ *
+ * MARCA_DO_FIM_DO_CONVITE é onde o convite termina na página (aparece uma vez
+ * só): a etiqueta entra logo depois.
+ */
+export const MARCA_DO_FIM_DO_CONVITE = '</main>';
+export const LINK_DO_ADMIN = '<a class="admin-no-canto" href="/admin/">Admin</a>';
+
+/**
+ * As regras de visual da etiqueta; entram no <head> do convite. A letra é a
+ * do "CONVITE OFICIAL" da própria página, e as cores são as do cartão do
+ * texto.
+ */
+export const ESTILO_DO_LINK_DO_ADMIN = `<style id="admin-no-canto">\n${[
+  // presa ao canto de cima, à direita; só o canto de dentro é arredondado
+  '.admin-no-canto{position:absolute;top:0;right:0;display:flex;align-items:center;height:16px;padding:0 9px 1px 11px;',
+  'border:solid rgba(234,191,78,.26);border-width:0 0 1px 1px;border-radius:0 0 0 8px;background:rgba(23,26,22,.94);',
+  'color:#b8b8ac;font-size:10px;font-weight:800;line-height:1;letter-spacing:.18em;text-transform:uppercase;text-decoration:none;white-space:nowrap;',
+  'transition:color .18s,border-color .18s}',
+  // Com 16px de altura, a etiqueta é pequena para o dedo: a área que responde ao toque continua 8px abaixo dela
+  // (24px ao todo). É uma área invisível. Quando a imagem do convite encosta na margem de cima (telas pequenas),
+  // o toque nesses 8px do canto dela abre o painel, e não as regras.
+  // (A conta parte da borda de dentro da etiqueta, que fica 1px acima do fim dela: 9px.)
+  '.admin-no-canto::after{content:"";position:absolute;top:0;right:0;bottom:-9px;left:0}',
+  '.admin-no-canto:hover{color:#eabf4e;border-color:rgba(234,191,78,.55)}',
+  // (o contorno do foco fica para dentro: para fora, a borda da tela o cortaria)
+  '.admin-no-canto:focus-visible{outline:2px solid #f6d77b;outline-offset:-2px}',
+  '@media (prefers-reduced-motion:reduce){.admin-no-canto{transition:none}}',
+].join('\n')}\n</style>`;
 
 /**
  * O link de volta ao convite, na página de regras.
